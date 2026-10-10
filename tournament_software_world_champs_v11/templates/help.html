@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row between mb"><div><h1>README / Help</h1><div class="muted">Tournament Software - operating guide and tournament logic.</div></div><a class="pill" href="/">Back to Dashboard</a></div>
+<div class="card">
+<h2>1. Tournament systems</h2>
+<p><strong>Group Stage + Championship</strong> runs round-robin groups first and then builds Championship and, when enabled, exact-placement/consolation paths. <strong>Single Elimination</strong> removes a team from the title path after one loss. <strong>Double Elimination</strong> uses a winners/losers concept. <strong>Round Robin</strong> is league play. <strong>Swiss</strong> pairs teams over multiple rounds without a full round-robin.</p>
+<h2>2. Seeding and groups</h2>
+<p>Players can be imported from Excel using columns <strong>Rank</strong> and <strong>Name</strong>. Seeding can also be changed by drag and drop. Group assignment can be automatic or manual. Within a group, the highest original seed remains the highest group seed.</p>
+<h2>3. Group standings and qualification</h2>
+<p>Group tables are calculated from completed group matches. The standard order is points, wins, set difference and point difference, with original seed used only as a final deterministic tie-break where needed. In Settings, <strong>Qualifiers per group</strong> controls the automatic places. <strong>Best teams from next place</strong> adds wildcards, for example 2 qualifiers per group + 2 best teams from 3rd place.</p>
+<p>When groups have different sizes, wildcard comparison is normalized per match in the current engine so teams are not rewarded simply for playing more group matches.</p>
+<h2>4. Tournament Seed after groups</h2>
+<p>Qualified teams receive a post-group Tournament Seed. Group winners are ranked ahead of runners-up, then qualified teams from the next group position. Inside each band the engine compares group performance (points per match / win rate / set and point performance) and preserves original seeding as a final tie-break.</p>
+<h2>5. Pairing and rematch avoidance</h2>
+<p>The automatic pairing proposal protects the strongest Tournament Seeds and tries to pair them against lower-ranked opponents. In the first knockout round the engine avoids a rematch between teams that already met in the same group whenever a mathematically valid alternative exists. Manual pairing can override the proposal while the relevant round is still editable.</p>
+<h2>6. Reseeding modes</h2>
+<ul><li><strong>First knockout round only</strong> - the first post-group round can be seeded/manual; after it is confirmed, winners follow the fixed bracket tree.</li><li><strong>Reseed every round</strong> - after a round is complete, the surviving teams can be reseeded and the next round can be manually adjusted.</li><li><strong>Fixed bracket</strong> - all later paths follow the generated tree; no reseeding.</li></ul>
+<p>A round is editable until an actual user-entered result in that round makes the competitive path live. BYEs and automatic propagation alone do not count as a played result.</p>
+<h2>7. Protected BYEs</h2>
+<p>If the qualified field does not fill a complete 4/8/16/32 bracket, the application can allocate unavoidable BYEs to the highest Tournament Seeds. Example: with 10 qualified teams, Seeds #1-#6 receive BYEs into the 8-team core, while Seeds #7-#10 play two preliminary matches. This protects top seeds without inventing extra qualifiers.</p>
+<h2>8. Consolation / exact placement</h2>
+<p>With <strong>Exact placement / consolation</strong> enabled, losing a Championship match does not automatically end the tournament. Losers are routed into placement matches so final places are decided on court. Semi-final losers play for 3rd place. Future draw slots show labels such as <strong>Winner #21</strong> or <strong>Loser #16</strong>, so the complete route is visible before the participant is known.</p>
+<h2>9. Match order and courts</h2>
+<p>Group matches are scheduled first. Multiple groups are interleaved across the available courts. Post-group matches are activated after group qualification is known. Match numbers are intended as persistent operational identifiers and downstream matches must always appear after the matches they depend on.</p>
+<h2>10. Scoring</h2>
+<p>Each phase can use Best of 3 or Best of 5 and race to 15 or 21. Scores are entered set by set. Win-by-two/deuce scores are accepted. Empty set rows are ignored.</p>
+<h2>11. Backup and exports</h2>
+<p><strong>Backup JSON</strong> stores tournament settings, players, phases and match results. <strong>Results Excel</strong> exports final standings and matches. PDF exports provide Groups & Results, Match Schedule, Tournament Draws and Final Standings. Tournament logos can be uploaded and appear as a subtle application watermark and a small PDF mark.</p>
+<h2>12. Recommended workflow</h2>
+<ol><li>Create the tournament and set courts/system.</li><li>Import or enter teams and confirm seeding.</li><li>Set group count and automatic/manual assignment.</li><li>Generate structure and play all Group Stage matches.</li><li>Review final group tables and qualified teams.</li><li>Confirm or manually adjust the allowed knockout pairing.</li><li>Enter results round by round.</li><li>Use Tournament Draws to verify Championship and consolation paths.</li><li>Export PDFs/Excel and create a Backup JSON regularly.</li></ol>
+<h2>13. Creator credit</h2><p>The software build contains a fixed creator credit: <strong>created by Michał Klimczak (klimczak.sc@gmail.com)</strong>. It is displayed in the application and printed on every PDF export.</p>
+</div>
+{% endblock %}

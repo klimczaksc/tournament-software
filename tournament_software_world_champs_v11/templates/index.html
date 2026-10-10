@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row between mb">
+  <div>
+    <h1>Tournament Software</h1>
+    <div class="muted">Local tournament dashboard with seeding, groups, brackets, PDF and Excel export.</div>
+  </div>
+</div>
+<div class="actions mb"><a class="pill" href="/help">README / Help</a></div>
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Create Tournament</h2>
+    <form method="post" action="/create" class="grid" style="grid-template-columns:repeat(2,1fr)">
+      <div><div class="small muted">Tournament name</div><input name="name" value="My Tournament" required style="width:100%"></div>
+      <div><div class="small muted">System</div><select name="system" style="width:100%">{% for value,label in systems %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+      <div><div class="small muted">Players</div><input type="number" min="2" max="256" name="player_count" value="16" style="width:100%"></div>
+      <div><div class="small muted">Available courts</div><input type="number" min="1" max="64" name="court_count" value="2" style="width:100%"></div>
+      <label class="row"><input type="checkbox" name="consolation" checked> Exact placement / consolation for all players</label>
+      <div class="actions"><button type="submit">Create</button></div>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Import Database</h2>
+    <form method="post" action="/import/db" enctype="multipart/form-data" class="row">
+      <input type="file" name="file" accept="application/json" required>
+      <button type="submit">Import JSON</button>
+    </form>
+    <div class="mt small muted">This restores tournament settings, players, phases and all recorded match results.</div>
+  </div>
+</div>
+<div class="card mt">
+  <h2>Your Tournaments</h2>
+  {% if tournaments %}
+    <table>
+      <thead><tr><th>Name</th><th>System</th><th>Players</th><th>Courts</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for t in tournaments %}
+      <tr>
+        <td><strong>{{ t.name }}</strong></td>
+        <td>{{ dict(systems).get(t.system, t.system) }}</td>
+        <td>{{ t.player_count }}</td>
+        <td>{{ t.court_count }}</td>
+        <td class="actions">
+          <a class="pill" href="/tournament/{{ t.id }}">Open</a>
+          <a class="pill" href="/tournament/{{ t.id }}/export/db">Backup</a>
+          <form method="post" action="/tournament/{{ t.id }}/delete" onsubmit="return confirm('Delete tournament?')">
+            <button class="btn-danger" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="muted">No tournaments yet.</div>
+  {% endif %}
+</div>
+{% endblock %}

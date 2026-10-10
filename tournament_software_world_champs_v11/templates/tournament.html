@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block content %}
+<nav class="side-menu" aria-label="Tournament navigation">
+  <strong>TOURNAMENT MENU</strong>
+  <a href="/">← Dashboard</a>
+  <a href="/help">README / Help</a>
+  <a href="#overview">Overview</a><a href="#settings">Settings</a><a href="#seeding">Seeding</a>
+  {% if tournament.system == 'group_knockout' %}<a href="#group-assignment">Group Assignment</a><a href="#group-tables">Group Tables</a>{% endif %}
+  {% if groups_complete %}<a href="#knockout-pairing">Pairings</a>{% endif %}
+  <a href="#matches">Matches</a><a href="#tree">Tournament Tree</a><a href="#standings">Standings</a>
+  <div class="nav-sep"></div><div class="nav-muted">FILES & VIEW</div>
+  <a href="/tournament/{{ tournament.id }}/export/db">Backup JSON</a><a href="/tournament/{{ tournament.id }}/export/pdf">Bracket PDF</a><a href="/tournament/{{ tournament.id }}/export/groups_pdf">Groups PDF</a><a href="/tournament/{{ tournament.id }}/export/schedule_pdf">Schedule PDF</a><a href="/tournament/{{ tournament.id }}/export/final_standings_pdf">Final Standings PDF</a><a href="/tournament/{{ tournament.id }}/export/excel">Results Excel</a>
+  <button type="button" id="theme-toggle" aria-label="Toggle light and dark mode">Light mode</button>
+</nav>
+{% if logo_url %}<img class="tournament-watermark" src="{{ logo_url }}" alt="">{% endif %}
+
+<div id="overview" class="row between mb">
+  <div>
+    <h1>{{ tournament.name }}</h1>
+    <div class="row small muted">
+      <span class="pill">{{ dict(systems).get(tournament.system, tournament.system) }}</span>
+      <span class="pill">{{ tournament.player_count }} teams</span><span class="pill">{{ tournament.court_count }} courts</span>
+      {% if tournament.consolation %}<span class="pill">exact placement</span>{% endif %}
+      <span class="pill">Pairing: {% if settings.pairing_mode == 'every_round' %}reseed every round{% elif settings.pairing_mode == 'fixed_bracket' %}fixed bracket{% else %}first knockout round only{% endif %}</span>
+    </div>
+  </div>
+
+</div>
+
+<details class="section" id="settings" open><summary>Settings & Phase Rules</summary><div class="section-body grid grid-2">
+  <div class="card"><h2>Tournament Settings</h2>
+    <form method="post" action="/tournament/{{ tournament.id }}/settings" class="grid" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+      <div><div class="small muted">Tournament name</div><input name="name" value="{{ tournament.name }}" style="width:100%"></div>
+      <div><div class="small muted">Tournament system</div><select name="system" style="width:100%">{% for value,label in systems %}<option value="{{ value }}" {% if value==tournament.system %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      <div><div class="small muted">Teams</div><input type="number" min="2" name="player_count" value="{{ tournament.player_count }}" style="width:100%"></div>
+      <div><div class="small muted">Courts</div><input type="number" min="1" name="court_count" value="{{ tournament.court_count }}" style="width:100%"></div>
+      <div><div class="small muted">Number of groups</div><input type="number" min="1" max="16" name="group_count" value="{{ settings.group_count }}" style="width:100%"></div>
+      <div><div class="small muted">Qualifiers per group</div><input type="number" min="1" max="16" name="qualifiers_per_group" value="{{ settings.qualifiers_per_group }}" style="width:100%"></div>
+      <div><div class="small muted">Best teams from next place</div><input type="number" min="0" max="16" name="best_next_place_qualifiers" value="{{ settings.best_next_place_qualifiers }}" style="width:100%"><div class="small muted mt-sm">Example: 2/group + 2 = two best 3rd-placed teams.</div></div>
+      <div><div class="small muted">Group assignment</div><select name="group_assignment_mode" style="width:100%"><option value="auto" {% if settings.group_assignment_mode == 'auto' %}selected{% endif %}>Automatic from seeding</option><option value="manual" {% if settings.group_assignment_mode == 'manual' %}selected{% endif %}>Manual</option></select></div>
+
+      <div style="grid-column:1/-1"><div class="small muted">Protected BYEs</div><select name="bye_policy" style="width:100%">
+        <option value="top_seeds" {% if settings.bye_policy == 'top_seeds' %}selected{% endif %}>Highest Tournament Seeds receive unavoidable BYEs</option>
+        <option value="structure_order" {% if settings.bye_policy == 'structure_order' %}selected{% endif %}>Keep structural source order</option>
+      </select><div class="small muted" style="margin-top:4px">If the qualified field does not fill a complete 4/8/16/32 draw, the strongest post-group seeds are protected into the next round. Example: 10 qualifiers → Seeds #1–#6 BYE, Seeds #7–#10 play two preliminary matches.</div></div>
+      <div style="grid-column:1/-1"><div class="small muted">Pairing / reseeding mode</div><select name="pairing_mode" style="width:100%">
+        <option value="first_round_only" {% if settings.pairing_mode == 'first_round_only' %}selected{% endif %}>First knockout round only — then follow the bracket</option>
+        <option value="every_round" {% if settings.pairing_mode == 'every_round' %}selected{% endif %}>Reseed every round — manual override available</option>
+        <option value="fixed_bracket" {% if settings.pairing_mode == 'fixed_bracket' %}selected{% endif %}>Fixed bracket — no reseeding</option>
+      </select></div>
+      <label class="row"><input type="checkbox" name="consolation" {% if tournament.consolation %}checked{% endif %}> Exact placement / consolation</label>
+      <div class="small muted" style="grid-column:1/-1"><strong>Qualification field:</strong> {{ championship_field }} to Championship{% if tournament.consolation and placement_field > 0 %}; {{ placement_field }} to placement/consolation{% endif %}.</div>
+      <div class="actions" style="grid-column:1/-1"><button type="submit">Save settings</button><button type="submit" name="generate_after" value="1">Save & Generate Structure</button></div>
+    </form>
+  </div>
+  <div class="card"><h2>Phase Rules</h2>
+    {% for ph in tournament.phases %}<form method="post" action="/phase/{{ ph.id }}/rules" class="row mb"><strong style="min-width:190px">{{ ph.name }}</strong><label>Best of <select name="best_of"><option {% if ph.best_of==3 %}selected{% endif %}>3</option><option {% if ph.best_of==5 %}selected{% endif %}>5</option></select></label><label>Race to <select name="points_to"><option {% if ph.points_to==15 %}selected{% endif %}>15</option><option {% if ph.points_to==21 %}selected{% endif %}>21</option></select></label><button type="submit">Save</button></form>{% endfor %}
+    <div class="small muted">Win-by-two / deuce scores are accepted.</div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+    <h3>Tournament logo</h3><div class="small muted mb">Shown as a large, subtle fixed watermark behind the tournament view and as a small logo in the bottom-right corner of PDFs.</div>
+    <form method="post" action="/tournament/{{ tournament.id }}/logo" enctype="multipart/form-data" class="row"><input type="file" name="logo" accept=".png,.jpg,.jpeg,.webp" required><button type="submit">Upload logo</button></form>
+    {% if logo_url %}<div class="row mt"><img src="{{ logo_url }}" alt="Tournament logo" style="max-height:54px;max-width:150px;object-fit:contain"><form method="post" action="/tournament/{{ tournament.id }}/logo/delete"><button type="submit" class="btn-secondary">Remove logo</button></form></div>{% endif %}
+  </div>
+</div></details>
+
+<details class="section" id="seeding" open><summary>Seeding</summary><div class="section-body card">
+  <form method="post" action="/tournament/{{ tournament.id }}/players/import_excel" enctype="multipart/form-data" class="row mb"><input type="file" name="file" accept=".xlsx,.xlsm,.xltx,.xltm" required><button type="submit">Import Excel Rank / Name</button></form>
+  <div class="small muted mb">Expected columns: <strong>Rank</strong> and <strong>Name</strong>. Drag to change seeding.</div>
+  <div id="seed-list">{% for p in tournament.players %}<div class="seed-item" draggable="true" data-id="{{ p.id }}"><div><strong>#{{ p.seed }}</strong></div><input class="player-name" value="{{ p.name }}"><input class="player-club" value="{{ p.club }}" placeholder="Club"></div>{% endfor %}</div>
+  <div class="actions mt"><button type="button" onclick="saveSeeding()">Save seeding</button><form method="post" action="/tournament/{{ tournament.id }}/generate"><button type="submit">Generate Structure</button></form></div>
+</div></details>
+
+{% if tournament.system == 'group_knockout' %}
+<details class="section" id="group-assignment" open><summary>Group Assignment</summary><div class="section-body card">
+  <div class="row between mb"><div><h2 style="margin-bottom:4px">Assign teams to groups</h2><div class="small muted">Highest-ranked team inside a group remains position #1.</div></div><span class="pill">{{ 'Manual' if settings.group_assignment_mode == 'manual' else 'Automatic from seeding' }}</span></div>
+  <div class="group-assignment-grid" id="group-assignment-list">{% for p in tournament.players %}<div class="group-assignment-row" data-player-id="{{ p.id }}"><div><strong>#{{ p.seed }}</strong></div><div><strong>{{ p.name }}</strong>{% if p.club %}<div class="small muted">{{ p.club }}</div>{% endif %}</div><select class="manual-group"><option value="">Select group</option>{% for group_name in group_names %}<option value="{{ loop.index }}" {% if settings.manual_groups.get(p.id|string) == loop.index %}selected{% endif %}>Group {{ group_name }}</option>{% endfor %}</select></div>{% endfor %}</div>
+  <div class="actions mt"><button type="button" onclick="saveManualGroups(false)">Save manual groups</button><button type="button" onclick="saveManualGroups(true)">Save & generate structure</button></div>
+</div></details>
+
+<details class="section" id="group-tables" open><summary>Group Tables</summary><div class="section-body card">
+  {% if group_tables %}{% if settings.best_next_place_qualifiers|int > 0 %}<div class="qualification-note mb">Top {{ settings.qualifiers_per_group }} from each group qualify automatically + best {{ settings.best_next_place_qualifiers }} team(s) from position {{ settings.qualifiers_per_group|int + 1 }}.</div>{% endif %}
+  <div class="grid grid-2">{% for group_name, rows in group_tables %}<div class="card" style="padding:12px"><h3>{{ group_name|replace('group_','Group ') }}</h3><table><thead><tr><th>#</th><th>Team</th><th>M</th><th>W</th><th>L</th><th>Pts</th><th>Sets</th><th>Point diff</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ loop.index }}</td><td><strong>{{ row.player.name }}</strong></td><td>{{ row.matches }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.points }}</td><td>{{ row.sets_won }}:{{ row.sets_lost }}</td><td>{{ row.point_diff }}</td></tr>{% endfor %}</tbody></table></div>{% endfor %}</div>
+  {% else %}<div class="muted">Generate the structure to display group tables.</div>{% endif %}
+</div></details>
+{% endif %}
+
+{% if tournament.system == 'group_knockout' and groups_complete %}
+<details class="section" open id="knockout-pairing"><summary>First Knockout Round Pairing</summary><div class="section-body card">
+  <div class="qualification-note mb"><strong>Group Stage complete.</strong> Suggested pairing uses tournament ranking and avoids Group Stage rematches whenever mathematically possible. You can override it manually before a result from this round is entered.</div>
+  {% if tournament_seeds %}<h3>Tournament ranking after groups</h3><div class="seed-ranking header"><div>Seed</div><div>Team</div><div>Group pos.</div><div>PPM</div><div>Set diff/M</div></div>{% for item in tournament_seeds %}<div class="seed-ranking"><div><strong>#{{ item.tournament_seed }}</strong></div><div><strong>{{ item.player.name }}</strong> <span class="small muted">{{ item.group|replace('group_','G') }}</span></div><div>#{{ item.group_position }}</div><div>{{ '%.2f'|format(item.ppm) }}</div><div>{{ '%.2f'|format(item.set_diff_pm) }}</div></div>{% endfor %}<div class="mb"></div>{% endif %}
+  {% if manual_pairing_ready %}<form method="post" action="/tournament/{{ tournament.id }}/knockout_pairing"><div class="grid grid-2">{% for m in knockout_entry_matches %}<div class="pair-card"><div class="small muted mb">Match #{{ m.order_index }}</div><div class="grid grid-2"><select name="match_{{ m.id }}_p1" required>{% for item in knockout_qualifiers %}<option value="{{ item.player.id }}" {% if m.player1_id == item.player.id %}selected{% endif %}>{{ item.player.name }} — {{ item.group|replace('group_','G') }} #{{ item.position }}</option>{% endfor %}</select><select name="match_{{ m.id }}_p2" required>{% for item in knockout_qualifiers %}<option value="{{ item.player.id }}" {% if m.player2_id == item.player.id %}selected{% endif %}>{{ item.player.name }} — {{ item.group|replace('group_','G') }} #{{ item.position }}</option>{% endfor %}</select></div></div>{% endfor %}</div><div class="actions mt"><button type="submit">Save First-Round Pairing</button></div></form>{% else %}<div class="qualification-note">This entry structure contains play-ins/byes and therefore uses the generated slot structure.</div>{% endif %}
+</div></details>
+{% endif %}
+
+{% if round_pairings %}<details class="section" id="round-pairings" open><summary>Reseed / Manual Pairing for Later Rounds</summary><div class="section-body card">
+  <div class="qualification-note mb">Active because <strong>Reseed every round</strong> is selected. If you choose <strong>First knockout round only</strong>, these rounds follow the fixed tree automatically.</div>
+  {% for rp in round_pairings %}<div class="pair-card mb"><h3>{{ rp.section }}</h3><div class="small muted mb">Round depth {{ rp.depth + 1 }}. {% if rp.locked %}Locked because this round or a downstream round already has a user-entered result.{% else %}You may reseed this round.{% endif %}</div>
+    <form method="post" action="/tournament/{{ tournament.id }}/round_pairing"><input type="hidden" name="round_key" value="{{ rp.key }}">{% for m in rp.matches %}<input type="hidden" name="match_id" value="{{ m.id }}">{% endfor %}
+      <div class="grid grid-2">{% for m in rp.matches %}<div class="pair-card"><div class="small muted">Match #{{ m.order_index }}</div><div class="grid grid-2"><select name="match_{{ m.id }}_p1" {% if rp.locked %}disabled{% endif %}>{% for p in rp.players %}<option value="{{ p.id }}" {% if m.player1_id==p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select><select name="match_{{ m.id }}_p2" {% if rp.locked %}disabled{% endif %}>{% for p in rp.players %}<option value="{{ p.id }}" {% if m.player2_id==p.id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select></div></div>{% endfor %}</div>
+      {% if not rp.locked %}<button class="mt" type="submit">Save Pairing for This Round</button>{% endif %}
+    </form>
+  </div>{% endfor %}
+</div></details>{% endif %}
+
+<details class="section" id="matches" open><summary>Matches</summary><div class="section-body card">
+  <div class="row between mb"><div class="small muted">Published match numbers are stable. New post-group matches are placed after the completed group-stage schedule and are not inserted back into the queue.</div><form method="post" action="/tournament/{{ tournament.id }}/schedule" class="row"><label>Courts <input type="number" min="1" name="court_count" value="{{ tournament.court_count }}" style="width:80px"></label><button type="submit">Recalculate courts</button></form></div>
+  {% if tournament.system == 'group_knockout' and matches and not groups_complete %}<div class="qualification-note mb"><strong>Group Stage in progress.</strong> Championship and placement remain locked until every group match has a result.</div>{% endif %}
+  {% if matches %}{% for m in matches %}<div class="match-card" id="match-{{ m.id }}"><div class="match-row">
+    <div><div class="small muted">Order / Court</div><div><strong>#{{ m.order_index }}</strong> · Court {{ m.court_number }}</div></div>
+    <div><div class="small muted">Stage</div><div><strong>{{ m.phase.name if m.phase else '' }}</strong></div><div class="small muted">{{ m.round_name }}{% if m.bracket.startswith('group_') %} · {{ m.bracket|replace('group_','Group ') }}{% endif %}</div></div>
+    <div><div class="small muted">Match</div><div><strong>{{ m.player1.name if m.player1 else 'TBD' }}</strong> vs <strong>{{ m.player2.name if m.player2 else 'TBD' }}</strong></div><div class="small muted">{% if m.phase %}BO{{ m.phase.best_of }} / race to {{ m.phase.points_to }}{% endif %}</div>{% if m.winner %}<div class="small mt">Winner: <strong>{{ m.winner.name }}</strong></div>{% endif %}</div>
+    <div>{% set locked_after_groups = tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not groups_complete %}{% set participants_pending = not m.player1 or not m.player2 %}
+      <form method="post" action="/match/{{ m.id }}/result"><input type="hidden" name="anchor" value="match-{{ m.id }}">{% set existing = score_sets(m.score_json) %}{% set maxsets = m.phase.best_of if m.phase else 3 %}
+        {% for si in range(1,maxsets+1) %}{% set vals = existing[si-1] if existing|length >= si else ['', ''] %}<div class="score-grid"><div class="team-left small">{{ m.player1.name if m.player1 else 'TBD' }}</div><input type="number" min="0" name="set_{{ si }}_p1" value="{{ vals[0] }}" {% if locked_after_groups or participants_pending %}disabled{% endif %}><div class="score-colon">:</div><input type="number" min="0" name="set_{{ si }}_p2" value="{{ vals[1] }}" {% if locked_after_groups or participants_pending %}disabled{% endif %}><div class="team-right small">{{ m.player2.name if m.player2 else 'TBD' }}</div></div>{% endfor %}
+        <button type="submit" {% if locked_after_groups or participants_pending %}disabled{% endif %}>Save result</button>
+      </form>{% if locked_after_groups %}<div class="small muted mt-sm">Locked until Group Stage is complete.</div>{% elif participants_pending %}<div class="small muted mt-sm">Waiting for earlier result.</div>{% endif %}
+    </div>
+  </div></div>{% endfor %}{% else %}<div class="muted">Generate the tournament structure first.</div>{% endif %}
+</div></details>
+
+{% if bracket_sections %}<details class="section" id="tree" open><summary>Tournament Draws</summary><div class="section-body card">
+  <div class="small muted mb">Draws are split into Championship and exact-placement sheets. Future slots show their source (for example <strong>Loser #16</strong>), so every route is visible before the team is known.</div>
+  {% for stage in bracket_sections %}{% if stage.stage != 'Group Stage' %}<div class="bracket-stage"><h2>{{ stage.stage }}</h2>{% for section in stage.sections %}<div class="bracket-section"><h3>{{ section.name }}</h3>{% if settings.pairing_mode == 'every_round' and section.kind == 'championship' %}<span class="reseed-badge">Reseeding may change future-round pairings</span>{% endif %}<div class="bracket-scroll"><div class="bracket-canvas"><svg class="bracket-svg" aria-hidden="true"></svg><div class="bracket-grid">
+    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
+  </div></div></div></div>{% endfor %}</div>{% endif %}{% endfor %}
+</div></details>{% endif %}
+
+<details class="section" id="standings" open><summary>Final Standings</summary><div class="section-body card">{% if ranking %}<table><thead><tr><th>Place</th><th>Team</th><th>Club</th><th>Original seed</th></tr></thead><tbody>{% for p in ranking %}<tr><td>{{ placement_map.get(p.id, loop.index) }}</td><td><strong>{{ p.name }}</strong></td><td>{{ p.club }}</td><td>{{ p.seed }}</td></tr>{% endfor %}</tbody></table>{% else %}<div class="muted">Standings populate as results are entered.</div>{% endif %}</div></details>
+
+<details class="section" id="exports" open><summary>PDF / Exports</summary><div class="section-body card"><div class="actions"><a class="pill" href="/tournament/{{ tournament.id }}/export/pdf">Tournament Bracket PDF</a><a class="pill" href="/tournament/{{ tournament.id }}/export/groups_pdf">Groups & Results PDF</a><a class="pill" href="/tournament/{{ tournament.id }}/export/schedule_pdf">Match Schedule PDF</a><a class="pill" href="/tournament/{{ tournament.id }}/export/final_standings_pdf">Final Standings PDF</a><a class="pill" href="/tournament/{{ tournament.id }}/export/excel">Results Excel</a><a class="pill" href="/tournament/{{ tournament.id }}/export/db">Backup JSON</a></div><div class="small muted mt">PDF layouts are designed for clean printing: neutral typography, thin rules and no dashboard styling.</div></div></details>
+
+<script>
+let dragged=null;
+document.querySelectorAll('.seed-item').forEach(item=>{item.addEventListener('dragstart',()=>{dragged=item;item.classList.add('dragging')});item.addEventListener('dragend',()=>item.classList.remove('dragging'));item.addEventListener('dragover',e=>e.preventDefault());item.addEventListener('drop',e=>{e.preventDefault();if(dragged&&dragged!==item){const list=document.getElementById('seed-list');const nodes=[...list.children];const a=nodes.indexOf(dragged),b=nodes.indexOf(item);if(a<b)list.insertBefore(dragged,item.nextSibling);else list.insertBefore(dragged,item);renumber();}})});
+function renumber(){document.querySelectorAll('.seed-item').forEach((el,i)=>el.querySelector('strong').textContent='#'+(i+1));}
+async function saveSeeding(){const players=[...document.querySelectorAll('.seed-item')].map((el,i)=>({id:el.dataset.id,name:el.querySelector('.player-name').value,club:el.querySelector('.player-club').value,seed:i+1}));const res=await fetch('/tournament/{{ tournament.id }}/players',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({players})});if(res.ok)location.reload();else alert('Save error');}
+async function saveManualGroups(generateAfter){const rows=[...document.querySelectorAll('.group-assignment-row')],manual_groups={};for(const row of rows){const value=row.querySelector('.manual-group').value;if(!value){alert('Assign every team to a group first.');return;}manual_groups[row.dataset.playerId]=parseInt(value,10);}const res=await fetch('/tournament/{{ tournament.id }}/groups',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({group_count:{{ settings.group_count }},group_assignment_mode:'manual',manual_groups})});if(!res.ok){alert('Group assignment save error');return;}if(generateAfter){const f=document.createElement('form');f.method='POST';f.action='/tournament/{{ tournament.id }}/generate';document.body.appendChild(f);f.submit();}else location.reload();}
+
+function drawBracketConnectors(){
+  document.querySelectorAll('.bracket-canvas').forEach(canvas=>{
+    const svg=canvas.querySelector('.bracket-svg'), grid=canvas.querySelector('.bracket-grid');
+    if(!svg||!grid)return;
+    const rounds=[...grid.querySelectorAll('.bracket-round')];
+    if(!rounds.length)return;
+
+    const headerTop=54, bottomPad=18, gapY=16;
+    const roundNeeds=rounds.map(round=>{
+      const cards=[...round.querySelectorAll('.bracket-match')];
+      return headerTop + bottomPad + cards.reduce((sum,c)=>sum+Math.max(84,c.offsetHeight||84),0) + gapY*Math.max(0,cards.length-1);
+    });
+    let boardH=Math.max(390,...roundNeeds);
+    rounds.forEach(r=>r.style.height=boardH+'px');
+    const byKey={};
+
+    rounds.forEach((round,ri)=>{
+      const cards=[...round.querySelectorAll('.bracket-match')];
+      if(!cards.length)return;
+      const items=cards.map((card,ci)=>{
+        const h=Math.max(84,card.offsetHeight||84);
+        let desiredCenter;
+        if(ri===0){
+          const usable=boardH-headerTop-bottomPad;
+          desiredCenter=headerTop+usable*((ci+.5)/cards.length);
+        }else{
+          const deps=(card.dataset.sourceKeys||'').split(',').filter(Boolean).map(k=>byKey[k]).filter(Boolean);
+          desiredCenter=deps.length ? deps.reduce((a,b)=>a+b.center,0)/deps.length : headerTop+(boardH-headerTop-bottomPad)*((ci+.5)/cards.length);
+        }
+        return {card,h,desiredTop:desiredCenter-h/2,top:0};
+      }).sort((a,b)=>a.desiredTop-b.desiredTop);
+
+      // Resolve collisions as one block, then shift the entire block inside bounds.
+      let cursor=headerTop;
+      items.forEach(it=>{it.top=Math.max(it.desiredTop,cursor); cursor=it.top+it.h+gapY;});
+      let overflow=(items[items.length-1].top+items[items.length-1].h)-(boardH-bottomPad);
+      if(overflow>0) items.forEach(it=>it.top-=overflow);
+      let under=headerTop-items[0].top;
+      if(under>0) items.forEach(it=>it.top+=under);
+      // Final forward pass guarantees no overlap after boundary shifts.
+      cursor=headerTop;
+      items.forEach(it=>{it.top=Math.max(it.top,cursor); cursor=it.top+it.h+gapY;});
+      if(cursor-gapY>boardH-bottomPad){
+        boardH=cursor-gapY+bottomPad;
+        rounds.forEach(r=>r.style.height=boardH+'px');
+      }
+      items.forEach(it=>{
+        it.card.style.top=it.top+'px';
+        const center=it.top+it.h/2;
+        if(it.card.dataset.matchKey)byKey[it.card.dataset.matchKey]={el:it.card,center};
+      });
+    });
+
+    const w=grid.scrollWidth,h=Math.max(grid.scrollHeight,boardH);
+    svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML='';
+    const root=canvas.getBoundingClientRect();
+    grid.querySelectorAll('.bracket-match').forEach(target=>{
+      const keys=(target.dataset.sourceKeys||'').split(',').filter(Boolean); if(!keys.length)return;
+      const tr=target.getBoundingClientRect(),tx=tr.left-root.left,ty=tr.top-root.top+tr.height/2;
+      keys.forEach(key=>{
+        const source=byKey[key]?.el;if(!source)return;
+        const sr=source.getBoundingClientRect();const sx=sr.right-root.left,sy=sr.top-root.top+sr.height/2;if(tx<=sx)return;
+        const bend=sx+(tx-sx)*.5;
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('class','bracket-connector');path.setAttribute('d',`M ${sx} ${sy} H ${bend} V ${ty} H ${tx}`);svg.appendChild(path);
+      });
+    });
+  });
+}
+window.addEventListener('load',drawBracketConnectors);window.addEventListener('resize',()=>requestAnimationFrame(drawBracketConnectors));document.querySelectorAll('details.section').forEach(d=>d.addEventListener('toggle',()=>setTimeout(drawBracketConnectors,20)));
+</script>
+{% endblock %}
