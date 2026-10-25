@@ -22,9 +22,9 @@
 <div id="page-bottom" aria-hidden="true"></div>
 <nav class="page-jumps" aria-label="Przewijanie strony"><a href="#page-top" aria-label="Na górę" title="Na górę">↑</a><a href="#page-bottom" aria-label="Na dół" title="Na dół">↓</a></nav>
 <style>
-.wrap .page-jumps{position:fixed;right:18px;bottom:24px;z-index:55!important;display:flex;flex-direction:column;gap:8px}
-.page-jumps a{display:grid;place-items:center;width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--link);font-size:25px;line-height:1;box-shadow:0 3px 12px #0002}
-.page-jumps a:hover{background:var(--panel2)}.page-jumps a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.wrap .page-jumps{position:fixed!important;right:14px;bottom:calc(24px + env(safe-area-inset-bottom, 0px));z-index:55!important;display:flex;flex-direction:column;gap:8px}
+.page-jumps a{display:grid;place-items:center;width:48px;height:48px;border:2px solid var(--panel);border-radius:50%;background:var(--accent);color:var(--accentText);font-size:27px;font-weight:700;line-height:1;box-shadow:0 3px 12px #0002}
+.page-jumps a:hover{filter:brightness(.9)}.page-jumps a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 #page-bottom{height:100px}#page-top{scroll-margin-top:16px}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
