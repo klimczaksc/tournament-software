@@ -1225,6 +1225,43 @@ def resolve_source(source, tournament_id, matches_by_key, group_tables_by_key, g
     return None
 
 
+def source_state(source, tournament_id, matches_by_key, group_tables_by_key,
+                 groups_complete=True, visiting=None):
+    """Return (player_id, resolved). A pending feeder is never an empty slot."""
+    if not source or source.get('kind') == 'empty':
+        return None, True
+    kind = source.get('kind')
+    if kind in ('player', 'group_pos', 'best_group_pos'):
+        if kind != 'player' and not groups_complete:
+            return None, False
+        return resolve_source(source, tournament_id, matches_by_key,
+                              group_tables_by_key, groups_complete), True
+    if kind not in ('winner', 'loser'):
+        return None, False
+    key = source.get('match_key')
+    visiting = set(visiting or ())
+    if key in visiting or key not in matches_by_key:
+        return None, False
+    visiting.add(key)
+    feeder = matches_by_key[key]
+    inputs = meta_for(feeder).get('sources') or []
+    if inputs:
+        states = [source_state(src, tournament_id, matches_by_key,
+                               group_tables_by_key, groups_complete, visiting)
+                  for src in inputs]
+        if not all(ready for _, ready in states):
+            return None, False
+        participants = [pid for pid, _ in states if pid is not None]
+        if len(participants) < 2:
+            # A proven structural BYE has a winner but no loser.
+            return (participants[0] if participants and kind == 'winner' else None), True
+        if [feeder.player1_id, feeder.player2_id] != [pid for pid, _ in states]:
+            return None, False
+    if not feeder.winner_id:
+        return None, False
+    return (feeder.winner_id if kind == 'winner' else feeder.loser_id), True
+
+
 def propagate_all(tournament_id):
     t = Tournament.query.get(tournament_id)
     if not t:
@@ -1247,8 +1284,10 @@ def propagate_all(tournament_id):
             meta = meta_for(m)
             sources = meta.get('sources') or []
             if sources:
-                new_p1 = resolve_source(sources[0], tournament_id, matches_by_key, group_tables_by_key, groups_complete) if len(sources) > 0 else None
-                new_p2 = resolve_source(sources[1], tournament_id, matches_by_key, group_tables_by_key, groups_complete) if len(sources) > 1 else None
+                states = [source_state(src, tournament_id, matches_by_key,
+                                       group_tables_by_key, groups_complete) for src in sources]
+                new_p1 = states[0][0] if states else None
+                new_p2 = states[1][0] if len(states) > 1 else None
                 if m.player1_id != new_p1 or m.player2_id != new_p2:
                     m.player1_id = new_p1
                     m.player2_id = new_p2
@@ -1257,12 +1296,18 @@ def propagate_all(tournament_id):
                     m.loser_id = None
                     changed = True
 
-            if m.player1_id and not m.player2_id:
+            inputs_ready = not sources or all(ready for _, ready in states)
+            # Clear legacy automatic wins while an upstream outcome is pending.
+            if not inputs_ready and (m.winner_id or m.loser_id):
+                m.winner_id = None
+                m.loser_id = None
+                changed = True
+            if inputs_ready and m.player1_id and not m.player2_id:
                 if m.winner_id != m.player1_id or m.loser_id is not None:
                     m.winner_id = m.player1_id
                     m.loser_id = None
                     changed = True
-            elif m.player2_id and not m.player1_id:
+            elif inputs_ready and m.player2_id and not m.player1_id:
                 if m.winner_id != m.player2_id or m.loser_id is not None:
                     m.winner_id = m.player2_id
                     m.loser_id = None
@@ -1276,6 +1321,25 @@ def propagate_all(tournament_id):
         if not changed:
             break
     db.session.commit()
+
+
+def repair_unplayed_brackets(tournament_id=None):
+    repaired = []
+    query = Tournament.query.filter_by(id=tournament_id) if tournament_id is not None else Tournament.query
+    for t in query.all():
+        matches = list(t.matches)
+        generated = [m for m in matches if meta_for(m).get('sources')]
+        if not generated or any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in generated):
+            continue
+        # Idempotent: only reconsider tournaments with legacy unscored wins.
+        if not any(m.winner_id for m in generated):
+            continue
+        before = [(m.id, m.player1_id, m.player2_id, m.winner_id, m.loser_id) for m in generated]
+        propagate_all(t.id)
+        after = [(m.id, m.player1_id, m.player2_id, m.winner_id, m.loser_id) for m in generated]
+        if before != after:
+            repaired.append(t.id)
+    return repaired
 
 
 def assign_schedule(tournament, renumber=False):
@@ -1504,6 +1568,7 @@ def import_database_json(payload):
     t = Tournament(name=td['name'], player_count=td['player_count'], system=td['system'], consolation=td['consolation'], court_count=td['court_count'], settings_json=td.get('settings_json', '{}'))
     imported_settings = settings_for(t)
     imported_settings.pop('public_token', None)
+    imported_settings.pop('public_slug', None)
     imported_settings['public_enabled'] = False
     save_settings_dict(t, imported_settings)
     db.session.add(t)
@@ -1519,7 +1584,18 @@ def import_database_json(payload):
         phases.append(phase)
     db.session.flush()
     by_order = {ph.order_index: ph for ph in phases}
+    old_id_to_new = {}
+    for saved in raw.get('matches', []):
+        metadata = json.loads(saved.get('notes') or '{}')
+        for slot, source in enumerate(metadata.get('sources') or []):
+            seed = saved.get(f'player{slot + 1}_seed')
+            if source.get('kind') == 'player' and seed in seed_to_player:
+                old_id_to_new[source.get('player_id')] = seed_to_player[seed].id
     for m in raw.get('matches', []):
+        metadata = json.loads(m.get('notes') or '{}')
+        for source in metadata.get('sources') or []:
+            if source.get('kind') == 'player':
+                source['player_id'] = old_id_to_new.get(source.get('player_id'))
         db.session.add(Match(
             tournament_id=t.id,
             phase_id=by_order.get(m.get('phase_order')).id if by_order.get(m.get('phase_order')) else None,
@@ -1529,9 +1605,10 @@ def import_database_json(payload):
             score_json=m.get('score_json', '[]'),
             winner_id=seed_to_player[m['winner_seed']].id if m.get('winner_seed') in seed_to_player else None,
             loser_id=seed_to_player[m['loser_seed']].id if m.get('loser_seed') in seed_to_player else None,
-            notes=m.get('notes', ''),
+            notes=json.dumps(metadata, ensure_ascii=False),
         ))
     db.session.commit()
+    repair_unplayed_brackets(t.id)
     return t
 
 
@@ -2584,6 +2661,10 @@ def delete_tournament(tournament_id):
 
 from online import configure_online
 configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)
+with app.app_context():
+    repaired = repair_unplayed_brackets()
+    if repaired:
+        app.logger.info('Repaired pending bracket outcomes for tournament IDs: %s', repaired)
 
 if __name__ == '__main__':
     with app.app_context():

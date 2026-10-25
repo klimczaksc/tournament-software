@@ -2,6 +2,8 @@
 import os
 import secrets
 import hmac
+import re
+import unicodedata
 from flask import request, session, g, abort, redirect, url_for, render_template, flash
 from flask_wtf.csrf import CSRFProtect
 from flask_limiter import Limiter
@@ -28,7 +30,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if g.user and (not g.user.active or session.get('version') != g.user.version):
             session.clear()
             g.user = None
-        public = {'login', 'setup', 'health', 'public_tournament', 'static'}
+        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static'}
         if request.endpoint in public:
             return
         if not g.user:
@@ -160,6 +162,16 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         flash('Styl interfejsu zapisany.')
         return redirect(url_for('tournament_view', tournament_id=t.id))
 
+    def make_public_slug(t):
+        stem = unicodedata.normalize('NFKD', t.name.replace('ł', 'l').replace('Ł', 'L'))
+        stem = stem.encode('ascii', 'ignore').decode().lower()
+        stem = re.sub(r'[^a-z0-9]+', '-', stem).strip('-')[:48] or 'turniej'
+        used = {settings_for(other).get('public_slug') for other in Tournament.query.all()}
+        while True:
+            slug = stem + '-' + secrets.token_hex(3)
+            if slug not in used:
+                return slug
+
     @app.route('/tournament/<int:tournament_id>/publish', methods=['POST'])
     def publish(tournament_id):
         t = db.get_or_404(Tournament, tournament_id)
@@ -168,6 +180,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         # Re-enabling creates a new link; old links stay invalid.
         if data['public_enabled'] and not settings_for(t).get('public_enabled'):
             data['public_token'] = secrets.token_urlsafe(24)
+            data['public_slug'] = make_public_slug(t)
         save_settings(t, data)
         db.session.commit()
         return redirect(url_for('tournament_view', tournament_id=t.id))
@@ -180,7 +193,24 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         g.public_view = True
         return tournament_view(t.id)
 
+    @app.route('/t/<slug>')
+    def public_short(slug):
+        t = next((t for t in Tournament.query.all()
+                  if settings_for(t).get('public_enabled')
+                  and settings_for(t).get('public_slug') == slug), None)
+        if not t:
+            abort(404)
+        g.public_view = True
+        return tournament_view(t.id)
+
     dummy_hash = generate_password_hash(secrets.token_urlsafe(32))
     with app.app_context():
         db.create_all()
+        # Existing player links keep working; publish a shorter alias alongside them.
+        for t in Tournament.query.all():
+            data = settings_for(t)
+            if data.get('public_enabled') and not data.get('public_slug'):
+                data['public_slug'] = make_public_slug(t)
+                save_settings(t, data)
+        db.session.commit()
     app.extensions['online_user'] = User

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}{% block content %}
-<div class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill">Tylko do odczytu · odświeżanie co 30 s</span></div>
+<div id="page-top" class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill">Tylko do odczytu · odświeżanie co 30 s</span></div>
 <nav class="actions mb"><a class="pill" href="#schedule">Harmonogram i wyniki</a><a class="pill" href="#tree">Drabinka</a><a class="pill" href="#standings">Klasyfikacja</a></nav>
 <details class="section" id="schedule" open><summary>Harmonogram i wyniki</summary><div class="section-body card"><input id="filter" placeholder="Szukaj drużyny / zawodnika" style="width:100%;margin-bottom:12px">
 {% for m in matches %}<article class="match-card"><div class="row between"><strong>#{{ m.order_index }} · Boisko {{ m.court_number }}</strong><span class="pill">{{ 'Zakończony' if m.winner_id else 'Oczekuje' }}</span></div><p><strong>{{ m.player1.name if m.player1 else source_label(m,0) }}</strong> — <strong>{{ m.player2.name if m.player2 else source_label(m,1) }}</strong></p><div>{{ m.phase.name if m.phase else '' }} · {{ m.round_name }}</div><p>{{ score_to_text(m.score_json) or '—' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p></article>{% else %}<p>Harmonogram zostanie opublikowany po wygenerowaniu turnieju.</p>{% endfor %}</div></details>
@@ -19,6 +19,15 @@
 
 <details class="section" id="standings" open><summary>Final Standings</summary><div class="section-body card">{% if ranking %}<table><thead><tr><th>Place</th><th>Team</th><th>Club</th><th>Original seed</th></tr></thead><tbody>{% for p in ranking %}<tr><td>{{ placement_map.get(p.id, loop.index) }}</td><td><strong>{{ p.name }}</strong></td><td>{{ p.club }}</td><td>{{ p.seed }}</td></tr>{% endfor %}</tbody></table>{% else %}<div class="muted">Standings populate as results are entered.</div>{% endif %}</div></details>
 
+<div id="page-bottom" aria-hidden="true"></div>
+<nav class="page-jumps" aria-label="Przewijanie strony"><a href="#page-top" aria-label="Na górę" title="Na górę">↑</a><a href="#page-bottom" aria-label="Na dół" title="Na dół">↓</a></nav>
+<style>
+.wrap .page-jumps{position:fixed;right:18px;bottom:24px;z-index:55!important;display:flex;flex-direction:column;gap:8px}
+.page-jumps a{display:grid;place-items:center;width:46px;height:46px;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--link);font-size:25px;line-height:1;box-shadow:0 3px 12px #0002}
+.page-jumps a:hover{background:var(--panel2)}.page-jumps a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+#page-bottom{height:100px}#page-top{scroll-margin-top:16px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
 <script>
 document.getElementById('filter').addEventListener('input',e=>document.querySelectorAll('#schedule article').forEach(a=>a.hidden=!a.textContent.toLowerCase().includes(e.target.value.toLowerCase())));
 const viewKey='player-view:'+location.pathname;

@@ -156,3 +156,84 @@ def test_tournament_appearance_is_shared_persistent_and_isolated():
     assert admin.post(path+'/appearance',data={'interface_style':'classic','csrf_token':token}).status_code == 302
     assert 'data-style="classic"' in guest.get(public).text
     assert 'data-style="classic"' in admin.get(path).text
+
+
+def test_pending_placement_fixture_preserves_groups_and_finishes_all_places():
+    from pathlib import Path
+    from app import import_database_json, propagate_all, meta_for, set_meta, placement_map, tournament_is_complete, score_sets
+    payload = (Path(__file__).parent/'fixtures/pending_placement_13.json').read_text()
+    raw = __import__('json').loads(payload)
+    expected_groups = [(m['order_index'], m['score_json'], m['winner_seed']) for m in raw['matches'] if m['bracket'].startswith('group_')]
+    with app.app_context():
+        t = import_database_json(payload) # Includes safe legacy repair; IDs differ from source DB.
+        by_number = {m.order_index: m for m in t.matches}
+        groups = [(m.order_index, m.score_json, m.winner.seed) for m in t.matches if m.bracket.startswith('group_')]
+        assert groups == expected_groups
+        assert by_number[33].player1.seed == 10
+        assert by_number[33].player2_id is None and by_number[33].winner_id is None
+        assert by_number[38].player1_id is None and by_number[38].player2_id is None
+        assert by_number[38].winner_id is None
+        assert placement_map(t) == {}
+        assert not tournament_is_complete(t)
+        # Every participant in the imported championship remains in this tournament.
+        own_ids = {p.id for p in t.players}
+        for number in (23,24,25,26):
+            assert by_number[number].player1_id in own_ids and by_number[number].player2_id in own_ids
+        def record(m):
+            assert m.player1_id and m.player2_id
+            m.score_json = '[[15, 5], [15, 5]]'
+            m.winner_id, m.loser_id = m.player1_id, m.player2_id
+            md = meta_for(m); md['user_result_entered'] = True; set_meta(m,md)
+            db.session.commit(); propagate_all(t.id)
+        # Resolving #27 supplies the missing player in #33; it does not award a win there.
+        record(by_number[27])
+        assert by_number[33].player2_id == by_number[27].winner_id
+        assert by_number[33].winner_id is None and by_number[38].player2_id is None
+        # Finish the rest and verify a unique exact ranking of all thirteen players.
+        for _ in range(50):
+            playable = [m for m in t.matches if m.player1_id and m.player2_id and not m.winner_id]
+            if not playable: break
+            record(playable[0])
+        assert tournament_is_complete(t)
+        places = placement_map(t)
+        assert set(places) == own_ids and sorted(places.values()) == list(range(1,14))
+        assert places[by_number[27].loser_id] == 13
+        groups_after = [(m.order_index, m.score_json, m.winner.seed) for m in t.matches if m.bracket.startswith('group_')]
+        assert groups_after == expected_groups
+
+
+def test_proven_structural_byes_still_advance():
+    from app import create_tournament, add_match, propagate_all, meta_for
+    with app.app_context():
+        t = create_tournament('Structural BYE', 2, 'single_elimination', True, 1)
+        player = t.players[0]
+        phase = t.phases[0]
+        a = add_match(t.id,phase.id,1,'main','BYE',{'kind':'player','player_id':player.id},{'kind':'empty'},'Championship',1,2,0,0,'bye_a')
+        b = add_match(t.id,phase.id,2,'main','Next',{'kind':'winner','match_key':'bye_a'},{'kind':'empty'},'Championship',1,2,1,0,'bye_b')
+        db.session.commit(); propagate_all(t.id)
+        assert a.winner_id == player.id and b.winner_id == player.id
+
+
+def test_short_public_links_navigation_and_revocation():
+    from app import create_tournament, settings_for
+    admin=app.test_client(); login(admin,'admin','Abc123!x'); token=csrf(admin,'/')
+    with app.app_context():
+        tid=create_tournament('Puchar Łódź 2026',4,'single_elimination',True,1).id
+    path=f'/tournament/{tid}'
+    admin.post(path+'/publish', data={'published':'on','csrf_token':token})
+    with app.app_context():
+        settings=settings_for(db.session.get(Tournament,tid))
+        slug=settings['public_slug']; old='/players/'+settings['public_token']
+        assert slug.startswith('puchar-lodz-2026-') and len(slug)<40
+    guest=app.test_client()
+    page=guest.get('/t/'+slug)
+    assert page.status_code==200
+    assert 'aria-label="Na górę"' in page.text and 'aria-label="Na dół"' in page.text
+    assert guest.get(old).status_code==200
+    assert '/t/'+slug in admin.get(path).text
+    admin.post(path+'/publish',data={'csrf_token':token})
+    assert guest.get('/t/'+slug).status_code==404 and guest.get(old).status_code==404
+    admin.post(path+'/publish',data={'published':'on','csrf_token':token})
+    assert guest.get('/t/'+slug).status_code==404
+    with app.app_context():
+        assert settings_for(db.session.get(Tournament,tid))['public_slug'] != slug
