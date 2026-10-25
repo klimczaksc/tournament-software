@@ -32,7 +32,7 @@ clock times. Existing v11 double-elimination and Swiss generation behavior is re
    Never commit these values to GitHub.
 4. Deploy, check `/health`, then generate a Railway public domain.
 5. Open `https://YOUR-DOMAIN/setup?token=YOUR-SETUP-TOKEN` privately. Create the
-   first administrator (password minimum 12 characters). This endpoint permanently
+   first administrator (password minimum 8 characters). This endpoint permanently
    closes once the first administrator exists; remove SETUP_TOKEN afterwards.
 6. Log in at `/login`. Use **Konta** to create read-only accounts or deactivate
    them/reset their passwords. Deactivation and resets invalidate existing sessions.

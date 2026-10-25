@@ -21,18 +21,19 @@ def test_full_access_lifecycle():
     assert guest.get('/').status_code==302
     assert guest.get('/setup').status_code==404
     token=csrf(admin,'/setup?token=test-only-token')
-    assert admin.post('/setup',data=dict(token='test-only-token',username='admin',password='StrongPassword123',csrf_token=token)).status_code==302
+    assert admin.post('/setup',data=dict(token='test-only-token',username='admin',password='1234567',csrf_token=token)).status_code==200
+    assert admin.post('/setup',data=dict(token='test-only-token',username='admin',password='Abc123!x',csrf_token=token)).status_code==302
     assert guest.get('/setup?token=test-only-token').status_code==404
     assert login(admin,'admin','wrong').status_code==200
-    assert login(admin,'admin','StrongPassword123').status_code==302
+    assert login(admin,'admin','Abc123!x').status_code==302
     token=csrf(admin,'/')
     assert admin.post('/create',data=dict(name='Test Cup',player_count=4,system='single_elimination',court_count=2,consolation='on',csrf_token=token)).status_code==302
     with app.app_context(): tid=Tournament.query.first().id
     path=f'/tournament/{tid}'
     assert admin.post(path+'/generate',data=dict(csrf_token=token)).status_code==302
     assert admin.get(path).status_code==200
-    assert admin.post('/accounts',data=dict(username='reader',password='ReaderPassword123',csrf_token=token)).status_code==302
-    assert login(viewer,'reader','ReaderPassword123').status_code==302
+    assert admin.post('/accounts',data=dict(username='reader',password='Read123!',csrf_token=token)).status_code==302
+    assert login(viewer,'reader','Read123!').status_code==302
     page=viewer.get(path)
     assert page.status_code==200 and 'Save result' not in page.text and 'Tournament Draws' in page.text
     assert 'Delete' not in viewer.get('/').text

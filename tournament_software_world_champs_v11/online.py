@@ -73,8 +73,8 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if request.method == 'POST':
             username = request.form.get('username', '').strip().lower()
             password = request.form.get('password', '')
-            if not 3 <= len(username) <= 80 or len(password) < 12:
-                flash('Login: 3–80 znaków. Hasło: minimum 12 znaków.')
+            if not 3 <= len(username) <= 80 or len(password) < 8:
+                flash('Login: 3–80 znaków. Hasło: minimum 8 znaków.')
             else:
                 db.session.add(User(username=username, password_hash=generate_password_hash(password), role='admin'))
                 db.session.commit()
@@ -107,8 +107,8 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
     def password():
         if request.method == 'POST':
             new = request.form.get('password', '')
-            if not check_password_hash(g.user.password_hash, request.form.get('current_password', '')) or len(new) < 12:
-                flash('Sprawdź obecne hasło. Nowe hasło wymaga minimum 12 znaków.')
+            if not check_password_hash(g.user.password_hash, request.form.get('current_password', '')) or len(new) < 8:
+                flash('Sprawdź obecne hasło. Nowe hasło wymaga minimum 8 znaków.')
             else:
                 g.user.password_hash = generate_password_hash(new)
                 g.user.version += 1
@@ -125,8 +125,8 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
             if action == 'create':
                 name = request.form.get('username', '').strip().lower()
                 pwd = request.form.get('password', '')
-                if not 3 <= len(name) <= 80 or len(pwd) < 12 or User.query.filter_by(username=name).first():
-                    flash('Login musi być unikalny (3–80 znaków), hasło: minimum 12 znaków.')
+                if not 3 <= len(name) <= 80 or len(pwd) < 8 or User.query.filter_by(username=name).first():
+                    flash('Login musi być unikalny (3–80 znaków), hasło: minimum 8 znaków.')
                 else:
                     db.session.add(User(username=name, password_hash=generate_password_hash(pwd), role='viewer'))
                     db.session.commit()
@@ -137,7 +137,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
                     abort(400)
                 if action == 'toggle':
                     user.active = not user.active
-                elif action == 'reset' and len(request.form.get('password', '')) >= 12:
+                elif action == 'reset' and len(request.form.get('password', '')) >= 8:
                     user.password_hash = generate_password_hash(request.form['password'])
                 else:
                     abort(400)
