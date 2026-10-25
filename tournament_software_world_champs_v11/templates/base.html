@@ -32,9 +32,19 @@
     .creator-credit{position:fixed;right:12px;bottom:7px;z-index:60;font-size:10px;line-height:1.2;color:var(--muted);opacity:.72;pointer-events:none;user-select:none;letter-spacing:.01em}
     @media(max-width:650px){.wrap:has(.side-menu){padding-left:172px}.side-menu{width:154px;padding:12px 8px}.side-menu a,.side-menu button{padding:8px 7px;font-size:12px}.group-assignment-row{grid-template-columns:55px 1fr}.group-assignment-row select{grid-column:1/-1}.score-grid{grid-template-columns:1fr 52px 14px 52px 1fr}.bracket-grid{grid-auto-columns:220px;column-gap:54px}.bracket-round{min-height:440px}}
   </style>
-</head>
+<script>
+const csrfToken={{ csrf_token()|tojson }};
+const originalFetch=window.fetch;
+window.fetch=(input,init={})=>{if(init.method && !['GET','HEAD'].includes(init.method.toUpperCase())){init.headers=new Headers(init.headers||{});init.headers.set('X-CSRFToken',csrfToken);}return originalFetch(input,init);};
+function protectForm(f){if(f.method.toLowerCase()==='post'&&!f.querySelector('[name=csrf_token]')){const x=document.createElement('input');x.type='hidden';x.name='csrf_token';x.value=csrfToken;f.appendChild(x);}}
+const originalSubmit=HTMLFormElement.prototype.submit;
+HTMLFormElement.prototype.submit=function(){protectForm(this);return originalSubmit.call(this);};
+document.addEventListener('DOMContentLoaded',()=>document.querySelectorAll('form').forEach(protectForm));
+document.addEventListener('submit',e=>protectForm(e.target));
+</script><style>@media(max-width:650px){.wrap{padding:16px 12px 40px}table{display:block;overflow:auto}.wrap:has(.side-menu){padding:16px 12px 40px}.side-menu{position:relative!important;width:100%;border:1px solid var(--line);border-radius:12px;margin-bottom:18px}.side-menu a,.side-menu button{display:inline-block;width:auto}.bracket-grid{grid-auto-columns:220px}}</style></head>
 <body>
 <div class="wrap">
+{% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ 'Administrator' if is_admin else 'Odczyt' }}</span>{% if is_admin %}<a class="pill" href="/accounts">Konta</a>{% endif %}<a class="pill" href="/password">Zmień hasło</a><form method="post" action="/logout"><button>Wyloguj</button></form></div></div>{% endif %}
   {% with messages = get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
   {% block content %}{% endblock %}
 </div>

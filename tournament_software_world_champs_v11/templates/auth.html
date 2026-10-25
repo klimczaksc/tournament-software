@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block content %}
+<div class="card" style="max-width:440px;margin:8vh auto"><h1>Tournament Software</h1><h2>{{ 'Pierwsze konto administratora' if mode == 'setup' else 'Zmień hasło' if mode == 'password' else 'Logowanie' }}</h2>
+<form method="post" class="grid">
+{% if mode == 'setup' %}<input type="hidden" name="token" value="{{ token }}">{% endif %}
+{% if mode != 'password' %}<label>Login<input name="username" autocomplete="username" required minlength="3" maxlength="80" style="width:100%"></label>{% else %}<label>Obecne hasło<input type="password" name="current_password" autocomplete="current-password" required style="width:100%"></label>{% endif %}
+<label>{{ 'Nowe hasło (min. 12 znaków)' if mode != 'login' else 'Hasło' }}<input type="password" name="password" autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}" required {% if mode != 'login' %}minlength="12"{% endif %} style="width:100%"></label><button>{{ 'Zaloguj się' if mode == 'login' else 'Zapisz' }}</button></form></div>
+{% endblock %}

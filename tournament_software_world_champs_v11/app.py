@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
+from flask import g, session, abort, Flask, render_template, request, redirect, url_for, send_file, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Integer, String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,17 +13,31 @@ from reportlab.lib.utils import ImageReader
 from werkzeug.utils import secure_filename
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'tournament.db')
+DATA_DIR = os.environ.get('DATA_DIR', BASE_DIR)
+os.makedirs(DATA_DIR, exist_ok=True)
+DB_PATH = os.path.join(DATA_DIR, 'tournament.db')
 APP_PORT = 5069
 APP_URL = f'http://127.0.0.1:{APP_PORT}'
 CREATOR_CREDIT = 'created by Michał Klimczak (klimczak.sc@gmail.com)'
-UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
+UPLOAD_DIR = os.path.join(DATA_DIR, 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_PATH}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'dev-secret-change-me'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+if not app.config['SECRET_KEY']:
+    secret_path = os.path.join(DATA_DIR, '.session-secret')
+    if not os.path.exists(secret_path):
+        with open(secret_path, 'w') as f:
+            f.write(uuid.uuid4().hex + uuid.uuid4().hex)
+        os.chmod(secret_path, 0o600)
+    with open(secret_path) as f:
+        app.config['SECRET_KEY'] = f.read()
+app.config.update(MAX_CONTENT_LENGTH=8 * 1024 * 1024,
+    SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('COOKIE_SECURE', '1' if os.environ.get('RAILWAY_ENVIRONMENT_ID') else '0') == '1',
+    PERMANENT_SESSION_LIFETIME=__import__('datetime').timedelta(hours=12))
 db = SQLAlchemy(app)
 
 POPULAR_SYSTEMS = [
@@ -1488,6 +1502,10 @@ def import_database_json(payload):
     raw = json.loads(payload)
     td = raw['tournament']
     t = Tournament(name=td['name'], player_count=td['player_count'], system=td['system'], consolation=td['consolation'], court_count=td['court_count'], settings_json=td.get('settings_json', '{}'))
+    imported_settings = settings_for(t)
+    imported_settings.pop('public_token', None)
+    imported_settings['public_enabled'] = False
+    save_settings_dict(t, imported_settings)
     db.session.add(t)
     db.session.flush()
     for p in raw.get('players', []):
@@ -2084,7 +2102,7 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title)
+    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title)
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])
@@ -2563,6 +2581,9 @@ def delete_tournament(tournament_id):
     flash('Tournament deleted.')
     return redirect(url_for('index'))
 
+
+from online import configure_online
+configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)
 
 if __name__ == '__main__':
     with app.app_context():

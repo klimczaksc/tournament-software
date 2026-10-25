@@ -1,0 +1,98 @@
+{% extends 'base.html' %}{% block content %}
+<div class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill">Tylko do odczytu · odświeżanie co 30 s</span></div>
+<nav class="actions mb"><a class="pill" href="#schedule">Harmonogram i wyniki</a><a class="pill" href="#tree">Drabinka</a><a class="pill" href="#standings">Klasyfikacja</a></nav>
+<details class="section" id="schedule" open><summary>Harmonogram i wyniki</summary><div class="section-body card"><input id="filter" placeholder="Szukaj drużyny / zawodnika" style="width:100%;margin-bottom:12px">
+{% for m in matches %}<article class="match-card"><div class="row between"><strong>#{{ m.order_index }} · Boisko {{ m.court_number }}</strong><span class="pill">{{ 'Zakończony' if m.winner_id else 'Oczekuje' }}</span></div><p><strong>{{ m.player1.name if m.player1 else source_label(m,0) }}</strong> — <strong>{{ m.player2.name if m.player2 else source_label(m,1) }}</strong></p><div>{{ m.phase.name if m.phase else '' }} · {{ m.round_name }}</div><p>{{ score_to_text(m.score_json) or '—' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p></article>{% else %}<p>Harmonogram zostanie opublikowany po wygenerowaniu turnieju.</p>{% endfor %}</div></details>
+{% if tournament.system == 'group_knockout' %}<details class="section" id="group-tables" open><summary>Group Tables</summary><div class="section-body card">
+  {% if group_tables %}{% if settings.best_next_place_qualifiers|int > 0 %}<div class="qualification-note mb">Top {{ settings.qualifiers_per_group }} from each group qualify automatically + best {{ settings.best_next_place_qualifiers }} team(s) from position {{ settings.qualifiers_per_group|int + 1 }}.</div>{% endif %}
+  <div class="grid grid-2">{% for group_name, rows in group_tables %}<div class="card" style="padding:12px"><h3>{{ group_name|replace('group_','Group ') }}</h3><table><thead><tr><th>#</th><th>Team</th><th>M</th><th>W</th><th>L</th><th>Pts</th><th>Sets</th><th>Point diff</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ loop.index }}</td><td><strong>{{ row.player.name }}</strong></td><td>{{ row.matches }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.points }}</td><td>{{ row.sets_won }}:{{ row.sets_lost }}</td><td>{{ row.point_diff }}</td></tr>{% endfor %}</tbody></table></div>{% endfor %}</div>
+  {% else %}<div class="muted">Generate the structure to display group tables.</div>{% endif %}
+</div></details>
+{% endif %}
+
+{% if bracket_sections %}<details class="section" id="tree" open><summary>Tournament Draws</summary><div class="section-body card">
+  <div class="small muted mb">Draws are split into Championship and exact-placement sheets. Future slots show their source (for example <strong>Loser #16</strong>), so every route is visible before the team is known.</div>
+  {% for stage in bracket_sections %}{% if stage.stage != 'Group Stage' %}<div class="bracket-stage"><h2>{{ stage.stage }}</h2>{% for section in stage.sections %}<div class="bracket-section"><h3>{{ section.name }}</h3>{% if settings.pairing_mode == 'every_round' and section.kind == 'championship' %}<span class="reseed-badge">Reseeding may change future-round pairings</span>{% endif %}<div class="bracket-scroll"><div class="bracket-canvas"><svg class="bracket-svg" aria-hidden="true"></svg><div class="bracket-grid">
+    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
+  </div></div></div></div>{% endfor %}</div>{% endif %}{% endfor %}
+</div></details>{% endif %}
+
+<details class="section" id="standings" open><summary>Final Standings</summary><div class="section-body card">{% if ranking %}<table><thead><tr><th>Place</th><th>Team</th><th>Club</th><th>Original seed</th></tr></thead><tbody>{% for p in ranking %}<tr><td>{{ placement_map.get(p.id, loop.index) }}</td><td><strong>{{ p.name }}</strong></td><td>{{ p.club }}</td><td>{{ p.seed }}</td></tr>{% endfor %}</tbody></table>{% else %}<div class="muted">Standings populate as results are entered.</div>{% endif %}</div></details>
+
+<script>
+document.getElementById('filter').addEventListener('input',e=>document.querySelectorAll('#schedule article').forEach(a=>a.hidden=!a.textContent.toLowerCase().includes(e.target.value.toLowerCase())));
+const viewKey='player-view:'+location.pathname;
+try{const saved=JSON.parse(sessionStorage.getItem(viewKey)||'null');if(saved){const input=document.getElementById('filter');input.value=saved.filter||'';input.dispatchEvent(new Event('input'));window.addEventListener('load',()=>window.scrollTo(0,saved.scroll||0));}}catch(e){}
+setInterval(()=>{if(!document.hidden){sessionStorage.setItem(viewKey,JSON.stringify({filter:document.getElementById('filter').value,scroll:window.scrollY}));location.reload();}},30000);
+function drawBracketConnectors(){
+  document.querySelectorAll('.bracket-canvas').forEach(canvas=>{
+    const svg=canvas.querySelector('.bracket-svg'), grid=canvas.querySelector('.bracket-grid');
+    if(!svg||!grid)return;
+    const rounds=[...grid.querySelectorAll('.bracket-round')];
+    if(!rounds.length)return;
+
+    const headerTop=54, bottomPad=18, gapY=16;
+    const roundNeeds=rounds.map(round=>{
+      const cards=[...round.querySelectorAll('.bracket-match')];
+      return headerTop + bottomPad + cards.reduce((sum,c)=>sum+Math.max(84,c.offsetHeight||84),0) + gapY*Math.max(0,cards.length-1);
+    });
+    let boardH=Math.max(390,...roundNeeds);
+    rounds.forEach(r=>r.style.height=boardH+'px');
+    const byKey={};
+
+    rounds.forEach((round,ri)=>{
+      const cards=[...round.querySelectorAll('.bracket-match')];
+      if(!cards.length)return;
+      const items=cards.map((card,ci)=>{
+        const h=Math.max(84,card.offsetHeight||84);
+        let desiredCenter;
+        if(ri===0){
+          const usable=boardH-headerTop-bottomPad;
+          desiredCenter=headerTop+usable*((ci+.5)/cards.length);
+        }else{
+          const deps=(card.dataset.sourceKeys||'').split(',').filter(Boolean).map(k=>byKey[k]).filter(Boolean);
+          desiredCenter=deps.length ? deps.reduce((a,b)=>a+b.center,0)/deps.length : headerTop+(boardH-headerTop-bottomPad)*((ci+.5)/cards.length);
+        }
+        return {card,h,desiredTop:desiredCenter-h/2,top:0};
+      }).sort((a,b)=>a.desiredTop-b.desiredTop);
+
+      // Resolve collisions as one block, then shift the entire block inside bounds.
+      let cursor=headerTop;
+      items.forEach(it=>{it.top=Math.max(it.desiredTop,cursor); cursor=it.top+it.h+gapY;});
+      let overflow=(items[items.length-1].top+items[items.length-1].h)-(boardH-bottomPad);
+      if(overflow>0) items.forEach(it=>it.top-=overflow);
+      let under=headerTop-items[0].top;
+      if(under>0) items.forEach(it=>it.top+=under);
+      // Final forward pass guarantees no overlap after boundary shifts.
+      cursor=headerTop;
+      items.forEach(it=>{it.top=Math.max(it.top,cursor); cursor=it.top+it.h+gapY;});
+      if(cursor-gapY>boardH-bottomPad){
+        boardH=cursor-gapY+bottomPad;
+        rounds.forEach(r=>r.style.height=boardH+'px');
+      }
+      items.forEach(it=>{
+        it.card.style.top=it.top+'px';
+        const center=it.top+it.h/2;
+        if(it.card.dataset.matchKey)byKey[it.card.dataset.matchKey]={el:it.card,center};
+      });
+    });
+
+    const w=grid.scrollWidth,h=Math.max(grid.scrollHeight,boardH);
+    svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML='';
+    const root=canvas.getBoundingClientRect();
+    grid.querySelectorAll('.bracket-match').forEach(target=>{
+      const keys=(target.dataset.sourceKeys||'').split(',').filter(Boolean); if(!keys.length)return;
+      const tr=target.getBoundingClientRect(),tx=tr.left-root.left,ty=tr.top-root.top+tr.height/2;
+      keys.forEach(key=>{
+        const source=byKey[key]?.el;if(!source)return;
+        const sr=source.getBoundingClientRect();const sx=sr.right-root.left,sy=sr.top-root.top+sr.height/2;if(tx<=sx)return;
+        const bend=sx+(tx-sx)*.5;
+        const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('class','bracket-connector');path.setAttribute('d',`M ${sx} ${sy} H ${bend} V ${ty} H ${tx}`);svg.appendChild(path);
+      });
+    });
+  });
+}
+window.addEventListener('load',drawBracketConnectors);window.addEventListener('resize',()=>requestAnimationFrame(drawBracketConnectors));document.querySelectorAll('details.section').forEach(d=>d.addEventListener('toggle',()=>setTimeout(drawBracketConnectors,20)));
+</script>
+{% endblock %}

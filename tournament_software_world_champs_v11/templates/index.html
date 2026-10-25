@@ -3,11 +3,11 @@
 <div class="row between mb">
   <div>
     <h1>Tournament Software</h1>
-    <div class="muted">Local tournament dashboard with seeding, groups, brackets, PDF and Excel export.</div>
+    <div class="muted">Archiwum turniejów · harmonogramy · wyniki · drabinki</div>
   </div>
 </div>
 <div class="actions mb"><a class="pill" href="/help">README / Help</a></div>
-<div class="grid grid-2">
+{% if is_admin %}<div class="grid grid-2">
   <div class="card">
     <h2>Create Tournament</h2>
     <form method="post" action="/create" class="grid" style="grid-template-columns:repeat(2,1fr)">
@@ -28,7 +28,7 @@
     <div class="mt small muted">This restores tournament settings, players, phases and all recorded match results.</div>
   </div>
 </div>
-<div class="card mt">
+{% endif %}<div class="card mt">
   <h2>Your Tournaments</h2>
   {% if tournaments %}
     <table>
@@ -42,10 +42,10 @@
         <td>{{ t.court_count }}</td>
         <td class="actions">
           <a class="pill" href="/tournament/{{ t.id }}">Open</a>
-          <a class="pill" href="/tournament/{{ t.id }}/export/db">Backup</a>
+          {% if is_admin %}<a class="pill" href="/tournament/{{ t.id }}/export/db">Backup</a>
           <form method="post" action="/tournament/{{ t.id }}/delete" onsubmit="return confirm('Delete tournament?')">
             <button class="btn-danger" type="submit">Delete</button>
-          </form>
+          </form>{% endif %}
         </td>
       </tr>
       {% endfor %}
