@@ -97,3 +97,21 @@ def test_formats_exports_and_import_privacy():
         # importer returns a tournament instance
         assert not settings_for(imported).get('public_enabled')
         assert not settings_for(imported).get('public_token')
+
+
+def test_https_forms_keep_referer_and_csrf_protection():
+    client = app.test_client()
+    page = client.get('/login', base_url='https://tournament.test')
+    assert page.headers['Referrer-Policy'] == 'same-origin'
+    token = re.search(r'const csrfToken=("[^"]+")', page.text)[1].strip('"')
+    data = dict(username='unknown', password='invalid-password', csrf_token=token)
+    # Browser submits the same-origin Referer under the returned policy.
+    response = client.post('/login', base_url='https://tournament.test', data=data,
+        headers={'Referer': 'https://tournament.test/login'})
+    assert response.status_code == 200
+    assert 'Nieprawidłowy login' in response.text
+    assert client.post('/login', base_url='https://tournament.test', data=data).status_code == 400
+    assert client.post('/login', base_url='https://tournament.test', data=data,
+        headers={'Referer': 'https://other.test/'}).status_code == 400
+    assert client.post('/login', base_url='https://tournament.test', data={'username':'unknown'},
+        headers={'Referer': 'https://tournament.test/login'}).status_code == 400
