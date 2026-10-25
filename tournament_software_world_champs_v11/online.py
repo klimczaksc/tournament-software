@@ -146,6 +146,20 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
             return redirect(url_for('accounts'))
         return render_template('accounts.html', users=User.query.order_by(User.username).all())
 
+    @app.route('/tournament/<int:tournament_id>/appearance', methods=['POST'])
+    def appearance(tournament_id):
+        t = db.get_or_404(Tournament, tournament_id)
+        style = request.form.get('interface_style')
+        if style not in ('classic', 'modern'):
+            abort(400)
+        data = settings_for(t)
+        data['interface_style'] = style
+        save_settings(t, data)
+        db.session.commit()
+        session['interface_style'] = style
+        flash('Styl interfejsu zapisany.')
+        return redirect(url_for('tournament_view', tournament_id=t.id))
+
     @app.route('/tournament/<int:tournament_id>/publish', methods=['POST'])
     def publish(tournament_id):
         t = db.get_or_404(Tournament, tournament_id)

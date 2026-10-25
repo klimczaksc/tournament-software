@@ -115,3 +115,44 @@ def test_https_forms_keep_referer_and_csrf_protection():
         headers={'Referer': 'https://other.test/'}).status_code == 400
     assert client.post('/login', base_url='https://tournament.test', data={'username':'unknown'},
         headers={'Referer': 'https://tournament.test/login'}).status_code == 400
+
+
+def test_tournament_appearance_is_shared_persistent_and_isolated():
+    from app import create_tournament, generate_structure, settings_for
+    admin = app.test_client()
+    assert login(admin, 'admin', 'Abc123!x').status_code == 302
+    token = csrf(admin, '/')
+    with app.app_context():
+        t = create_tournament('Appearance Cup', 4, 'single_elimination', True, 2)
+        generate_structure(t)
+        tid = t.id
+        other = create_tournament('Separate Cup', 4, 'single_elimination', True, 1).id
+        before = [(m.id,m.score_json,m.player1_id,m.player2_id,m.order_index) for m in Match.query.filter_by(tournament_id=tid).all()]
+    path = f'/tournament/{tid}'
+    assert 'data-style="classic"' in admin.get(path).text
+    assert admin.post(path+'/appearance', data={'interface_style':'modern','csrf_token':token}).status_code == 302
+    html = admin.get(path).text
+    assert 'data-style="modern"' in html and 'Zapisz styl' in html
+    assert 'data-style="modern"' in admin.get('/').text
+    assert 'data-style="classic"' in admin.get(f'/tournament/{other}').text
+    assert admin.post(path+'/appearance', data={'interface_style':'invalid','csrf_token':token}).status_code == 400
+    admin.post(path+'/publish',data={'published':'on','csrf_token':token})
+    with app.app_context():
+        t = db.session.get(Tournament, tid)
+        assert settings_for(t)['interface_style'] == 'modern'
+        public = '/players/'+settings_for(t)['public_token']
+        after = [(m.id,m.score_json,m.player1_id,m.player2_id,m.order_index) for m in Match.query.filter_by(tournament_id=tid).all()]
+        assert before == after
+        reader = User.query.filter_by(username='reader').first()
+        reader.active = True
+        db.session.commit()
+    guest = app.test_client()
+    assert 'data-style="modern"' in guest.get(public).text
+    assert 'Zapisz styl' not in guest.get(public).text
+    reader_client = app.test_client()
+    login(reader_client, 'reader', 'Read123!')
+    assert 'data-style="modern"' in reader_client.get(path).text
+    assert reader_client.post(path+'/appearance',data={'interface_style':'classic','csrf_token':csrf(reader_client,'/')}).status_code == 403
+    assert admin.post(path+'/appearance',data={'interface_style':'classic','csrf_token':token}).status_code == 302
+    assert 'data-style="classic"' in guest.get(public).text
+    assert 'data-style="classic"' in admin.get(path).text
