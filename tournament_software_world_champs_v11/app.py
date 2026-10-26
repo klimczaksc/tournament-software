@@ -101,7 +101,7 @@ class Match(db.Model):
 
 
 def settings_for(t: Tournament):
-    base = {'qualifiers_per_group': 2, 'best_next_place_qualifiers': 0, 'group_count': 2, 'group_assignment_mode': 'auto', 'manual_groups': {}, 'pairing_mode': 'first_round_only', 'bye_policy': 'top_seeds', 'logo_filename': ''}
+    base = {'qualifiers_per_group': 2, 'best_next_place_qualifiers': 0, 'wildcard_comparison': 'ppm', 'group_count': 2, 'group_assignment_mode': 'auto', 'manual_groups': {}, 'pairing_mode': 'first_round_only', 'bye_policy': 'top_seeds', 'logo_filename': ''}
     try:
         base.update(json.loads(t.settings_json or '{}'))
     except Exception:
@@ -314,7 +314,27 @@ def compute_group_tables(t):
     for key in sorted(groups.keys()):
         rows = standings_for_matches(groups[key], list(players_by_group[key].values()))
         result.append((key, rows))
+    settings = settings_for(t)
+    position = max(1, int(settings.get('qualifiers_per_group', 2))) + 1
+    if settings.get('wildcard_comparison') == 'exclude_bottom' and int(settings.get('best_next_place_qualifiers', 0)) > 0:
+        eligible = [(key, rows) for key, rows in result if len(rows) >= position]
+        target_size = min((len(rows) for _, rows in eligible), default=0)
+        for key, rows in eligible:
+            if len(rows) <= target_size:
+                continue
+            # Use FINAL full-table positions to choose the omitted opponents.
+            # Do not reorder the original table or replace its displayed totals.
+            retained = {row['player'].id for row in rows[:target_size]}
+            counted = [m for m in groups[key] if m.player1_id in retained and m.player2_id in retained]
+            adjusted = standings_for_matches(counted, [row['player'] for row in rows[:target_size]])
+            candidate = rows[position - 1]
+            candidate['wildcard_comparison'] = next(row for row in adjusted if row['player'].id == candidate['player'].id)
+            candidate['excluded_opponents'] = [row['player'].name for row in rows[target_size:]]
     return result
+
+
+def comparison_metrics(row):
+    return row.get('wildcard_comparison', row)
 
 
 def build_group_sources(group_tables, positions):
@@ -542,10 +562,10 @@ def best_group_position_rows(group_tables, position):
             row = rows[position - 1]
             candidates.append((group_key, row))
     candidates.sort(key=lambda item: (
-        -(item[1]['points'] / max(1, item[1]['matches'])),
-        -(item[1]['wins'] / max(1, item[1]['matches'])),
-        -(item[1]['set_diff'] / max(1, item[1]['matches'])),
-        -(item[1]['point_diff'] / max(1, item[1]['matches'])),
+        -(comparison_metrics(item[1])['points'] / max(1, comparison_metrics(item[1])['matches'])),
+        -(comparison_metrics(item[1])['wins'] / max(1, comparison_metrics(item[1])['matches'])),
+        -(comparison_metrics(item[1])['set_diff'] / max(1, comparison_metrics(item[1])['matches'])),
+        -(comparison_metrics(item[1])['point_diff'] / max(1, comparison_metrics(item[1])['matches'])),
         item[1]['player'].seed
     ))
     return candidates
@@ -635,15 +655,16 @@ def tournament_seed_rows(t, player_ids=None):
             p = row['player']
             if allowed is not None and p.id not in allowed:
                 continue
-            matches = max(1, row['matches'])
+            metrics = comparison_metrics(row)
+            matches = max(1, metrics['matches'])
             rows.append({
                 'player': p,
                 'group': group_map.get(p.id, group_key),
                 'group_position': pos,
-                'ppm': row['points'] / matches,
-                'win_rate': row['wins'] / matches,
-                'set_diff_pm': row['set_diff'] / matches,
-                'point_diff_pm': row['point_diff'] / matches,
+                'ppm': metrics['points'] / matches,
+                'win_rate': metrics['wins'] / matches,
+                'set_diff_pm': metrics['set_diff'] / matches,
+                'point_diff_pm': metrics['point_diff'] / matches,
             })
     # Tournament seed: group winners are ranked ahead of runners-up, who
     # are ranked ahead of qualified third-placed teams. Inside each tier use
@@ -1205,23 +1226,9 @@ def resolve_source(source, tournament_id, matches_by_key, group_tables_by_key, g
             return None
         pos = int(source.get('pos', 0))
         rank = int(source.get('rank', 0))
-        candidates = []
-        for group_key, rows in group_tables_by_key.items():
-            if 1 <= pos <= len(rows):
-                row = rows[pos - 1]
-                candidates.append(row)
-        # Cross-group wildcards must be fair even when groups have different
-        # sizes (e.g. 5/4/4). Compare performance per match, not raw totals,
-        # otherwise a team from the larger group has an artificial advantage.
-        candidates.sort(key=lambda row: (
-            -(row['points'] / max(1, row['matches'])),
-            -(row['wins'] / max(1, row['matches'])),
-            -(row['set_diff'] / max(1, row['matches'])),
-            -(row['point_diff'] / max(1, row['matches'])),
-            row['player'].seed
-        ))
+        candidates = best_group_position_rows(list(group_tables_by_key.items()), pos)
         if 1 <= rank <= len(candidates):
-            return candidates[rank - 1]['player'].id
+            return candidates[rank - 1][1]['player'].id
     return None
 
 
@@ -2179,13 +2186,20 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title)
+    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])
 def update_settings(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
     current = settings_for(t)
+    comparison = request.form.get('wildcard_comparison', current.get('wildcard_comparison', 'ppm'))
+    if comparison not in ('ppm', 'exclude_bottom'):
+        abort(400)
+    if comparison != current.get('wildcard_comparison', 'ppm') and any(score_sets(m.score_json) for m in t.matches):
+        flash('Metodę porównywania grup wybierz przed wpisaniem pierwszego wyniku. Trwający turniej zachowuje dotychczasowe zasady.')
+        return redirect(url_for('tournament_view', tournament_id=t.id) + '#settings')
+    current['wildcard_comparison'] = comparison
     current['qualifiers_per_group'] = max(1, int(request.form.get('qualifiers_per_group', current.get('qualifiers_per_group', 2))))
     current['best_next_place_qualifiers'] = max(0, int(request.form.get('best_next_place_qualifiers', current.get('best_next_place_qualifiers', 0))))
     current['group_count'] = max(1, int(request.form.get('group_count', current.get('group_count', 2))))

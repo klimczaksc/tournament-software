@@ -237,3 +237,73 @@ def test_short_public_links_navigation_and_revocation():
     assert guest.get('/t/'+slug).status_code==404
     with app.app_context():
         assert settings_for(db.session.get(Tournament,tid))['public_slug'] != slug
+
+
+def test_excluding_bottom_changes_wildcard_without_changing_group_tables():
+    import json
+    from pathlib import Path
+    from app import (import_database_json, compute_group_tables, best_group_position_rows,
+                     settings_for, save_settings_dict, comparison_metrics, resolve_source,
+                     championship_qualifier_rows, tournament_seed_rows)
+    raw=json.loads((Path(__file__).parent/'fixtures/pending_placement_13.json').read_text())
+    settings=json.loads(raw['tournament']['settings_json'])
+    settings['best_next_place_qualifiers']=1
+    raw['tournament']['settings_json']=json.dumps(settings)
+    with app.app_context():
+        t=import_database_json(json.dumps(raw))
+        def snapshot(tables):
+            return [(key,[(r['player'].seed,r['points'],r['matches'],r['sets_won'],r['sets_lost'],r['point_diff']) for r in rows]) for key,rows in tables]
+        tables=compute_group_tables(t)
+        original=snapshot(tables)
+        assert best_group_position_rows(tables,3)[0][1]['player'].seed == 7
+        settings=settings_for(t);settings['wildcard_comparison']='exclude_bottom';save_settings_dict(t,settings);db.session.commit()
+        adjusted=compute_group_tables(t)
+        assert snapshot(adjusted)==original
+        # Original 3rd place in the five-person group remains the candidate.
+        row=dict(adjusted)['group_1'][2]
+        metrics=comparison_metrics(row)
+        assert row['player'].seed==7 and row['matches']==4 and row['wins']==2
+        assert metrics['matches']==3 and metrics['wins']==1
+        assert (metrics['sets_won'],metrics['sets_lost'])==(2,4)
+        assert metrics['point_diff']==-10
+        # Exclude the FINAL last place (seed 12), not the lowest original seed (13).
+        assert row['excluded_opponents']==['Player 12']
+        assert best_group_position_rows(adjusted,3)[0][1]['player'].seed==3
+        first=resolve_source({'kind':'best_group_pos','pos':3,'rank':1},t.id,{},dict(adjusted),True)
+        assert db.session.get(__import__('app').Player,first).seed==3
+        qualifiers=championship_qualifier_rows(t)
+        assert [q['player'].seed for q in qualifiers if q['wildcard_rank']]==[3]
+        seeds=tournament_seed_rows(t)
+        normalized=next(r for r in seeds if r['player'].seed==7)
+        assert normalized['ppm']==2/3 and normalized['set_diff_pm']==-2/3
+        # Turning the method off reproduces the original wildcard ranking.
+        settings['wildcard_comparison']='ppm';save_settings_dict(t,settings);db.session.commit()
+        assert best_group_position_rows(compute_group_tables(t),3)[0][1]['player'].seed==7
+
+
+def test_wildcard_option_saved_before_results_and_locked_afterwards():
+    from app import create_tournament, generate_structure, settings_for
+    admin=app.test_client();login(admin,'admin','Abc123!x');token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('Wildcard settings',13,'group_knockout',True,2);tid=t.id
+        assert settings_for(t)['wildcard_comparison']=='ppm'
+    path=f'/tournament/{tid}'
+    fields={'wildcard_comparison':'exclude_bottom','group_count':3,'qualifiers_per_group':2,'best_next_place_qualifiers':2,'consolation':'on','generate_after':'1','csrf_token':token}
+    assert admin.post(path+'/settings',data=fields).status_code==302
+    with app.app_context():
+        t=db.session.get(Tournament,tid)
+        assert settings_for(t)['wildcard_comparison']=='exclude_bottom'
+        assert len(t.matches)>0
+        m=next(m for m in t.matches if m.bracket.startswith('group_'))
+        mid=m.id
+    assert admin.post(f'/match/{mid}/result',data={'set_1_p1':21,'set_1_p2':5,'set_2_p1':21,'set_2_p2':5,'csrf_token':token}).status_code==302
+    html=admin.get(path).text
+    assert 'Metoda jest zablokowana' in html
+    fields.update(wildcard_comparison='ppm',generate_after='0',name='Must not change')
+    assert admin.post(path+'/settings',data=fields).status_code==302
+    with app.app_context():
+        t=db.session.get(Tournament,tid)
+        assert settings_for(t)['wildcard_comparison']=='exclude_bottom'
+        assert t.name=='Wildcard settings'
+    fields['wildcard_comparison']='invalid'
+    assert admin.post(path+'/settings',data=fields).status_code==400
