@@ -1349,6 +1349,87 @@ def repair_unplayed_brackets(tournament_id=None):
     return repaired
 
 
+def closing_match_kind(match):
+    meta = meta_for(match)
+    band = (meta.get('place_start'), meta.get('place_end'))
+    if band == (1, 2):
+        return 'final'
+    if band == (3, 4):
+        return 'bronze'
+    return None
+
+
+def interleave_knockout_order(matches, court_count):
+    """Fill parallel court slots with main/placement matches whose feeders are earlier."""
+    groups = [m for m in matches if m.bracket.startswith('group_')]
+    remaining = [m for m in matches if not m.bracket.startswith('group_')]
+    if not any(meta_for(m).get('key') for m in remaining):
+        return matches
+    rank = {m.id: i for i, m in enumerate(matches)}
+    keyed = {meta_for(m).get('key'): m.id for m in matches if meta_for(m).get('key')}
+    dependencies = {m.id: {keyed[src['match_key']] for src in meta_for(m).get('sources', [])
+                           if src.get('kind') in ('winner', 'loser') and src.get('match_key') in keyed}
+                    for m in remaining}
+    done = {m.id for m in groups}
+    ordered = list(groups)
+    lane_cursor = 0
+    while remaining:
+        ordinary = [m for m in remaining if not closing_match_kind(m)]
+        pool = ordinary or [m for m in remaining if closing_match_kind(m) == 'bronze'] or remaining
+        ready = sorted([m for m in pool if dependencies[m.id] <= done], key=lambda m: rank[m.id])
+        if not ready:
+            raise ValueError('Cannot schedule bracket: missing or cyclic match dependency.')
+        batch, occupied = [], set()
+        for _ in range(court_count):
+            eligible = [m for m in ready if m not in batch and not ({m.player1_id,m.player2_id} - {None}) & occupied]
+            if not eligible:
+                break
+            preferred = [m for m in eligible if (0 if meta_for(m).get('place_start') == 1 else 1) == lane_cursor]
+            chosen = (preferred or eligible)[0]
+            batch.append(chosen)
+            occupied.update({chosen.player1_id,chosen.player2_id} - {None})
+            lane_cursor = 1 - (0 if meta_for(chosen).get('place_start') == 1 else 1)
+            if closing_match_kind(chosen):
+                break # Bronze and final each get a separate closing slot.
+        ordered.extend(batch)
+        done.update(m.id for m in batch)
+        remaining = [m for m in remaining if m not in batch]
+    return ordered
+
+
+def allocate_court_slots(matches, court_count):
+    wave, court = 1, 0
+    keys_in_wave, players_in_wave = set(), set()
+    previous_closing = False
+    for m in matches:
+        meta = meta_for(m)
+        deps = {src.get('match_key') for src in meta.get('sources', []) if src.get('kind') in ('winner','loser')}
+        players = {m.player1_id,m.player2_id} - {None}
+        closing = closing_match_kind(m)
+        if court and (court >= court_count or deps & keys_in_wave or players & players_in_wave or closing or previous_closing):
+            wave += 1
+            court = 0
+            keys_in_wave, players_in_wave = set(), set()
+        court += 1
+        m.court_number = court
+        meta['schedule_wave'] = wave
+        set_meta(m,meta)
+        if meta.get('key'):
+            keys_in_wave.add(meta['key'])
+        players_in_wave.update(players)
+        previous_closing = bool(closing)
+
+
+def upgrade_unplayed_schedules():
+    for t in Tournament.query.all():
+        if settings_for(t).get('schedule_version') == 2:
+            continue
+        knockout = [m for m in t.matches if meta_for(m).get('key')]
+        if not knockout or any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in knockout):
+            continue
+        assign_schedule(t,renumber=True)
+
+
 def assign_schedule(tournament, renumber=False):
     """Assign courts while keeping published match numbers stable.
 
@@ -1430,13 +1511,18 @@ def assign_schedule(tournament, renumber=False):
                 section_rank = 0 if section == 'Championship' else (1 if section == '3rd Place' else 2)
                 return (section_rank, start, slot, m.id)
             ordered.extend(sorted(other_matches, key=other_key))
+        ordered = interleave_knockout_order(ordered, court_count)
         for idx, m in enumerate(ordered, start=1):
             m.order_index = idx
         matches = sorted(ordered, key=lambda m: m.order_index)
 
-    # Court allocation may be safely recalculated without touching match order.
-    for idx, m in enumerate(sorted(matches, key=lambda m: (m.order_index, m.id)), start=1):
-        m.court_number = ((idx - 1) % court_count) + 1
+    # Keep published numbers on normal score saves, while separating dependencies
+    # and the two closing matches into different parallel court slots.
+    allocate_court_slots(sorted(matches, key=lambda m: (m.order_index,m.id)), court_count)
+    if renumber:
+        settings = settings_for(tournament)
+        settings['schedule_version'] = 2
+        save_settings_dict(tournament,settings)
     db.session.commit()
 
 def placement_map(t):
@@ -2604,10 +2690,14 @@ def delete_tournament_logo(tournament_id):
 @app.route('/tournament/<int:tournament_id>/schedule', methods=['POST'])
 def reschedule(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
-    t.court_count = int(request.form.get('court_count', t.court_count))
+    reorder = request.form.get('reorder') == '1'
+    if reorder and any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in t.matches if meta_for(m).get('key')):
+        flash('Kolejność można zmienić przed wpisaniem wyników fazy pucharowej.')
+        return redirect(url_for('tournament_view', tournament_id=t.id) + '#matches')
+    t.court_count = max(1,int(request.form.get('court_count', t.court_count)))
     db.session.commit()
-    assign_schedule(t, renumber=False)
-    flash('Court allocation updated. Published match numbers were preserved.')
+    assign_schedule(t, renumber=reorder)
+    flash('Zapisano przeplataną kolejność meczów; mecz o 3. miejsce i finał zamykają harmonogram.' if reorder else 'Court allocation updated. Published match numbers were preserved.')
     return redirect(url_for('tournament_view', tournament_id=t.id))
 
 
@@ -2677,6 +2767,7 @@ from online import configure_online
 configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)
 with app.app_context():
     repaired = repair_unplayed_brackets()
+    upgrade_unplayed_schedules()
     if repaired:
         app.logger.info('Repaired pending bracket outcomes for tournament IDs: %s', repaired)
 

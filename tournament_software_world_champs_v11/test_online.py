@@ -307,3 +307,61 @@ def test_wildcard_option_saved_before_results_and_locked_afterwards():
         assert t.name=='Wildcard settings'
     fields['wildcard_comparison']='invalid'
     assert admin.post(path+'/settings',data=fields).status_code==400
+
+
+def test_interleaved_schedule_dependencies_closing_matches_and_scores():
+    import json
+    from pathlib import Path
+    from app import import_database_json, assign_schedule, meta_for, closing_match_kind
+    raw=json.loads((Path(__file__).parent/'fixtures/pending_placement_13.json').read_text())
+    with app.app_context():
+        t=import_database_json(json.dumps(raw))
+        groups_before={m.id:(m.order_index,m.score_json,m.winner_id) for m in t.matches if m.bracket.startswith('group_')}
+        original_ids={m.id for m in t.matches}
+        for courts in (2,3,1,4):
+            t.court_count=courts
+            assign_schedule(t,renumber=True)
+            matches=sorted(t.matches,key=lambda m:m.order_index)
+            assert {m.id for m in matches}==original_ids
+            assert [closing_match_kind(m) for m in matches[-2:]]==['bronze','final']
+            assert meta_for(matches[-2])['schedule_wave'] < meta_for(matches[-1])['schedule_wave']
+            assert matches[-1].court_number==1
+            keyed={meta_for(m).get('key'):m for m in matches if meta_for(m).get('key')}
+            waves={}
+            for m in matches:
+                md=meta_for(m);wave=md['schedule_wave']
+                waves.setdefault(wave,[]).append(m)
+                for src in md.get('sources',[]):
+                    if src.get('kind') in ('winner','loser'):
+                        dep=keyed[src['match_key']]
+                        assert dep.order_index<m.order_index
+                        assert meta_for(dep)['schedule_wave']<wave
+            for batch in waves.values():
+                assert len(batch)<=courts
+                assert len({m.court_number for m in batch})==len(batch)
+                players=[pid for m in batch for pid in (m.player1_id,m.player2_id) if pid]
+                assert len(players)==len(set(players))
+            if courts==2:
+                assert any(any(meta_for(m).get('place_start')==1 for m in batch) and any((meta_for(m).get('place_start') or 0)>3 for m in batch) for batch in waves.values())
+            assert {m.id:(m.order_index,m.score_json,m.winner_id) for m in t.matches if m.bracket.startswith('group_')}==groups_before
+            numbers={m.id:m.order_index for m in matches}
+            assign_schedule(t,renumber=False)
+            assert {m.id:m.order_index for m in t.matches}==numbers
+
+
+def test_schedule_reordering_refuses_started_knockout():
+    from app import create_tournament, generate_structure, meta_for
+    admin=app.test_client();login(admin,'admin','Abc123!x');token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('Started bracket',8,'single_elimination',True,2)
+        generate_structure(t);tid=t.id
+        match=next(m for m in t.matches if m.player1_id and m.player2_id)
+        mid=match.id
+    admin.post(f'/match/{mid}/result',data={'set_1_p1':21,'set_1_p2':0,'set_2_p1':21,'set_2_p2':0,'set_3_p1':21,'set_3_p2':0,'csrf_token':token})
+    with app.app_context():
+        t=db.session.get(Tournament,tid)
+        before={m.id:(m.order_index,m.score_json,m.winner_id) for m in t.matches}
+    assert admin.post(f'/tournament/{tid}/schedule',data={'reorder':'1','csrf_token':token}).status_code==302
+    with app.app_context():
+        t=db.session.get(Tournament,tid)
+        assert {m.id:(m.order_index,m.score_json,m.winner_id) for m in t.matches}==before
