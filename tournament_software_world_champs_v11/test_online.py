@@ -449,7 +449,7 @@ def test_timing_admin_controls_record_finish_once_and_public_sections():
     # Finish time cannot be added to an unresolved match, or be in the future.
     assert admin.post(f'/match/{mids[1]}/timing',data={'actual_end':'2020-01-01T10:00','csrf_token':token}).status_code==400
     assert admin.post(f'/match/{mids[1]}/timing',data={'actual_start':'2099-01-01T10:00','csrf_token':token}).status_code==400
-    # A manual correction survives result editing and is included in the public view.
+    # A manual correction remains visible in the admin; public cards omit actual timing.
     assert admin.post(f'/match/{mids[0]}/timing',data={'actual_start':'2020-01-01T10:00','actual_end':'2020-01-01T10:45','csrf_token':token}).status_code==302
     admin.post(path+'/publish',data={'published':'on','csrf_token':token})
     with app.app_context(): public='/t/'+settings_for(db.session.get(Tournament,tid))['public_slug']
@@ -457,10 +457,37 @@ def test_timing_admin_controls_record_finish_once_and_public_sections():
     next_section=page.split('<div class="next-matches">')[1].split('<details class="section" id="more-upcoming"')[0]
     assert next_section.count('<article ')==5
     assert 'id="more-upcoming"' in page and 'id="results" data-view-state' in page
-    assert '01.01 10:45' in page and '2030' not in page # rendered clocks show day/month, not ISO fields
+    assert '01.01 10:45' in admin.get(path).text
+    assert '2030' not in page # rendered clocks show day/month, not ISO fields
     assert 'Start teraz' not in page and 'Edytuj godziny' not in page
     assert guest.get(public+'?display=1').status_code==200
     assert 'Pełny ekran' in guest.get(public+'?display=1').text
     assert guest.post(f'/match/{mids[0]}/timing').status_code==401
     for export in ('schedule_pdf','excel'):
         assert admin.get(path+'/export/'+export).status_code==200
+
+
+def test_in_place_controls_and_clear_public_monitor_statuses():
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict
+    admin=app.test_client()
+    with app.app_context(): uid=User.query.filter_by(role='admin').first().id
+    with admin.session_transaction() as session: session.update(uid=uid,version=1)
+    token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('In-place controls',8,'single_elimination',True,2);generate_structure(t);tid=t.id
+        md=settings_for(t);md.update(schedule_start='2026-01-01T10:00',public_enabled=True,public_token='in-place-public',public_slug='in-place-public')
+        save_settings_dict(t,md);db.session.commit()
+        mid=next(m.id for m in t.matches if m.player1_id and m.player2_id and not m.winner_id)
+    html=admin.get(f'/tournament/{tid}').text
+    assert 'static/admin-match-updates.js' in html and 'data-player1=' in html
+    response=admin.post(f'/match/{mid}/timing',data={'action':'start','csrf_token':token},follow_redirects=True)
+    assert response.status_code==200 and 'Zapisano czas meczu.' in response.text
+    assert f'id="match-{mid}"' in response.text
+    guest=app.test_client()
+    assert guest.get('/static/admin-match-updates.js').status_code==200
+    public=guest.get('/players/in-place-public?display=1').text
+    assert 'match-status-live' in public and 'W trakcie' in public
+    assert 'start rzeczywisty' not in public
+    ongoing=public.split(f'data-match-id="{mid}"')[1].split('</article>')[0]
+    assert 'match-time' not in ongoing # Actual start remains in the admin only.
+    assert 'match-time' in public # Waiting matches retain their planned hours.

@@ -1,8 +1,8 @@
 {% extends 'base.html' %}{% block content %}
 <div id="page-top" class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill"><span id="refresh-status" role="status">Tylko do odczytu · odświeżanie co 15 s</span></span></div>
 {% macro player_match(m) %}{% set slot=timing.get(m.id) %}
-<article class="match-card" data-match-id="{{ m.id }}"><div class="row between"><strong>#{{ m.order_index }} · Kort {{ m.court_number }}</strong><span class="pill">{{ slot.state if slot else ('Zakończony' if m.winner_id else 'Oczekuje') }}</span></div>
-{% if slot %}<div class="match-time"><strong>{{ format_time(slot.start) }}</strong> <span class="small muted">{{ 'start rzeczywisty' if slot.actual else 'planowany start' }} · do {{ format_time(slot.end) }}</span></div>{% endif %}
+<article class="match-card" data-match-id="{{ m.id }}"><div class="row between"><strong>#{{ m.order_index }} · Kort {{ m.court_number }}</strong><span class="pill match-status{% if slot and slot.state == 'W trakcie' %} match-status-live{% endif %}">{{ slot.state if slot else ('Zakończony' if m.winner_id else 'Oczekuje') }}</span></div>
+{% if slot and not slot.actual %}<div class="match-time"><strong>{{ format_time(slot.start) }}</strong> <span class="small muted">do {{ format_time(slot.end) }}</span></div>{% endif %}
 <p><strong>{{ m.player1.name if m.player1 else source_label(m,0) }}</strong> — <strong>{{ m.player2.name if m.player2 else source_label(m,1) }}</strong></p><div class="small muted">{{ m.phase.name if m.phase else '' }} · {{ m.round_name }}</div>
 {% if m.winner_id %}<p>{{ score_to_text(m.score_json) or 'Wolny los' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p>{% endif %}</article>
 {% endmacro %}
@@ -33,7 +33,9 @@
 <nav class="page-jumps" aria-label="Przewijanie strony"><a href="#page-top" aria-label="Na górę" title="Na górę">↑</a><a href="#page-bottom" aria-label="Na dół" title="Na dół">↓</a></nav>
 <style>
 .match-time{margin-top:10px;font-size:20px;color:var(--accent)}
-.monitor-mode .next-matches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.monitor-mode .match-card{font-size:22px}.monitor-mode .match-time{font-size:28px}.monitor-mode #filter,.monitor-mode .page-jumps{display:none!important}.monitor-mode .wrap{max-width:none}
+.monitor-mode .next-matches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.monitor-mode .match-card{font-size:22px}.monitor-mode .match-time{font-size:28px}
+html.monitor-mode .next-matches .match-status{font-size:clamp(22px,2vw,32px);font-weight:750;line-height:1.2;padding:12px 20px;border:2px solid var(--line);border-radius:10px}
+html.monitor-mode .next-matches .match-status-live{background:var(--accent);border-color:var(--accent);color:var(--accentText)}.monitor-mode #filter,.monitor-mode .page-jumps{display:none!important}.monitor-mode .wrap{max-width:none}
 @media(max-width:700px){.monitor-mode .next-matches{grid-template-columns:1fr}}
 .wrap .page-jumps{position:fixed!important;right:14px;bottom:calc(24px + env(safe-area-inset-bottom, 0px));z-index:55!important;display:flex;flex-direction:column;gap:8px}
 .page-jumps a{display:grid;place-items:center;width:48px;height:48px;border:2px solid var(--panel);border-radius:50%;background:var(--accent);color:var(--accentText);font-size:27px;font-weight:700;line-height:1;box-shadow:0 3px 12px #0002}
