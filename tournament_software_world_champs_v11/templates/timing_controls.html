@@ -1,0 +1,12 @@
+{% set slot=timing.get(m.id) %}{% set md=meta_for(m) %}
+{% if settings.get('schedule_start') %}
+<div class="mt small"><strong>{{ format_time(slot.start) if slot else '—' }}</strong>{% if slot %} · {{ slot.state }} · do {{ format_time(slot.end) }}{% if slot.shifted %}<p class="muted">Godzina przesunięta: kort, zawodnik lub wcześniejszy mecz nie jest jeszcze dostępny.</p>{% endif %}{% endif %}</div>
+{% if not m.winner_id and m.player1_id and m.player2_id and not md.get('actual_start') %}<form method="post" action="/match/{{ m.id }}/timing" class="mt-sm"><button name="action" value="start">▶ Start teraz</button></form>{% endif %}
+<details class="mt small"><summary style="cursor:pointer">Edytuj godziny meczu</summary>
+<form method="post" action="/match/{{ m.id }}/timing" class="timing-fields mt-sm">
+<label>Planowany start (najwcześniej)<input type="datetime-local" name="manual_start" value="{{ md.get('manual_start','')[:16] }}"></label>
+<label>Rzeczywisty start<input type="datetime-local" name="actual_start" value="{{ md.get('actual_start','')[:16] }}"></label>
+<label>Rzeczywisty koniec (po wpisaniu wyniku)<input type="datetime-local" name="actual_end" value="{{ md.get('actual_end','')[:16] }}" {% if not m.winner_id %}disabled{% endif %}></label>
+<button>Zapisz godziny</button><span class="muted">Puste pole usuwa korektę. Czasy w strefie {{ settings.get('schedule_timezone','Europe/Warsaw') }}.</span>
+</form></details>
+{% endif %}

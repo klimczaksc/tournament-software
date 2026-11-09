@@ -5,6 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 import json, math, os, io, itertools, uuid
 from collections import defaultdict
 from datetime import datetime
+from timetable import build_timetable, local_now, parse_time, format_time
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from openpyxl import Workbook, load_workbook
 from reportlab.lib.pagesizes import A3, A4, landscape
 from reportlab.pdfgen import canvas
@@ -1298,6 +1300,10 @@ def propagate_all(tournament_id):
                 if m.player1_id != new_p1 or m.player2_id != new_p2:
                     m.player1_id = new_p1
                     m.player2_id = new_p2
+                    cleared_meta = meta_for(m)
+                    cleared_meta.pop('actual_start', None)
+                    cleared_meta.pop('actual_end', None)
+                    set_meta(m, cleared_meta)
                     m.score_json = '[]'
                     m.winner_id = None
                     m.loser_id = None
@@ -2082,7 +2088,8 @@ def write_schedule_pdf(t):
     matches=Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index,Match.id).all()
     pagesize=landscape(A4); buf=io.BytesIO(); c=canvas.Canvas(buf,pagesize=pagesize); width,height=pagesize; c.setTitle(f'{t.name} - Match Schedule')
     mx=8*mm; top=height-28*mm; bottom=8*mm; row_h=5.0*mm; section_h=5.5*mm
-    cols=[('No.',0,5),('Court',12,5),('Round',28,38),('Team 1',98,28),('Team 2',154,28),('Score',210,43)]
+    timing=build_timetable(t,matches,settings_for(t),meta_for,closing_match_kind)
+    cols=[('No.',0,5),('Court',10,5),('Start',24,18),('Round',52,25),('Team 1',107,23),('Team 2',159,23),('Score',212,40)]
     page=1
     def header():
         _pdf_title(c,t.name,'Match Schedule',width,height); c.setFont('Helvetica',7); c.setFillGray(.45); c.drawRightString(width-mx,height-18*mm,f'Page {page}'); c.setFillGray(0)
@@ -2098,7 +2105,7 @@ def write_schedule_pdf(t):
         if stage!=prev_stage:
             c.setFillGray(.94); c.roundRect(mx,y-section_h+1.1*mm,width-2*mx,section_h-1.4*mm,1*mm,stroke=0,fill=1); c.setFillGray(0)
             c.setFont('Helvetica-Bold',8.4); c.drawString(mx+2*mm,y-2.3*mm,stage.upper()); y-=section_h
-        vals=[m.order_index,m.court_number,m.round_name,m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD',score_to_text(m.score_json) or '']
+        vals=[m.order_index,m.court_number,format_time(timing[m.id]['start']) if m.id in timing else '',m.round_name,m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD',score_to_text(m.score_json) or '']
         c.setFont('Helvetica',8.5)
         for v,(_,x,lim) in zip(vals,cols): c.drawString(mx+x*mm,y,str(v)[:lim])
         c.setStrokeGray(.88); c.setLineWidth(.25); c.line(mx,y-1.8*mm,width-mx,y-1.8*mm); c.setStrokeGray(0); y-=row_h; prev_stage=stage
@@ -2187,9 +2194,10 @@ def write_results_excel(t):
     for i, p in enumerate(ranking, start=1):
         ws1.append([places.get(p.id, i), p.name, p.club, p.seed])
     ws2 = wb.create_sheet('Matches')
-    ws2.append(['Order', 'Court', 'Phase', 'Round', 'Bracket', 'Player 1', 'Player 2', 'Score', 'Winner'])
+    timing=build_timetable(t,list(t.matches),settings_for(t),meta_for,closing_match_kind)
+    ws2.append(['Start (' + settings_for(t).get('schedule_timezone','Europe/Warsaw') + ')', 'Order', 'Court', 'Phase', 'Round', 'Bracket', 'Player 1', 'Player 2', 'Score', 'Winner'])
     for m in Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all():
-        ws2.append([m.order_index, m.court_number, m.phase.name if m.phase else '', m.round_name, m.bracket,
+        ws2.append([format_time(timing[m.id]['start']) if m.id in timing else '', m.order_index, m.court_number, m.phase.name if m.phase else '', m.round_name, m.bracket,
                     m.player1.name if m.player1 else '', m.player2.name if m.player2 else '', score_to_text(m.score_json), m.winner.name if m.winner else ''])
     if t.system == 'group_knockout':
         for group_name, rows in compute_group_tables(t):
@@ -2258,6 +2266,9 @@ def create():
 def tournament_view(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
     matches = Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all()
+    timing = build_timetable(t, matches, settings_for(t), meta_for, closing_match_kind)
+    upcoming = sorted([m for m in matches if not m.winner_id], key=lambda m: (0 if timing.get(m.id, {}).get('actual') else 1, timing[m.id]['start'] if m.id in timing else datetime.max, m.order_index))
+    completed = [m for m in matches if m.winner_id]
     ranking = final_ranking(t) if matches else []
     group_tables = compute_group_tables(t)
     sections = bracket_sections(t)
@@ -2272,7 +2283,7 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
+    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])
@@ -2461,6 +2472,8 @@ def update_knockout_pairing(tournament_id):
         candidate.winner_id = None
         candidate.loser_id = None
         cmeta.pop('user_result_entered', None)
+        cmeta.pop('actual_start', None)
+        cmeta.pop('actual_end', None)
         set_meta(candidate, cmeta)
 
     for m, p1, p2 in pairs:
@@ -2529,10 +2542,15 @@ def update_match_result(match_id):
     p2_sets = sum(1 for a, b in sets if b > a)
     winner_side = 1 if p1_sets > p2_sets else (2 if p2_sets > p1_sets else None)
 
+    was_completed = bool(m.winner_id)
     m.score_json = json.dumps(sets, ensure_ascii=False)
     m.winner_id = None
     m.loser_id = None
     result_meta = meta_for(m)
+    if winner_side and settings_for(m.tournament).get('schedule_start') and not was_completed:
+        result_meta['actual_end'] = local_now(settings_for(m.tournament)).isoformat()
+    if not winner_side:
+        result_meta.pop('actual_end', None)
     if sets:
         result_meta['user_result_entered'] = True
     else:
@@ -2629,6 +2647,8 @@ def update_round_pairing(tournament_id):
         dm.winner_id = None
         dm.loser_id = None
         dmeta.pop('user_result_entered', None)
+        dmeta.pop('actual_start', None)
+        dmeta.pop('actual_end', None)
         set_meta(dm, dmeta)
 
     for m, p1, p2 in new_pairs:
@@ -2687,6 +2707,70 @@ def delete_tournament_logo(tournament_id):
     return redirect(url_for('tournament_view',tournament_id=t.id)+'#settings')
 
 
+@app.route('/tournament/<int:tournament_id>/timetable', methods=['POST'])
+def save_timetable(tournament_id):
+    t = Tournament.query.get_or_404(tournament_id)
+    try:
+        start = parse_time(request.form.get('schedule_start', ''))
+        minutes = int(request.form.get('match_minutes', 30))
+        zone = request.form.get('schedule_timezone', 'Europe/Warsaw')
+        ZoneInfo(zone)
+        if not 1 <= minutes <= 480:
+            raise ValueError('Duration out of range')
+    except (ValueError, ZoneInfoNotFoundError):
+        abort(400, 'Podaj poprawną datę, strefę czasową i czas meczu (1–480 minut).')
+    st = settings_for(t)
+    st.update(schedule_start=start.isoformat() if start else '', match_minutes=minutes, schedule_timezone=zone)
+    save_settings_dict(t, st)
+    db.session.commit()
+    flash('Zapisano timetable. Godziny oczekujących meczów przeliczają się automatycznie.')
+    return redirect(url_for('tournament_view', tournament_id=t.id) + '#timetable')
+
+
+@app.route('/match/<int:match_id>/timing', methods=['POST'])
+def save_match_timing(match_id):
+    m = Match.query.get_or_404(match_id)
+    st = settings_for(m.tournament)
+    if not st.get('schedule_start'):
+        abort(400, 'Najpierw ustaw godzinę startu turnieju.')
+    md = meta_for(m)
+    if request.form.get('action') == 'start':
+        if m.winner_id or not m.player1_id or not m.player2_id or (m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not group_stage_complete(m.tournament_id)):
+            abort(400, 'Mecz nie jest gotowy do rozpoczęcia.')
+        md.setdefault('actual_start', local_now(st).isoformat())
+    else:
+        try:
+            values = {key: parse_time(request.form.get(key, '')) for key in ('manual_start', 'actual_start', 'actual_end')}
+            if values['actual_end'] and (not m.winner_id or (values['actual_start'] and values['actual_end'] < values['actual_start'])):
+                raise ValueError('Invalid finish')
+            if values['actual_start'] and (not m.player1_id or not m.player2_id):
+                raise ValueError('Missing players')
+            now = local_now(st)
+            if any(values[key] and values[key] > now for key in ('actual_start', 'actual_end')):
+                raise ValueError('Actual times cannot be in the future')
+        except ValueError:
+            abort(400, 'Sprawdź godziny. Koniec wymaga wyniku i nie może poprzedzać startu; rzeczywiste czasy nie mogą być w przyszłości.')
+        for key, value in values.items():
+            if value:
+                md[key] = value.isoformat()
+            else:
+                md.pop(key, None)
+    if md.get('actual_start') and not m.winner_id:
+        closing = closing_match_kind(m)
+        if closing and any(other.id != m.id and not other.winner_id and not (closing == 'bronze' and closing_match_kind(other) == 'final') for other in m.tournament.matches):
+            abort(400, 'Najpierw zakończ wcześniejsze mecze. Mecz o 3. miejsce jest przed finałem.')
+        if not m.player1_id or not m.player2_id or (m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not group_stage_complete(m.tournament_id)):
+            abort(400, 'Mecz nie jest gotowy do rozpoczęcia.')
+        if any(other.id != m.id and not other.winner_id and meta_for(other).get('actual_start') and
+               (other.court_number == m.court_number or set(filter(None, (other.player1_id, other.player2_id))) & set((m.player1_id, m.player2_id)))
+               for other in m.tournament.matches):
+            abort(400, 'Kort lub zawodnik bierze już udział w trwającym meczu.')
+    set_meta(m, md)
+    db.session.commit()
+    flash('Zapisano czas meczu. Harmonogram został przeliczony.')
+    return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + f'#match-{m.id}')
+
+
 @app.route('/tournament/<int:tournament_id>/schedule', methods=['POST'])
 def reschedule(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
@@ -2694,7 +2778,10 @@ def reschedule(tournament_id):
     if reorder and any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in t.matches if meta_for(m).get('key')):
         flash('Kolejność można zmienić przed wpisaniem wyników fazy pucharowej.')
         return redirect(url_for('tournament_view', tournament_id=t.id) + '#matches')
-    t.court_count = max(1,int(request.form.get('court_count', t.court_count)))
+    court_count = max(1,int(request.form.get('court_count', t.court_count)))
+    if (reorder or court_count != t.court_count) and any(not m.winner_id and meta_for(m).get('actual_start') for m in t.matches):
+        abort(400, 'Zakończ trwające mecze przed zmianą kolejności lub liczby kortów.')
+    t.court_count = court_count
     db.session.commit()
     assign_schedule(t, renumber=reorder)
     flash('Zapisano przeplataną kolejność meczów; mecz o 3. miejsce i finał zamykają harmonogram.' if reorder else 'Court allocation updated. Published match numbers were preserved.')

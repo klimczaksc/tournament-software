@@ -85,7 +85,7 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
 </div>
 <div class="creator-credit">created by Michał Klimczak (klimczak.sc@gmail.com)</div>
 <script>
-  document.querySelectorAll('details.section').forEach((el,idx)=>{const key='section-open-'+(el.id||idx);const saved=localStorage.getItem(key);if(saved!==null)el.open=saved==='1';el.addEventListener('toggle',()=>localStorage.setItem(key,el.open?'1':'0'));});
+  document.querySelectorAll('details.section:not([data-view-state])').forEach((el,idx)=>{const key='section-open-'+(el.id||idx);const saved=localStorage.getItem(key);if(saved!==null)el.open=saved==='1';el.addEventListener('toggle',()=>localStorage.setItem(key,el.open?'1':'0'));});
   const themeBtn=document.getElementById('theme-toggle');
   function currentTheme(){return document.documentElement.dataset.theme==='light'?'light':'dark'}
   function refreshThemeButton(){if(themeBtn)themeBtn.textContent=currentTheme()==='light'?'Dark mode':'Light mode'}

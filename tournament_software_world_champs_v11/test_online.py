@@ -365,3 +365,102 @@ def test_schedule_reordering_refuses_started_knockout():
     with app.app_context():
         t=db.session.get(Tournament,tid)
         assert {m.id:(m.order_index,m.score_json,m.winner_id) for m in t.matches}==before
+
+
+def test_live_timetable_parallel_courts_delay_manual_floor_and_dependencies():
+    from datetime import datetime
+    from types import SimpleNamespace
+    from timetable import build_timetable
+    from app import closing_match_kind
+    def match(i,court,p1,p2,**md):
+        return SimpleNamespace(id=i,order_index=i,court_number=court,player1_id=p1,player2_id=p2,
+                               winner_id=None,bracket='main',notes=__import__('json').dumps(md))
+    meta=lambda m: __import__('json').loads(m.notes)
+    a=match(1,1,1,2,key='a',actual_start='2030-05-01T10:00')
+    b=match(2,2,3,4,key='b')
+    c=match(3,1,5,6,key='c')
+    d=match(4,2,None,7,key='d',sources=[{'kind':'winner','match_key':'a'}])
+    bronze=match(5,1,8,9,place_start=3,place_end=4)
+    final=match(6,2,10,11,place_start=1,place_end=2)
+    t=SimpleNamespace(system='single_elimination')
+    settings={'schedule_start':'2030-05-01T10:00','match_minutes':30}
+    now=datetime(2030,5,1,10,45)
+    slots=build_timetable(t,[a,b,c,d,bronze,final],settings,meta,closing_match_kind,now)
+    assert slots[1]['end']==datetime(2030,5,1,10,46) # Ongoing overtime blocks its court.
+    assert slots[2]['start']==now # Another court can start independently.
+    assert slots[3]['start']==slots[1]['end']
+    assert slots[4]['start']>=slots[1]['end'] and slots[4]['start']>=slots[2]['end']
+    assert slots[5]['start']>=max(slots[i]['end'] for i in (1,2,3,4))
+    assert slots[6]['start']>=slots[5]['end']
+    # A real finish releases the court. The other court keeps its own allocation.
+    a.winner_id=1;a.notes=__import__('json').dumps({'key':'a','actual_start':'2030-05-01T10:00','actual_end':'2030-05-01T10:45'})
+    c.notes=__import__('json').dumps({'key':'c','manual_start':'2030-05-01T11:30'})
+    revised=build_timetable(t,[a,b,c,d,bronze,final],settings,meta,closing_match_kind,now)
+    assert revised[2]['start']==slots[2]['start']
+    assert revised[3]['start']==datetime(2030,5,1,11,30)
+    c.notes=__import__('json').dumps({'key':'c','manual_start':'2030-05-01T10:15'})
+    revised=build_timetable(t,[a,b,c,d,bronze,final],settings,meta,closing_match_kind,now)
+    assert revised[3]['start']==now and revised[3]['shifted']
+    # A player cannot be double-booked, even across different courts.
+    c.player1_id=3
+    revised=build_timetable(t,[a,b,c,d,bronze,final],settings,meta,closing_match_kind,now)
+    assert revised[3]['start']>=revised[2]['end']
+
+
+def test_live_timetable_groups_wait_before_knockout_and_byes_take_no_time():
+    from datetime import datetime
+    from pathlib import Path
+    from app import import_database_json, meta_for, closing_match_kind, save_settings_dict, settings_for
+    from timetable import build_timetable
+    with app.app_context():
+        t=import_database_json((Path(__file__).parent/'fixtures/pending_placement_13.json').read_text())
+        settings=settings_for(t);settings.update(schedule_start='2030-05-01T10:00',match_minutes=30)
+        save_settings_dict(t,settings);db.session.commit()
+        slots=build_timetable(t,list(t.matches),settings,meta_for,closing_match_kind,datetime(2030,5,1,9))
+        group_end=max(slots[m.id]['end'] for m in t.matches if m.bracket.startswith('group_'))
+        for m in t.matches:
+            if not m.bracket.startswith('group_') and not m.winner_id:
+                assert slots[m.id]['start']>=group_end
+            for src in meta_for(m).get('sources',[]):
+                if src.get('kind') in ('winner','loser'):
+                    dep=next(x for x in t.matches if meta_for(x).get('key')==src['match_key'])
+                    assert slots[m.id]['start']>=slots[dep.id]['end']
+
+
+def test_timing_admin_controls_record_finish_once_and_public_sections():
+    from app import create_tournament, generate_structure, meta_for, settings_for
+    admin=app.test_client();login(admin,'admin','Abc123!x');token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('Live Clock Cup',8,'single_elimination',True,2);generate_structure(t);tid=t.id
+        mids=[m.id for m in t.matches if m.player1_id and m.player2_id and not m.winner_id]
+    path=f'/tournament/{tid}'
+    assert admin.post(path+'/timetable',data={'schedule_start':'2030-05-01T10:00','match_minutes':'0','csrf_token':token}).status_code==400
+    assert admin.post(path+'/timetable',data={'schedule_start':'bad','csrf_token':token}).status_code==400
+    assert admin.post(path+'/timetable',data={'schedule_start':'2030-05-01T10:00','schedule_timezone':'not/a/zone','csrf_token':token}).status_code==400
+    assert admin.post(path+'/timetable',data={'schedule_start':'2030-05-01T10:00','match_minutes':'30','schedule_timezone':'Europe/Warsaw','csrf_token':token}).status_code==302
+    assert 'Edytuj godziny meczu' in admin.get(path).text
+    assert admin.post(f'/match/{mids[0]}/timing',data={'action':'start','csrf_token':token}).status_code==302
+    payload={'set_1_p1':21,'set_1_p2':1,'set_2_p1':21,'set_2_p2':1,'csrf_token':token}
+    assert admin.post(f'/match/{mids[0]}/result',data=payload).status_code==302
+    with app.app_context():
+        md=meta_for(db.session.get(Match,mids[0]));finish=md['actual_end'];assert md.get('actual_start')
+    assert admin.post(f'/match/{mids[0]}/result',data=payload).status_code==302
+    with app.app_context(): assert meta_for(db.session.get(Match,mids[0]))['actual_end']==finish
+    # Finish time cannot be added to an unresolved match, or be in the future.
+    assert admin.post(f'/match/{mids[1]}/timing',data={'actual_end':'2020-01-01T10:00','csrf_token':token}).status_code==400
+    assert admin.post(f'/match/{mids[1]}/timing',data={'actual_start':'2099-01-01T10:00','csrf_token':token}).status_code==400
+    # A manual correction survives result editing and is included in the public view.
+    assert admin.post(f'/match/{mids[0]}/timing',data={'actual_start':'2020-01-01T10:00','actual_end':'2020-01-01T10:45','csrf_token':token}).status_code==302
+    admin.post(path+'/publish',data={'published':'on','csrf_token':token})
+    with app.app_context(): public='/t/'+settings_for(db.session.get(Tournament,tid))['public_slug']
+    guest=app.test_client();page=guest.get(public).text
+    next_section=page.split('<div class="next-matches">')[1].split('<details class="section" id="more-upcoming"')[0]
+    assert next_section.count('<article ')==5
+    assert 'id="more-upcoming"' in page and 'id="results" data-view-state' in page
+    assert '01.01 10:45' in page and '2030' not in page # rendered clocks show day/month, not ISO fields
+    assert 'Start teraz' not in page and 'Edytuj godziny' not in page
+    assert guest.get(public+'?display=1').status_code==200
+    assert 'Pełny ekran' in guest.get(public+'?display=1').text
+    assert guest.post(f'/match/{mids[0]}/timing').status_code==401
+    for export in ('schedule_pdf','excel'):
+        assert admin.get(path+'/export/'+export).status_code==200

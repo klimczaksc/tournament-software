@@ -64,3 +64,26 @@ python app.py
 Local port: 5069. DATA_DIR defaults to the app directory; a local session secret
 is generated when SECRET_KEY is absent. Keep databases, uploads and secrets out
 of git. For tests: `pip install pytest && pytest test_online.py`.
+
+
+### Timetable i ekran zawodników
+
+W turnieju otwórz „Timetable · godziny meczów”, ustaw lokalną datę i godzinę startu,
+czas meczu (domyślnie 30 minut) oraz strefę IANA (domyślnie `Europe/Warsaw`).
+Pusta data wyłącza godziny. Ustawienie nie generuje ponownie drabinki i nie zmienia wyników.
+
+„Start teraz” rejestruje rzeczywisty start. Pierwszy rozstrzygający wynik rejestruje
+czas zakończenia; późniejsze korekty wyniku go zachowują. Przy opóźnionym wpisaniu
+wyniku popraw czas w „Edytuj godziny meczu”. Planowany start jest dolnym ograniczeniem:
+kort, zawodnicy, faza grupowa i źródłowe mecze muszą być dostępne. Prognozy są liczone
+osobno dla każdego kortu; przekroczony czas trwającego meczu przesuwa jego następników.
+Brak oznaczenia startu oznacza, że program nie wie, czy mecz rzeczywiście się rozpoczął.
+Stare wyniki bez czasów korzystają z szacowanego przebiegu; nie otrzymują automatycznie
+fikcyjnych rzeczywistych czasów. Godziny są też w eksporcie harmonogramu PDF i Excel.
+
+Publiczny widok pokazuje pięć pierwszych trwających/nadchodzących meczów, rozwijaną
+resztę oraz osobno rozwijane wyniki. Drabinki i tabele pozostają dostępne. Dane odświeżają
+się co 15 sekund w aktywnym oknie, bez przeładowania strony i utraty pełnego ekranu.
+„Tryb monitora” (`?display=1`) powiększa najbliższe mecze i dodaje zegar oraz pełny ekran.
+W systemie wybierz rozszerzony pulpit, otwórz ten widok w osobnym oknie na drugim
+monitorze, a na głównym pozostaw panel administratora. Wyłącz usypianie ekranu na czas turnieju.

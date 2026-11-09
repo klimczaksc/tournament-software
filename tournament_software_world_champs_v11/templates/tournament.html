@@ -7,6 +7,7 @@
   <a href="#overview">Overview</a><a href="#settings">Settings</a><a href="#seeding">Seeding</a>
   {% if tournament.system == 'group_knockout' %}<a href="#group-assignment">Group Assignment</a><a href="#group-tables">Group Tables</a>{% endif %}
   {% if groups_complete %}<a href="#knockout-pairing">Pairings</a>{% endif %}
+  <a href="#timetable">Timetable</a>
   <a href="#matches">Matches</a><a href="#tree">Tournament Tree</a><a href="#standings">Standings</a>
   <div class="nav-sep"></div><div class="nav-muted">FILES & VIEW</div>
   <a href="/tournament/{{ tournament.id }}/export/db">Backup JSON</a><a href="/tournament/{{ tournament.id }}/export/pdf">Bracket PDF</a><a href="/tournament/{{ tournament.id }}/export/groups_pdf">Groups PDF</a><a href="/tournament/{{ tournament.id }}/export/schedule_pdf">Schedule PDF</a><a href="/tournament/{{ tournament.id }}/export/final_standings_pdf">Final Standings PDF</a><a href="/tournament/{{ tournament.id }}/export/excel">Results Excel</a>
@@ -15,7 +16,7 @@
 {% if logo_url %}<img class="tournament-watermark" src="{{ logo_url }}" alt="">{% endif %}
 
 <div class="card mb appearance-control"><div><h3>Styl interfejsu</h3><p>Wygląd panelu administratora i strony zawodników w tym turnieju.</p></div><form method="post" action="{{ url_for('appearance', tournament_id=tournament.id) }}" class="row"><label for="interface-style">Styl interfejsu<select id="interface-style" name="interface_style"><option value="classic" {% if settings.get('interface_style', 'classic') != 'modern' %}selected{% endif %}>Klasyczny</option><option value="modern" {% if settings.get('interface_style') == 'modern' %}selected{% endif %}>Nowoczesny</option></select></label><button type="submit">Zapisz styl</button></form></div>
-<div class="card mb"><h3>Link dla graczy</h3><form method="post" action="/tournament/{{ tournament.id }}/publish" class="row"><label><input type="checkbox" name="published" {% if settings.get('public_enabled') %}checked{% endif %}> Publiczny harmonogram, wyniki i drabinka</label><button>Zapisz</button></form>{% if settings.get('public_enabled') %}<input readonly style="width:100%;margin-top:12px" value="{{ url_for('public_short', slug=settings.get('public_slug'), _external=True) }}" onclick="this.select()"><p class="small muted">Skopiuj i udostępnij graczom. Każdy z linkiem zobaczy dane turnieju.</p>{% endif %}</div>
+<div class="card mb"><h3>Link dla graczy</h3><form method="post" action="/tournament/{{ tournament.id }}/publish" class="row"><label><input type="checkbox" name="published" {% if settings.get('public_enabled') %}checked{% endif %}> Publiczny harmonogram, wyniki i drabinka</label><button>Zapisz</button></form>{% if settings.get('public_enabled') %}<input readonly style="width:100%;margin-top:12px" value="{{ url_for('public_short', slug=settings.get('public_slug'), _external=True) }}" onclick="this.select()"><p class="small muted"><a class="pill" target="_blank" rel="noopener" href="{{ url_for('public_short', slug=settings.get('public_slug'), display=1) }}">Otwórz widok na monitor ↗</a> Skopiuj i udostępnij graczom. Każdy z linkiem zobaczy dane turnieju.</p>{% endif %}</div>
 <div id="overview" class="row between mb">
   <div>
     <h1>{{ tournament.name }}</h1>
@@ -108,6 +109,17 @@
   </div>{% endfor %}
 </div></details>{% endif %}
 
+<details class="section" id="timetable" open><summary>Timetable · godziny meczów</summary><div class="section-body card">
+<form method="post" action="/tournament/{{ tournament.id }}/timetable" class="row">
+<label>Start turnieju / fazy grupowej<input type="datetime-local" name="schedule_start" value="{{ settings.get('schedule_start','')[:16] }}"></label>
+<label>Minut na mecz<input type="number" name="match_minutes" min="1" max="480" value="{{ settings.get('match_minutes',30) }}" style="width:90px"></label>
+<label>Strefa czasowa<input name="schedule_timezone" value="{{ settings.get('schedule_timezone','Europe/Warsaw') }}" required placeholder="Europe/Warsaw"></label><button>Zapisz timetable</button>
+</form><p class="small muted">Ustaw datę i godzinę rozpoczęcia. Pusta data wyłącza godziny. Prognoza uwzględnia liczbę kortów, dostępność zawodników i wcześniejsze rundy. Mecz o 3. miejsce oraz finał pozostają na końcu.</p>
+<p class="small muted">Klikaj „Start teraz” przy rozpoczęciu meczu. Zapisanie pierwszego rozstrzygającego wyniku zapisuje rzeczywisty koniec i przelicza pozostałe mecze; korekta wyniku zachowuje ten czas. Jeśli wpisujesz wynik później lub uzupełniasz stary turniej, popraw czas końca ręcznie. Ręczny planowany start jest najwcześniejszą godziną — zależności mogą ją przesunąć. Trwający mecz po przekroczeniu {{ settings.get('match_minutes',30) }} minut nadal zajmuje kort aż do zapisania wyniku.</p>
+<p class="small muted">Ta sama kolejka opisuje bazowy układ równoległy; aktualne godziny mogą się różnić wskutek opóźnień. Zmiana liczby kortów jest dostępna poniżej.</p>
+</div></details>
+<style>.timing-fields{display:flex;flex-wrap:wrap;gap:8px;align-items:end}.timing-fields label,#timetable label{display:flex;flex-direction:column;gap:5px}.timing-fields input{max-width:230px}</style>
+
 <details class="section" id="matches" open><summary>Matches</summary><div class="section-body card">
   <div class="row between mb"><div class="small muted">Mecze głównej drabinki i consolation są przeplatane. Ta sama kolejka oznacza mecze równoległe na różnych boiskach. Przedostatni jest mecz o 3. miejsce, ostatni finał.</div><form method="post" action="/tournament/{{ tournament.id }}/schedule" class="row"><label>Courts <input type="number" min="1" name="court_count" value="{{ tournament.court_count }}" style="width:80px"></label><button type="submit">Recalculate courts</button><button type="submit" name="reorder" value="1">Zastosuj przeplataną kolejność</button></form></div>
   {% if tournament.system == 'group_knockout' and matches and not groups_complete %}<div class="qualification-note mb"><strong>Group Stage in progress.</strong> Championship and placement remain locked until every group match has a result.</div>{% endif %}
@@ -121,13 +133,13 @@
         <button type="submit" {% if locked_after_groups or participants_pending %}disabled{% endif %}>Save result</button>
       </form>{% if locked_after_groups %}<div class="small muted mt-sm">Locked until Group Stage is complete.</div>{% elif participants_pending %}<div class="small muted mt-sm">Waiting for earlier result.</div>{% endif %}
     </div>
-  </div></div>{% endfor %}{% else %}<div class="muted">Generate the tournament structure first.</div>{% endif %}
+  </div>{% include 'timing_controls.html' %}</div>{% endfor %}{% else %}<div class="muted">Generate the tournament structure first.</div>{% endif %}
 </div></details>
 
 {% if bracket_sections %}<details class="section" id="tree" open><summary>Tournament Draws</summary><div class="section-body card">
   <div class="small muted mb">Draws are split into Championship and exact-placement sheets. Future slots show their source (for example <strong>Loser #16</strong>), so every route is visible before the team is known.</div>
   {% for stage in bracket_sections %}{% if stage.stage != 'Group Stage' %}<div class="bracket-stage"><h2>{{ stage.stage }}</h2>{% for section in stage.sections %}<div class="bracket-section"><h3>{{ section.name }}</h3>{% if settings.pairing_mode == 'every_round' and section.kind == 'championship' %}<span class="reseed-badge">Reseeding may change future-round pairings</span>{% endif %}<div class="bracket-scroll"><div class="bracket-canvas"><svg class="bracket-svg" aria-hidden="true"></svg><div class="bracket-grid">
-    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
+    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if timing.get(m.id) %} · {{ format_time(timing[m.id].start) }}{% endif %}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
   </div></div></div></div>{% endfor %}</div>{% endif %}{% endfor %}
 </div></details>{% endif %}
 
