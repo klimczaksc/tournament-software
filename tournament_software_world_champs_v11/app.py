@@ -393,7 +393,34 @@ def add_match(tournament_id, phase_id, order_index, bracket, round_name, source1
     return m
 
 
-def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefix, order_state, bracket='main', depth_base=0):
+def record_or_add(plan, *args):
+    if plan is None:
+        return add_match(*args)
+    plan[args[-1]] = [args[5], args[6]]
+
+
+def seeded_source_pairs(tournament_id, sources):
+    """Pair top and bottom halves, avoiding group rematches when known."""
+    sources = list(sources)
+    t = db.session.get(Tournament, tournament_id)
+    if t and t.system == 'group_knockout' and group_stage_complete(t.id):
+        tables = dict(compute_group_tables(t))
+        ids = [resolve_source(src,t.id,{},tables,True) for src in sources]
+        if all(ids) and len(set(ids)) == len(ids):
+            by_id = dict(zip(ids,sources))
+            pairs = recommended_pairs(t,ids)
+            if len(pairs)*2 == len(sources):
+                return [(by_id[a.id],by_id[b.id]) for a,b in pairs]
+    return [(sources[i],sources[-1-i]) for i in range(len(sources)//2)]
+
+
+def seeded_source_slots(tournament_id, sources):
+    pairs = seeded_source_pairs(tournament_id,sources)
+    positions = balanced_seed_positions(len(sources))
+    return [src for i in range(0,len(positions),2) for src in pairs[min(positions[i:i+2])-1]]
+
+
+def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefix, order_state, bracket='main', depth_base=0, plan=None):
     sources = list(sources)
     n = len(sources)
     if n <= 1:
@@ -403,7 +430,7 @@ def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefi
     if n == 2:
         key = f'{key_prefix}_m1'
         order_state['value'] += 1
-        add_match(
+        record_or_add(plan,
             tournament_id,
             phase_id,
             order_state['value'],
@@ -428,7 +455,7 @@ def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefi
     for i in range(0, n, 2):
         key = f'{key_prefix}_r{depth_base+1}_m{i//2+1}'
         order_state['value'] += 1
-        add_match(
+        record_or_add(plan,
             tournament_id,
             phase_id,
             order_state['value'],
@@ -446,7 +473,7 @@ def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefi
         winners.append({'kind': 'winner', 'match_key': key})
         losers.append({'kind': 'loser', 'match_key': key})
 
-    build_exact_bracket(tournament_id, phase_id, winners, place_start, f'{key_prefix}_W', order_state, bracket=bracket, depth_base=depth_base + 1)
+    build_exact_bracket(tournament_id, phase_id, winners, place_start, f'{key_prefix}_W', order_state, bracket=bracket, depth_base=depth_base + 1, plan=plan)
     build_exact_bracket(
         tournament_id,
         phase_id,
@@ -455,12 +482,12 @@ def build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefi
         f'{key_prefix}_L',
         order_state,
         bracket='placement' if place_start > 1 or bracket == 'placement' else 'main',
-        depth_base=depth_base + 1,
+        depth_base=depth_base + 1, plan=plan,
     )
     return []
 
 
-def build_exact_bracket_any(tournament_id, phase_id, sources, place_start, key_prefix, order_state, bracket='main', depth_base=0):
+def build_exact_bracket_any(tournament_id, phase_id, sources, place_start, key_prefix, order_state, bracket='main', depth_base=0, seeded=False, plan=None):
     """Build exact-placement brackets for any field size >= 2.
 
     Non-power-of-two fields use a preliminary/play-in round. Higher-priority
@@ -472,7 +499,7 @@ def build_exact_bracket_any(tournament_id, phase_id, sources, place_start, key_p
     if n <= 1:
         return []
     if n & (n - 1) == 0:
-        return build_exact_bracket(tournament_id, phase_id, sources, place_start, key_prefix, order_state, bracket=bracket, depth_base=depth_base)
+        return build_exact_bracket(tournament_id, phase_id, seeded_source_slots(tournament_id,sources) if seeded else sources, place_start, key_prefix, order_state, bracket=bracket, depth_base=depth_base, plan=plan)
 
     core_size = 1 << (n.bit_length() - 1)
     play_in_matches = n - core_size
@@ -486,12 +513,11 @@ def build_exact_bracket_any(tournament_id, phase_id, sources, place_start, key_p
     # Pair the strongest play-in source with the weakest, then work inward.
     # With 4 groups + 2/group + 2 best third-place teams this means the
     # wildcards face lower-priority automatic qualifiers rather than each other.
-    for i in range(play_in_matches):
-        src1 = prelim_sources[i]
-        src2 = prelim_sources[-1 - i]
+    pairs = seeded_source_pairs(tournament_id,prelim_sources) if seeded else [(prelim_sources[i],prelim_sources[-1-i]) for i in range(play_in_matches)]
+    for i, (src1,src2) in enumerate(pairs):
         key = f'{key_prefix}_playin_m{i+1}'
         order_state['value'] += 1
-        add_match(
+        record_or_add(plan,
             tournament_id, phase_id, order_state['value'], bracket,
             f'{section} - Preliminary', src1, src2, section,
             place_start, place_start + n - 1, depth_base, i, key
@@ -502,11 +528,11 @@ def build_exact_bracket_any(tournament_id, phase_id, sources, place_start, key_p
     core_sources = bye_sources + prelim_winners
     build_exact_bracket_any(
         tournament_id, phase_id, core_sources, place_start,
-        f'{key_prefix}_CORE', order_state, bracket=bracket, depth_base=depth_base + 1
+        f'{key_prefix}_CORE', order_state, bracket=bracket, depth_base=depth_base + 1, seeded=seeded, plan=plan
     )
     build_exact_bracket_any(
         tournament_id, phase_id, prelim_losers, place_start + core_size,
-        f'{key_prefix}_PLAYOUT', order_state, bracket='placement', depth_base=depth_base + 1
+        f'{key_prefix}_PLAYOUT', order_state, bracket='placement', depth_base=depth_base + 1, seeded=seeded, plan=plan
     )
     return []
 
@@ -1075,7 +1101,7 @@ def generate_group_knockout(t: Tournament):
             next_place = champ_size + 1
             build_exact_bracket_any(
                 t.id, knockout_phase.id, placement_sources, next_place,
-                f'place_{next_place}', order_state, bracket='placement'
+                f'place_{next_place}', order_state, bracket='placement', seeded=True
             )
 
     db.session.commit()
@@ -1275,10 +1301,40 @@ def source_state(source, tournament_id, matches_by_key, group_tables_by_key,
     return (feeder.winner_id if kind == 'winner' else feeder.loser_id), True
 
 
+def repair_placement_seeding(t):
+    if t.system != 'group_knockout':
+        return False
+    field = [m for m in t.matches if str(meta_for(m).get('key','')).startswith('place_')]
+    if not field or any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') or
+                        meta_for(m).get('actual_start') or meta_for(m).get('manual_pairing') for m in field):
+        return False
+    leaves = {}
+    for m in field:
+        for src in meta_for(m).get('sources',[]):
+            if src.get('kind') == 'best_group_pos':
+                leaves[(int(src['pos']),int(src['rank']))] = src
+    if len(leaves)<2:
+        return False
+    start = min(meta_for(m)['place_start'] for m in field)
+    plan = {}
+    build_exact_bracket_any(t.id,field[0].phase_id,[leaves[k] for k in sorted(leaves)],start,
+                            f'place_{start}',{'value':0},bracket='placement',seeded=True,plan=plan)
+    if set(plan) != {meta_for(m).get('key') for m in field}:
+        return False
+    changed = False
+    for m in field:
+        md = meta_for(m)
+        if md.get('sources') != plan[md['key']]:
+            md['sources'] = plan[md['key']]
+            set_meta(m,md);changed=True
+    return changed
+
+
 def propagate_all(tournament_id):
     t = Tournament.query.get(tournament_id)
     if not t:
         return
+    repair_placement_seeding(t)
     matches = Match.query.filter_by(tournament_id=tournament_id).order_by(Match.order_index, Match.id).all()
     matches_by_key = {}
     for m in matches:
@@ -1765,9 +1821,9 @@ def bracket_sections(t):
             return ('championship', 1)
         if p <= 4:
             return ('bronze', 3)
-        # Exact-placement families are 5-8, 9-16, 17-32, ...
-        lo = (1 << int(math.floor(math.log2(max(1, p - 1))))) + 1
-        return ('placement', lo)
+        # Keep each winner path separate: 9-16 -> 9-12 -> 9-10,
+        # with independent lower branches for 11-12, 13-16 and 15-16.
+        return ('placement', p)
 
     for m in matches:
         meta = meta_for(m)
@@ -2911,6 +2967,9 @@ configure_online(app, db, Tournament, settings_for, save_settings_dict, tourname
 with app.app_context():
     statistics_services['backfill']()
     repaired = repair_unplayed_brackets()
+    for pending_tournament in Tournament.query.all():
+        if repair_placement_seeding(pending_tournament):
+            propagate_all(pending_tournament.id)
     upgrade_unplayed_schedules()
     if repaired:
         app.logger.info('Repaired pending bracket outcomes for tournament IDs: %s', repaired)

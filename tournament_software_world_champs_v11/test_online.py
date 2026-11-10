@@ -169,8 +169,9 @@ def test_pending_placement_fixture_preserves_groups_and_finishes_all_places():
         by_number = {m.order_index: m for m in t.matches}
         groups = [(m.order_index, m.score_json, m.winner.seed) for m in t.matches if m.bracket.startswith('group_')]
         assert groups == expected_groups
-        assert by_number[33].player1.seed == 10
-        assert by_number[33].player2_id is None and by_number[33].winner_id is None
+        pending_core=next(m for m in t.matches if any(src.get('kind')=='winner' and src.get('match_key')==meta_for(by_number[27])['key'] for src in meta_for(m).get('sources',[])))
+        assert meta_for(pending_core)['sources'][0] == {'kind':'best_group_pos','pos':3,'rank':3}
+        assert pending_core.player2_id is None and pending_core.winner_id is None
         assert by_number[38].player1_id is None and by_number[38].player2_id is None
         assert by_number[38].winner_id is None
         assert placement_map(t) == {}
@@ -185,10 +186,10 @@ def test_pending_placement_fixture_preserves_groups_and_finishes_all_places():
             m.winner_id, m.loser_id = m.player1_id, m.player2_id
             md = meta_for(m); md['user_result_entered'] = True; set_meta(m,md)
             db.session.commit(); propagate_all(t.id)
-        # Resolving #27 supplies the missing player in #33; it does not award a win there.
+        # Resolving #27 supplies the missing player in the protected-seed quarter-final; it does not award a win there.
         record(by_number[27])
-        assert by_number[33].player2_id == by_number[27].winner_id
-        assert by_number[33].winner_id is None and by_number[38].player2_id is None
+        assert pending_core.player2_id == by_number[27].winner_id
+        assert pending_core.winner_id is None and by_number[38].player2_id is None
         # Finish the rest and verify a unique exact ranking of all thirteen players.
         for _ in range(50):
             playable = [m for m in t.matches if m.player1_id and m.player2_id and not m.winner_id]
@@ -924,3 +925,44 @@ def test_public_tv_logo_is_scoped_and_revoked_with_the_player_link():
     assert guest.get(f'/tournament/{tid}/logo').status_code==302
     admin.post(f'/tournament/{tid}/publish',data={'csrf_token':atok})
     assert guest.get(url).status_code==404
+
+
+def test_consolation_seeding_separates_top_seeds_avoids_group_rematches_and_preserves_ids():
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict,meta_for,set_meta,propagate_all,bracket_sections,tournament_seed_rows,player_group_map
+    with app.app_context():
+        t=create_tournament('Placement seeding',16,'group_knockout',True,3)
+        st=settings_for(t);st.update(group_count=4,qualifiers_per_group=2,best_next_place_qualifiers=0);save_settings_dict(t,st);db.session.commit();generate_structure(t)
+        roots=sorted([m for m in t.matches if meta_for(m).get('key','').startswith('place_9_r1_')],key=lambda m:meta_for(m)['slot_index'])
+        assert len(roots)==4
+        # Before the groups finish, the placeholders already cross third with fourth.
+        assert all({src['pos'] for src in meta_for(m)['sources']}=={3,4} for m in roots)
+        ids={m.id for m in t.matches};numbers={m.id:m.order_index for m in t.matches}
+        group_scores={}
+        for m in t.matches:
+            if m.bracket.startswith('group_'):
+                m.score_json='[[15,0],[15,0]]';m.winner_id=m.player1_id;m.loser_id=m.player2_id
+                group_scores[m.id]=m.score_json
+        db.session.commit();propagate_all(t.id)
+        pairs=[(m.player1_id,m.player2_id) for m in roots]
+        entrants=[pid for pair in pairs for pid in pair]
+        assert len(entrants)==8 and len(set(entrants))==8
+        groups=player_group_map(t)
+        assert all(groups[a]!=groups[b] for a,b in pairs)
+        ranked=tournament_seed_rows(t,entrants);seeds={r['player'].id:i+1 for i,r in enumerate(ranked)}
+        assert all(min(seeds[a],seeds[b])<=4<max(seeds[a],seeds[b]) for a,b in pairs)
+        first_half={pid for pair in pairs[:2] for pid in pair}
+        assert (ranked[0]['player'].id in first_half)!=(ranked[1]['player'].id in first_half)
+        assert {m.id for m in t.matches}==ids and {m.id:m.order_index for m in t.matches}==numbers
+        assert all(db.session.get(Match,mid).score_json==value for mid,value in group_scores.items())
+        # Each view branch contains one winner path, not interleaved W/L trees.
+        sections=[section for stage in bracket_sections(t) for section in stage['sections']]
+        shown=[m.id for section in sections for rnd in section['rounds'] for m in rnd]
+        assert len(shown)==len(set(shown))==len(t.matches)
+        for section in sections:
+            if section['kind']=='placement':
+                assert len({meta_for(m)['place_start'] for rnd in section['rounds'] for m in rnd})==1
+        # Explicit or played draws are never silently replaced.
+        locked=roots[0];md=meta_for(locked);md['actual_start']='2026-11-10T12:00:00';set_meta(locked,md)
+        before={m.id:meta_for(m).get('sources') for m in t.matches};db.session.commit();propagate_all(t.id)
+        assert {m.id:meta_for(m).get('sources') for m in t.matches}==before
+
