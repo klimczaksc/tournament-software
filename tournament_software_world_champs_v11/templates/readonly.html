@@ -51,6 +51,25 @@ html.monitor-mode .next-matches .match-status-live{background:var(--accent);bord
 body:has(.player-view)>.creator-credit{display:none}.player-view .actions .pill{white-space:normal}.player-view table{max-width:100%}
 @media(max-width:650px){.player-view .player-matchup{gap:8px}.player-view .match-round{font-size:13px}.player-view .card{padding:14px}.player-view .match-status{flex-shrink:0}.player-view .match-card{padding:14px}.player-view .bracket-scroll{max-width:100%}.player-view .row.between{gap:10px}}
 
+/* Native text and SVG stay sharp at Full HD, 4K and high pixel density. */
+html.monitor-mode{font-size:clamp(16px,1vw,38px);text-rendering:optimizeLegibility}
+.monitor-mode .wrap{padding:clamp(16px,1.25vw,48px)}
+.monitor-mode h1{font-size:clamp(28px,2vw,80px)}.monitor-mode h2{font-size:clamp(24px,1.6vw,64px)}
+.monitor-mode .next-matches{gap:clamp(12px,.85vw,36px)}
+.monitor-mode .card,.monitor-mode .match-card{padding:clamp(14px,1vw,40px)}
+.monitor-mode .next-matches .match-card{font-size:clamp(22px,1.55vw,64px);line-height:1.35}
+.monitor-mode .player-matchup{gap:clamp(8px,.65vw,28px);margin:clamp(14px,1vw,40px) 0}
+.monitor-mode .match-time{font-size:clamp(28px,1.8vw,76px)}
+.monitor-mode .match-final-score,.monitor-mode .live-score{font-size:clamp(32px,2.15vw,88px);font-weight:750}
+.monitor-mode .referee-label{font-size:clamp(20px,1.2vw,48px)}.monitor-mode .match-round{font-size:clamp(16px,1vw,40px)}
+html.monitor-mode .next-matches .match-status{font-size:clamp(22px,1.65vw,68px);padding:clamp(8px,.6vw,24px) clamp(12px,1vw,40px)}
+.monitor-mode .actions .pill,.monitor-mode #fullscreen,.monitor-mode #screen-clock{font-size:clamp(14px,1vw,40px)}
+.monitor-mode .bracket-svg{shape-rendering:geometricPrecision}
+.monitor-mode h3,.monitor-mode .bracket-round-title{font-size:clamp(18px,1.2vw,48px)}
+.monitor-mode .bracket-grid{grid-auto-columns:clamp(240px,16vw,640px);column-gap:clamp(54px,4vw,160px)}
+.monitor-mode .bracket-team{font-size:clamp(16px,1.1vw,44px)}
+.monitor-mode .bracket-meta,.monitor-mode .bracket-section-label,.monitor-mode th{font-size:clamp(14px,.85vw,34px)}
+
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style>
 <script>
