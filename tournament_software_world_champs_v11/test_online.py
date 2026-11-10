@@ -881,3 +881,46 @@ def test_referee_assignments_give_playing_priority_for_overlapping_matches():
         # A registered manual assignment receives the same collision check.
         md=meta_for(target);md['referee_name']=first.loser.name;md['referee_player_id']=pid;set_meta(target,md);db.session.commit()
         assert 'Do zmiany:' in referee_services['assignments'](t,list(t.matches))[target.id]
+
+
+def test_main_rounds_rest_between_consolation_waves_and_no_match_is_lost():
+    import json
+    from types import SimpleNamespace
+    from app import interleave_knockout_order,allocate_court_slots,meta_for,closing_match_kind
+    def match(mid,key,start,end,deps=(),group=False):
+        md={} if group else dict(key=key,place_start=start,place_end=end,sources=[dict(kind='winner',match_key=key) for key in deps])
+        return SimpleNamespace(id=mid,bracket='group_A' if group else 'knockout',notes=json.dumps(md),player1_id=None,player2_id=None,court_number=1,winner_id=None)
+    for courts in (1,2,3,4):
+        group=match(1,None,None,None,group=True)
+        main=[match(2,'main16',1,16),match(3,'main8',1,8,['main16']),match(4,'main4',1,4,['main8'])]
+        placement=[match(5,'place1',9,16),match(6,'place2',9,12,['place1']),match(7,'place3',9,10,['place2'])]
+        bronze=match(8,'bronze',3,4,['main4']);final=match(9,'final',1,2,['main4'])
+        original=[group,*main,*placement,bronze,final]
+        result=interleave_knockout_order(original,courts);allocate_court_slots(result,courts)
+        for index,m in enumerate(result,1):m.order_index=index
+        assert len(result)==len(original) and {m.id for m in result}=={m.id for m in original}
+        assert result[0] is group and result[1] is placement[0]
+        assert [closing_match_kind(m) for m in result[-2:]]==['bronze','final']
+        for earlier,later in zip(main,main[1:]):
+            assert meta_for(later)['schedule_wave'] >= meta_for(earlier)['schedule_wave']+2
+        from timetable import build_timetable
+        from datetime import datetime,timedelta
+        slots=build_timetable(SimpleNamespace(system='group_knockout'),result,{'schedule_start':'2030-01-01T09:00','match_minutes':30},meta_for,closing_match_kind,datetime(2030,1,1,8))
+        for earlier,later in zip(main,main[1:]):
+            assert slots[later.id]['start'] >= slots[earlier.id]['end']+timedelta(minutes=30)
+
+
+def test_public_tv_logo_is_scoped_and_revoked_with_the_player_link():
+    import io
+    from PIL import Image
+    admin,atok,tid,mid,code=referee_fixture()
+    image=io.BytesIO();Image.new('RGB',(80,80),'green').save(image,format='PNG');image.seek(0)
+    assert admin.post(f'/tournament/{tid}/logo',data={'csrf_token':atok,'logo':(image,'logo.png')},content_type='multipart/form-data').status_code==302
+    guest=app.test_client();url='/players/ref-'+str(tid)+'/logo'
+    assert guest.get(url).status_code==200 and guest.get(url).mimetype=='image/png'
+    page=guest.get('/players/ref-'+str(tid)+'?display=1').text
+    assert 'class="tv-tournament-logo"' in page and url in page
+    assert guest.get('/players/invalid-logo-token/logo').status_code==404
+    assert guest.get(f'/tournament/{tid}/logo').status_code==302
+    admin.post(f'/tournament/{tid}/publish',data={'csrf_token':atok})
+    assert guest.get(url).status_code==404

@@ -36,6 +36,7 @@ def build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
                 if pid:
                     busy_players[pid] = max(busy_players.get(pid, start), end)
     group_end = start
+    batch_floors = {}
     previous_end = start
     remaining = list(sorted(matches, key=lambda m: m.order_index))
     while remaining:
@@ -57,6 +58,12 @@ def build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
                     [players.get(pid, start) for pid in (m.player1_id, m.player2_id) if pid])
         if tournament.system == 'group_knockout' and not m.bracket.startswith('group_'):
             floor = max(floor, group_end)
+        batch = md.get('schedule_batch') if not m.bracket.startswith('group_') else None
+        if batch is not None:
+            # Preserve the inter-round rest wave even on an otherwise idle court.
+            if batch not in batch_floors:
+                batch_floors[batch] = max([start] + list(ends.values()))
+            floor = max(floor, batch_floors[batch])
         if closing_match_kind(m):
             floor = max(floor, previous_end)
         bye = bool(m.winner_id and not (m.player1_id and m.player2_id))

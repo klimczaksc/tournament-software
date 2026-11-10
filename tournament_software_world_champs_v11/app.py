@@ -1382,25 +1382,47 @@ def interleave_knockout_order(matches, court_count):
                     for m in remaining}
     done = {m.id for m in groups}
     ordered = list(groups)
-    lane_cursor = 0
+    lane_cursor = 1
+    wave = 0
+    done_wave = {m.id: 0 for m in groups}
     while remaining:
+        wave += 1
         ordinary = [m for m in remaining if not closing_match_kind(m)]
         pool = ordinary or [m for m in remaining if closing_match_kind(m) == 'bronze'] or remaining
         ready = sorted([m for m in pool if dependencies[m.id] <= done], key=lambda m: rank[m.id])
         if not ready:
             raise ValueError('Cannot schedule bracket: missing or cyclic match dependency.')
         batch, occupied = [], set()
+        placement_ready = any(meta_for(m).get('place_start') != 1 and not closing_match_kind(m) for m in ready)
+        resting = {m.id for m in ready if placement_ready and meta_for(m).get('place_start') == 1 and
+                   (wave == 1 or any(done_wave.get(dep) == wave - 1 for dep in dependencies[m.id]))}
         for _ in range(court_count):
-            eligible = [m for m in ready if m not in batch and not ({m.player1_id,m.player2_id} - {None}) & occupied]
+            eligible = [m for m in ready if m.id not in resting and m not in batch and not ({m.player1_id,m.player2_id} - {None}) & occupied]
+            if any(meta_for(m).get('place_start') == 1 for m in batch) and any(
+                    meta_for(m).get('place_start') == 1 and not closing_match_kind(m) and
+                    m not in batch and not dependencies[m.id] <= done for m in remaining):
+                # Keep consolation available for the next recovery wave instead
+                # of consuming every filler alongside the preceding main round.
+                eligible = [m for m in eligible if meta_for(m).get('place_start') == 1]
             if not eligible:
                 break
-            preferred = [m for m in eligible if (0 if meta_for(m).get('place_start') == 1 else 1) == lane_cursor]
-            chosen = (preferred or eligible)[0]
+            placement = [m for m in eligible if meta_for(m).get('place_start') != 1 and not closing_match_kind(m)]
+            # Open with consolation when its entrants are known from the groups.
+            # Give advancing main-draw players a placement wave between rounds
+            # whenever a dependency-ready consolation match can fill that slot.
+            rested = [m for m in eligible if meta_for(m).get('place_start') != 1 or
+                      not any(done_wave.get(dep) == wave - 1 for dep in dependencies[m.id])]
+            choices = placement if wave == 1 and placement else (rested or eligible)
+            preferred = [m for m in choices if (0 if meta_for(m).get('place_start') == 1 else 1) == lane_cursor]
+            chosen = (preferred or choices)[0]
             batch.append(chosen)
             occupied.update({chosen.player1_id,chosen.player2_id} - {None})
             lane_cursor = 1 - (0 if meta_for(chosen).get('place_start') == 1 else 1)
             if closing_match_kind(chosen):
                 break # Bronze and final each get a separate closing slot.
+        for m in batch:
+            md = meta_for(m);md['schedule_batch'] = wave;set_meta(m, md)
+            done_wave[m.id] = wave
         ordered.extend(batch)
         done.update(m.id for m in batch)
         remaining = [m for m in remaining if m not in batch]
@@ -1411,12 +1433,14 @@ def allocate_court_slots(matches, court_count):
     wave, court = 1, 0
     keys_in_wave, players_in_wave = set(), set()
     previous_closing = False
+    previous_batch = None
     for m in matches:
         meta = meta_for(m)
         deps = {src.get('match_key') for src in meta.get('sources', []) if src.get('kind') in ('winner','loser')}
         players = {m.player1_id,m.player2_id} - {None}
         closing = closing_match_kind(m)
-        if court and (court >= court_count or deps & keys_in_wave or players & players_in_wave or closing or previous_closing):
+        batch = meta.get('schedule_batch') if not m.bracket.startswith('group_') else None
+        if court and (court >= court_count or deps & keys_in_wave or players & players_in_wave or closing or previous_closing or (batch is not None and batch != previous_batch)):
             wave += 1
             court = 0
             keys_in_wave, players_in_wave = set(), set()
@@ -1428,14 +1452,15 @@ def allocate_court_slots(matches, court_count):
             keys_in_wave.add(meta['key'])
         players_in_wave.update(players)
         previous_closing = bool(closing)
+        previous_batch = batch
 
 
 def upgrade_unplayed_schedules():
     for t in Tournament.query.all():
-        if settings_for(t).get('schedule_version') == 2:
+        if settings_for(t).get('schedule_version') == 3:
             continue
         knockout = [m for m in t.matches if meta_for(m).get('key')]
-        if not knockout or any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in knockout):
+        if not knockout or any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') or meta_for(m).get('actual_start') for m in knockout):
             continue
         assign_schedule(t,renumber=True)
 
@@ -1531,7 +1556,7 @@ def assign_schedule(tournament, renumber=False):
     allocate_court_slots(sorted(matches, key=lambda m: (m.order_index,m.id)), court_count)
     if renumber:
         settings = settings_for(tournament)
-        settings['schedule_version'] = 2
+        settings['schedule_version'] = 3
         save_settings_dict(tournament,settings)
     db.session.commit()
 
@@ -2294,7 +2319,7 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, referees=referees, live_scores=live_scores, referee_codes=referee_codes, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
+    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, referees=referees, live_scores=live_scores, referee_codes=referee_codes, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=((url_for('public_tournament_logo', token=settings.get('public_token','')) if getattr(g,'public_view',False) or not g.user else url_for('tournament_logo', tournament_id=t.id)) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])

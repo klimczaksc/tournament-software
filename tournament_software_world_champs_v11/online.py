@@ -33,7 +33,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if g.user and (not g.user.active or session.get('version') != g.user.version):
             session.clear()
             g.user = None
-        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores', 'public_event_updates', 'match_statistics', 'match_statistics_data'}
+        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'public_tournament_logo', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores', 'public_event_updates', 'match_statistics', 'match_statistics_data'}
         if request.endpoint in public:
             return
         if not g.user:
@@ -199,6 +199,13 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
             abort(404)
         g.public_view = True
         return tournament_view(t.id)
+
+    @app.route('/players/<token>/logo')
+    def public_tournament_logo(token):
+        t = next((t for t in Tournament.query.all() if settings_for(t).get('public_enabled') and hmac.compare_digest(settings_for(t).get('public_token', ''), token)), None)
+        if not t:
+            abort(404)
+        return app.view_functions['tournament_logo'](t.id)
 
     @app.route('/t/<slug>')
     def public_short(slug):
