@@ -9,6 +9,7 @@ from sqlalchemy import update
 from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import HTTPException
 from timetable import local_now
+from match_statistics import utc_now, as_utc
 
 
 def configure_referees(app, db, Tournament, Match, settings_for, save_settings, meta_for, set_meta, groups_complete, save_result):
@@ -24,7 +25,7 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
     app.extensions['referee_score'] = RefereeScore
 
     def empty():
-        return {'events': [], 'sets': [], 'current': [0, 0], 'started': False, 'finalized': False}
+        return {'stream_id': uuid.uuid4().hex, 'event_times': [], 'events': [], 'sets': [], 'current': [0, 0], 'started': False, 'finalized': False}
 
     def signature(m):
         return f'{m.player1_id}:{m.player2_id}:{m.phase.best_of if m.phase else 3}:{m.phase.points_to if m.phase else 21}'
@@ -178,6 +179,8 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
         code = f'{secrets.randbelow(1000):03d}'
         while code == row.desk_code:
             code = f'{secrets.randbelow(1000):03d}'
+        prior=data_for(row)
+        if prior.get('stream_id'):app.extensions['match_statistics']['record'](m,'reset',prior)
         row.desk_code, row.code_hash = code, generate_password_hash(code)
         row.epoch, row.revision, row.signature, row.data_json = uuid.uuid4().hex, row.revision + 1, signature(m), json.dumps(empty())
         md = meta_for(m);md.pop('actual_start', None);md.pop('actual_end', None);set_meta(m, md)
@@ -253,26 +256,36 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
             if data.get('finalized'):
                 abort(409)
             action = payload.get('action')
+            data.setdefault('stream_id',uuid.uuid4().hex)
+            data.setdefault('event_times',[None]*len(data['events']))
+            data['revision']=row.revision
             if action == 'finish':
                 if not data.get('finished_at'):
                     abort(409, 'Mecz nie ma jeszcze zwycięzcy.')
                 data['finalized'] = True
+                app.extensions['match_statistics']['record'](m,'finish',data)
                 row.data_json = json.dumps(data)
                 # Official scoring uses exactly the same propagation as the admin panel.
                 save_result(m, data['sets'])
                 md = meta_for(m);md['actual_end'] = data['finished_at'];set_meta(m, md)
+                app.extensions['match_statistics']['sync'](m)
                 db.session.commit()
                 return jsonify(state_payload(m, row))
             events = list(data['events'])
-            if action == 'point':
+            if action in ('point','start'):
                 side = payload.get('side')
-                if type(side) is not int or side not in (0, 1) or len(events) >= 2000:
+                if action=='point' and (type(side) is not int or side not in (0, 1) or len(events) >= 2000):
                     abort(400)
-                events.append(side)
+                if action=='point':
+                    events.append(side)
+                    data['event_times'].append(utc_now())
+                elif data.get('started'):
+                    abort(409, 'Mecz już rozpoczęty.')
             elif action == 'undo':
                 if not events:
                     abort(409, 'Nie ma punktu do cofnięcia.')
-                events.pop()
+                removed=events.pop()
+                data['event_times'].pop()
             else:
                 abort(400)
             sets, current, complete = calculate(events, m)
@@ -280,12 +293,19 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
                 for other in m.tournament.matches:
                     if other.id != m.id and not other.winner_id and meta_for(other).get('actual_start') and (other.court_number == m.court_number or set(filter(None, (other.player1_id, other.player2_id))) & {m.player1_id, m.player2_id}):
                         abort(409, 'Kort lub zawodnik bierze udział w innym meczu.')
-                md = meta_for(m);md.setdefault('actual_start', local_now(settings_for(m.tournament)).isoformat());set_meta(m, md)
+                md = meta_for(m)
+                data['timing_quality']='explicit' if action=='start' or md.get('actual_start') else 'first_point'
+                md.setdefault('actual_start', local_now(settings_for(m.tournament)).isoformat())
+                data['started_at_utc']=as_utc(md['actual_start'],settings_for(m.tournament).get('schedule_timezone','Europe/Warsaw')).isoformat()
+                set_meta(m, md)
             data.update(events=events, sets=sets, current=current, started=True)
             if complete:
                 data.setdefault('finished_at', local_now(settings_for(m.tournament)).isoformat())
+                data.setdefault('finished_at_utc',utc_now())
             else:
                 data.pop('finished_at', None)
+                data.pop('finished_at_utc',None)
+            app.extensions['match_statistics']['record'](m,action,data,payload.get('side') if action=='point' else removed if action=='undo' else None)
             row.data_json = json.dumps(data)
             db.session.commit()
             return jsonify(state_payload(m, row))

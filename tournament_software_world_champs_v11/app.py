@@ -203,6 +203,7 @@ def create_tournament(name, player_count, system, consolation, court_count):
 
 
 def clear_matches(tournament):
+    statistics_services['clear'](tournament.id)
     referee_services['clear'](tournament.id)
     Match.query.filter_by(tournament_id=tournament.id).delete()
     db.session.commit()
@@ -1661,6 +1662,7 @@ def export_database_json(t):
             'notes': m.notes
         } for m in Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all()]
     }
+    data['match_statistics']=statistics_services['export'](t)
     return json.dumps(data, ensure_ascii=False, indent=2)
 
 
@@ -1713,6 +1715,7 @@ def import_database_json(payload):
     repair_unplayed_brackets(t.id)
     if settings_for(t).get('referee_enabled'):
         referee_services['ensure'](t)
+    statistics_services['restore'](t,raw.get('match_statistics',[]))
     return t
 
 
@@ -2551,6 +2554,8 @@ def save_match_sets(m, sets):
         if not smart_byes:
             apply_recommended_entry_pairing(m.tournament)
     assign_schedule(m.tournament, renumber=False)
+    statistics_services['sync'](m)
+    db.session.commit()
 
 
 @app.route('/match/<int:match_id>/result', methods=['POST'])
@@ -2778,6 +2783,7 @@ def save_match_timing(match_id):
                for other in m.tournament.matches):
             abort(400, 'Kort lub zawodnik bierze już udział w trwającym meczu.')
     set_meta(m, md)
+    statistics_services['sync'](m, quality='manual')
     db.session.commit()
     flash('Zapisano czas meczu. Harmonogram został przeliczony.')
     return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + f'#match-{m.id}')
@@ -2856,6 +2862,7 @@ def export_excel(tournament_id):
 @app.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
 def delete_tournament(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
+    statistics_services['clear'](t.id)
     referee_services['clear'](t.id)
     db.session.delete(t)
     db.session.commit()
@@ -2866,9 +2873,18 @@ def delete_tournament(tournament_id):
 from referees import configure_referees
 referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets)
 
+app.extensions['referee_services']=referee_services
+
+from match_statistics import configure_statistics
+statistics_services = configure_statistics(app, db, Tournament, Match, settings_for, meta_for, app.extensions['referee_score'])
+
+from event_updates import configure_event_updates
+configure_event_updates(app, db, Tournament, settings_for, tournament_view)
+
 from online import configure_online
 configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)
 with app.app_context():
+    statistics_services['backfill']()
     repaired = repair_unplayed_brackets()
     upgrade_unplayed_schedules()
     if repaired:

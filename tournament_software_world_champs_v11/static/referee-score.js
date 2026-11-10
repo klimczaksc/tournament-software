@@ -4,10 +4,11 @@
   let state=null,busy=false,blocked=true;
   const status=document.getElementById('ref-connection');
   const tiles=[...root.querySelectorAll('.point-tile')];
-  const undo=document.getElementById('ref-undo'),finish=document.getElementById('ref-finish');
+  const undo=document.getElementById('ref-undo'),finish=document.getElementById('ref-finish'),start=document.getElementById('ref-start');
   function render(){
     if(!state)return;
-    tiles.forEach((tile,i)=>{tile.disabled=busy||blocked||state.playable===false||state.awaiting_confirmation||!!state.winner_id||state.finalized;document.getElementById('ref-p'+i).textContent=state.current[i];tile.querySelector('.ref-name').textContent=state.players[i];});
+    if(start){start.hidden=state.started||!!state.winner_id;start.disabled=busy||blocked||state.playable===false;}
+    tiles.forEach((tile,i)=>{tile.disabled=busy||blocked||!state.started||state.playable===false||state.awaiting_confirmation||!!state.winner_id||state.finalized;document.getElementById('ref-p'+i).textContent=state.current[i];tile.querySelector('.ref-name').textContent=state.players[i];});
     document.getElementById('ref-rules').textContent='Do '+state.points_to+' punktów · best of '+state.best_of;
     document.getElementById('ref-sets').textContent='Sety: '+(state.sets.map(s=>s.join(':')).join(' · ')||'—');
     undo.disabled=busy||blocked||!!state.winner_id||state.finalized;
@@ -36,6 +37,7 @@
       blocked=true;status.textContent='Brak potwierdzenia zapisu. Łączenie i sprawdzanie wyniku…';
     }finally{busy=false;render();}
   }
+  if(start)start.addEventListener('click',()=>action('start'));
   tiles.forEach(tile=>tile.addEventListener('click',()=>action('point',Number(tile.dataset.side))));
   undo.addEventListener('click',()=>action('undo'));
   finish.addEventListener('click',()=>{if(confirm('Zatwierdzić końcowy wynik? Sprawdź zapisane sety.'))action('finish');});

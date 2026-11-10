@@ -1,34 +1,34 @@
 {% extends 'base.html' %}{% block content %}
-<div id="page-top" class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill"><span id="refresh-status" role="status">Tylko do odczytu · odświeżanie co 15 s</span></span></div>
+<div id="page-top" class="row between mb"><h1>{{ tournament.name }}</h1><span class="pill"><span id="refresh-status" role="status">Tylko do odczytu · aktualizacje zmienionych meczów</span></span></div>
 {% macro player_match(m) %}{% set slot=timing.get(m.id) %}
-<article class="match-card" data-match-id="{{ m.id }}"><div class="row between"><strong>#{{ m.order_index }} · Kort {{ m.court_number }}</strong><span class="pill match-status{% if slot and slot.state == 'W trakcie' %} match-status-live{% endif %}">{{ slot.state if slot else ('Zakończony' if m.winner_id else 'Oczekuje') }}</span></div>
+<article class="match-card" data-player1="{{ m.player1_id or '' }}" data-player2="{{ m.player2_id or '' }}" data-match-id="{{ m.id }}" data-event-key="match:{{ m.id }}" data-event-complete="{{ 1 if m.winner_id else 0 }}"><div class="row between"><strong>#{{ m.order_index }} · Kort {{ m.court_number }}</strong><span class="pill match-status{% if slot and slot.state == 'W trakcie' %} match-status-live{% endif %}">{{ slot.state if slot else ('Zakończony' if m.winner_id else 'Oczekuje') }}</span></div>
 {% if slot and not slot.actual %}<div class="match-time"><strong>{{ format_time(slot.start) }}</strong> <span class="small muted">do {{ format_time(slot.end) }}</span></div>{% endif %}
 <p><strong>{{ m.player1.name if m.player1 else source_label(m,0) }}</strong> — <strong>{{ m.player2.name if m.player2 else source_label(m,1) }}</strong></p><div class="small muted">{{ m.phase.name if m.phase else '' }} · {{ m.round_name }}</div>
 {% if settings.get('referee_enabled') %}<p class="referee-label small">Sędzia: <strong>{{ referees.get(m.id,'Do wyznaczenia') }}</strong></p>{% set live=live_scores.get(m.id) %}<div class="live-score" {% if not live %}hidden{% endif %}>{% if live %}<strong>{% if live.complete %}Wynik końcowy{% elif live.awaiting_confirmation %}Do zatwierdzenia{% else %}{{ live.current|join(':') }}{% endif %}</strong> · Sety: {{ live.sets|map('join',':')|join(' · ') or '—' }}{% endif %}</div>{% if not m.winner_id %}<a class="pill referee-entry" href="{{ url_for('referee_page',match_id=m.id) }}">Sędziuj ten mecz · kod ze stolika</a>{% endif %}{% endif %}
-{% if m.winner_id %}<p>{{ score_to_text(m.score_json) or 'Wolny los' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p>{% endif %}</article>
+{% if m.winner_id %}<p>{{ score_to_text(m.score_json) or 'Wolny los' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p>{% endif %}<a class="pill" href="{{ url_for('match_statistics',match_id=m.id) }}">Statystyki i przebieg punktów</a></article>
 {% endmacro %}
 <div class="row between mb"><nav class="actions"><a class="pill" href="#schedule">Nadchodzące mecze</a><a class="pill" href="#results">Wyniki</a><a class="pill" href="#tree">Drabinka</a></nav><div class="actions"><a class="pill" href="{{ request.path }}{{ '' if display_mode else '?display=1' }}" {% if not display_mode %}target="_blank" rel="noopener"{% endif %}>{{ 'Zwykły widok' if display_mode else 'Tryb monitora ↗' }}</a>{% if display_mode %}<button id="fullscreen" type="button">Pełny ekran</button><strong id="screen-clock"></strong>{% endif %}</div></div>
-<p id="schedule-note" class="small muted">{% if timing %}Godziny w strefie {{ settings.get('schedule_timezone', 'Europe/Warsaw') }}. Są orientacyjne i aktualizują się po rozpoczęciu meczu, zapisaniu wyniku lub korekcie organizatora. Przekroczenie czasu trwającego meczu przesuwa kolejne prognozy.{% else %}Organizator nie ustawił jeszcze godzin rozpoczęcia.{% endif %}</p>
+<p id="schedule-note" data-event-key="schedule-note" class="small muted">{% if timing %}Godziny w strefie {{ settings.get('schedule_timezone', 'Europe/Warsaw') }}. Są orientacyjne i aktualizują się po rozpoczęciu meczu, zapisaniu wyniku lub korekcie organizatora. Przekroczenie czasu trwającego meczu przesuwa kolejne prognozy.{% else %}Organizator nie ustawił jeszcze godzin rozpoczęcia.{% endif %}</p>
 <section id="schedule" class="card"><h2>Najbliższe mecze</h2><p class="small muted">Do 5 meczów: najpierw trwające, potem najbliższe zaplanowane.</p><input id="filter" placeholder="Szukaj drużyny / zawodnika" style="width:100%;margin-bottom:12px">
-<div class="next-matches">{% for m in upcoming[:5] %}{{ player_match(m) }}{% else %}<p>Brak nadchodzących meczów.</p>{% endfor %}</div>
-{% if upcoming|length > 5 %}<details class="section" id="more-upcoming" data-view-state><summary>Pokaż pozostałe mecze ({{ upcoming|length - 5 }}) · rozwiń / zwiń</summary><div class="section-body">{% for m in upcoming[5:] %}{{ player_match(m) }}{% endfor %}</div></details>{% endif %}
+<div class="next-matches" data-event-list="next">{% for m in upcoming[:5] %}{{ player_match(m) }}{% else %}<p>Brak nadchodzących meczów.</p>{% endfor %}</div>
+<details class="section" id="more-upcoming" data-view-state {% if upcoming|length <= 5 %}hidden{% endif %}><summary>Pokaż pozostałe mecze ({{ upcoming|length - 5 }}) · rozwiń / zwiń</summary><div class="section-body" data-event-list="more">{% for m in upcoming[5:] %}{{ player_match(m) }}{% endfor %}</div></details>
 </section>
-<details class="section" id="results" data-view-state><summary>Wyniki meczów ({{ completed|length }}) · rozwiń / zwiń</summary><div class="section-body card">{% for m in completed %}{{ player_match(m) }}{% else %}<p>Nie ma jeszcze wyników.</p>{% endfor %}</div></details>
-{% if tournament.system == 'group_knockout' %}<details class="section" id="group-tables" open><summary>Group Tables</summary><div class="section-body card">{% if settings.wildcard_comparison == 'exclude_bottom' and settings.best_next_place_qualifiers|int > 0 %}<div class="qualification-note mb"><strong>Porównanie dodatkowych awansujących:</strong> pomijamy mecze z najniższymi miejscami w większych grupach do wielkości najmniejszej porównywanej grupy. Poniższe tabele obejmują wszystkie wyniki. PPM i bilanse porównywanych zawodników w rozstawieniu po grupach uwzględniają to pominięcie.</div>{% endif %}
+<details class="section" id="results" data-view-state><summary>Wyniki meczów ({{ completed|length }}) · rozwiń / zwiń</summary><div class="section-body card" data-event-list="completed">{% for m in completed %}{{ player_match(m) }}{% else %}<p>Nie ma jeszcze wyników.</p>{% endfor %}</div></details>
+{% if tournament.system == 'group_knockout' %}<details class="section" id="group-tables" data-event-key="group-shell" open><summary>Group Tables</summary><div class="section-body card">{% if settings.wildcard_comparison == 'exclude_bottom' and settings.best_next_place_qualifiers|int > 0 %}<div class="qualification-note mb"><strong>Porównanie dodatkowych awansujących:</strong> pomijamy mecze z najniższymi miejscami w większych grupach do wielkości najmniejszej porównywanej grupy. Poniższe tabele obejmują wszystkie wyniki. PPM i bilanse porównywanych zawodników w rozstawieniu po grupach uwzględniają to pominięcie.</div>{% endif %}
   {% if group_tables %}{% if settings.best_next_place_qualifiers|int > 0 %}<div class="qualification-note mb">Top {{ settings.qualifiers_per_group }} from each group qualify automatically + best {{ settings.best_next_place_qualifiers }} team(s) from position {{ settings.qualifiers_per_group|int + 1 }}.</div>{% endif %}
-  <div class="grid grid-2">{% for group_name, rows in group_tables %}<div class="card" style="padding:12px"><h3>{{ group_name|replace('group_','Group ') }}</h3><table><thead><tr><th>#</th><th>Team</th><th>M</th><th>W</th><th>L</th><th>Pts</th><th>Sets</th><th>Point diff</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ loop.index }}</td><td><strong>{{ row.player.name }}</strong></td><td>{{ row.matches }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.points }}</td><td>{{ row.sets_won }}:{{ row.sets_lost }}</td><td>{{ row.point_diff }}</td></tr>{% endfor %}</tbody></table></div>{% endfor %}</div>
+  <div class="grid grid-2">{% for group_name, rows in group_tables %}<div class="card" style="padding:12px" data-event-key="group:{{ group_name }}"><h3>{{ group_name|replace('group_','Group ') }}</h3><table><thead><tr><th>#</th><th>Team</th><th>M</th><th>W</th><th>L</th><th>Pts</th><th>Sets</th><th>Point diff</th></tr></thead><tbody>{% for row in rows %}<tr><td>{{ loop.index }}</td><td><strong>{{ row.player.name }}</strong></td><td>{{ row.matches }}</td><td>{{ row.wins }}</td><td>{{ row.losses }}</td><td>{{ row.points }}</td><td>{{ row.sets_won }}:{{ row.sets_lost }}</td><td>{{ row.point_diff }}</td></tr>{% endfor %}</tbody></table></div>{% endfor %}</div>
   {% else %}<div class="muted">Generate the structure to display group tables.</div>{% endif %}
 </div></details>
 {% endif %}
 
-{% if bracket_sections %}<details class="section" id="tree" open><summary>Tournament Draws</summary><div class="section-body card">
+{% if bracket_sections %}<details class="section" id="tree" data-event-key="tree-shell" open><summary>Tournament Draws</summary><div class="section-body card">
   <div class="small muted mb">Draws are split into Championship and exact-placement sheets. Future slots show their source (for example <strong>Loser #16</strong>), so every route is visible before the team is known.</div>
   {% for stage in bracket_sections %}{% if stage.stage != 'Group Stage' %}<div class="bracket-stage"><h2>{{ stage.stage }}</h2>{% for section in stage.sections %}<div class="bracket-section"><h3>{{ section.name }}</h3>{% if settings.pairing_mode == 'every_round' and section.kind == 'championship' %}<span class="reseed-badge">Reseeding may change future-round pairings</span>{% endif %}<div class="bracket-scroll"><div class="bracket-canvas"><svg class="bracket-svg" aria-hidden="true"></svg><div class="bracket-grid">
-    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if timing.get(m.id) %} · {{ format_time(timing[m.id].start) }}{% endif %}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
+    {% for round_matches in section.rounds %}<div class="bracket-round"><div class="bracket-round-title">{{ draw_round_title(round_matches, loop.index0, section.rounds|length, section.name) }}</div>{% for m in round_matches %}{% set mm=meta_for(m) %}<div class="bracket-match" data-event-key="bracket:{{ m.id }}" data-match-key="{{ mm.get('key','') }}" data-source-keys="{{ source_match_keys(mm)|join(',') }}"><div class="bracket-section-label">#{{ m.order_index }} · {{ mm.get('section', m.round_name) }}</div><div class="bracket-team {% if not m.player1 %}placeholder{% endif %} {% if m.winner_id == m.player1_id and m.player1_id %}winner{% endif %}"><span>{{ m.player1.name if m.player1 else source_label(m,0) }}</span></div><div class="bracket-team {% if not m.player2 %}placeholder{% endif %} {% if m.winner_id == m.player2_id and m.player2_id %}winner{% endif %}"><span>{{ m.player2.name if m.player2 else source_label(m,1) }}</span></div><div class="bracket-meta">Court {{ m.court_number }}{% if timing.get(m.id) %} · {{ format_time(timing[m.id].start) }}{% endif %}{% if m.score_json and m.score_json!='[]' %} · {{ score_to_text(m.score_json) }}{% endif %}</div></div>{% endfor %}</div>{% endfor %}
   </div></div></div></div>{% endfor %}</div>{% endif %}{% endfor %}
 </div></details>{% endif %}
 
-<details class="section" id="standings" open><summary>Final Standings</summary><div class="section-body card">{% if ranking %}<table><thead><tr><th>Place</th><th>Team</th><th>Club</th><th>Original seed</th></tr></thead><tbody>{% for p in ranking %}<tr><td>{{ placement_map.get(p.id, loop.index) }}</td><td><strong>{{ p.name }}</strong></td><td>{{ p.club }}</td><td>{{ p.seed }}</td></tr>{% endfor %}</tbody></table>{% else %}<div class="muted">Standings populate as results are entered.</div>{% endif %}</div></details>
+<details class="section" id="standings" open><summary>Final Standings</summary><div class="section-body card" data-event-key="standings">{% if ranking %}<table><thead><tr><th>Place</th><th>Team</th><th>Club</th><th>Original seed</th></tr></thead><tbody>{% for p in ranking %}<tr><td>{{ placement_map.get(p.id, loop.index) }}</td><td><strong>{{ p.name }}</strong></td><td>{{ p.club }}</td><td>{{ p.seed }}</td></tr>{% endfor %}</tbody></table>{% else %}<div class="muted">Standings populate as results are entered.</div>{% endif %}</div></details>
 
 <div id="page-bottom" aria-hidden="true"></div>
 <nav class="page-jumps" aria-label="Przewijanie strony"><a href="#page-top" aria-label="Na górę" title="Na górę">↑</a><a href="#page-bottom" aria-label="Na dół" title="Na dół">↓</a></nav>
@@ -60,34 +60,6 @@ window.addEventListener('load',()=>{
   if(displayMode){document.querySelectorAll('details.section').forEach(d=>d.open=false);}
   else if(saved){filter.value=saved.filter||'';document.querySelectorAll('details.section').forEach(d=>{if(saved.details&&d.id in saved.details)d.open=saved.details[d.id];});applyFilter();window.scrollTo(0,saved.scroll||0);}
 });
-// Updating only the data keeps fullscreen, scroll and open panels intact.
-let refreshBusy=false;
-let publicLiveData=null;
-function paintLive(){
-  if(!publicLiveData)return;
-  document.querySelectorAll('article[data-match-id]').forEach(card=>{
-    const id=card.dataset.matchId,live=publicLiveData.scores[id],box=card.querySelector('.live-score'),ref=card.querySelector('.referee-label strong');
-    if(ref&&publicLiveData.referees[id])ref.textContent=publicLiveData.referees[id];
-    if(!box)return;box.hidden=!live;if(!live)return;
-    box.textContent=(live.complete?'Wynik końcowy':live.awaiting_confirmation?'Do zatwierdzenia':'Na żywo: '+live.current.join(':'))+' · Sety: '+(live.sets.map(s=>s.join(':')).join(' · ')||'—');
-    const badge=card.querySelector('.match-status');badge.textContent=live.complete?'Zakończony':'W trakcie';badge.classList.toggle('match-status-live',!live.complete);
-  });
-}
-setInterval(async()=>{
-  if(document.hidden||refreshBusy)return;
-  refreshBusy=true;
-  try{
-    const response=await fetch(location.href,{cache:'no-store'});if(!response.ok)throw new Error('refresh');
-    const doc=new DOMParser().parseFromString(await response.text(),'text/html');
-    if(!doc.querySelector('#schedule'))throw new Error('refresh');
-    const panels=['schedule','results','group-tables','tree','standings'];
-    const opened={};document.querySelectorAll('details[id]').forEach(d=>opened[d.id]=d.open);
-    panels.forEach(id=>{const old=document.getElementById(id),next=doc.getElementById(id);if(!old&&next){document.getElementById('standings').before(next);return;}if(old&&next){if(id==='schedule')old.querySelector('.next-matches').replaceWith(next.querySelector('.next-matches'));else old.innerHTML=next.innerHTML;if(id==='schedule'){const more=old.querySelector('#more-upcoming'),fresh=next.querySelector('#more-upcoming');if(more)more.remove();if(fresh)old.append(fresh);}}});
-    document.querySelectorAll('details[id]').forEach(d=>{if(d.id in opened)d.open=opened[d.id];});
-    document.getElementById('schedule-note').textContent=doc.getElementById('schedule-note').textContent;
-    applyFilter();paintLive();drawBracketConnectors();document.getElementById('refresh-status').textContent='Zaktualizowano '+new Date().toLocaleTimeString('pl-PL')+' · co 15 s';
-  }catch(e){document.getElementById('refresh-status').textContent='Brak aktualizacji — sprawdź połączenie lub ważność linku';}finally{refreshBusy=false;}
-},15000);
 window.addEventListener('pagehide',()=>{try{const details={};document.querySelectorAll('details[id]').forEach(d=>details[d.id]=d.open);sessionStorage.setItem(viewKey,JSON.stringify({filter:filter.value,scroll:window.scrollY,details}));}catch(e){}});
 if(displayMode){
   document.documentElement.classList.add('monitor-mode');
@@ -95,11 +67,6 @@ if(displayMode){
   const clock=()=>document.getElementById('screen-clock').textContent=new Date().toLocaleTimeString('pl-PL',{timeZone:{{ settings.get('schedule_timezone', 'Europe/Warsaw')|tojson }},hour:'2-digit',minute:'2-digit',second:'2-digit'});
   clock();setInterval(clock,1000);
 }
-{% if settings.get('referee_enabled') and settings.get('public_enabled') %}
-let liveBusy=false;
-async function pollLive(){if(document.hidden||liveBusy)return;liveBusy=true;try{const response=await fetch({{ url_for('public_live_scores',token=settings.public_token)|tojson }},{cache:'no-store'});if(!response.ok)throw new Error();publicLiveData=await response.json();paintLive();}catch(e){document.getElementById('refresh-status').textContent='Brak aktualizacji live — sprawdź połączenie';}finally{liveBusy=false;}}
-pollLive();setInterval(pollLive,2000);
-{% endif %}
 function drawBracketConnectors(){
   document.querySelectorAll('.bracket-canvas').forEach(canvas=>{
     const svg=canvas.querySelector('.bracket-svg'), grid=canvas.querySelector('.bracket-grid');
@@ -172,4 +139,6 @@ function drawBracketConnectors(){
 document.addEventListener('toggle',e=>{if(e.target.matches('details'))requestAnimationFrame(drawBracketConnectors);},true);
 window.addEventListener('load',drawBracketConnectors);window.addEventListener('resize',()=>requestAnimationFrame(drawBracketConnectors));document.querySelectorAll('details.section').forEach(d=>d.addEventListener('toggle',()=>setTimeout(drawBracketConnectors,20)));
 </script>
+<div id="tournament-events" data-url="{{ url_for('public_event_updates',token=settings.public_token) if public_view else url_for('tournament_event_updates',tournament_id=tournament.id) }}" data-public="{{ '1' if public_view or not is_admin else '0' }}" hidden></div>
+<script src="{{ url_for('static',filename='tournament-events.js') }}" defer></script>
 {% endblock %}

@@ -454,7 +454,7 @@ def test_timing_admin_controls_record_finish_once_and_public_sections():
     admin.post(path+'/publish',data={'published':'on','csrf_token':token})
     with app.app_context(): public='/t/'+settings_for(db.session.get(Tournament,tid))['public_slug']
     guest=app.test_client();page=guest.get(public).text
-    next_section=page.split('<div class="next-matches">')[1].split('<details class="section" id="more-upcoming"')[0]
+    next_section=page.split('<div class="next-matches" data-event-list="next">')[1].split('<details class="section" id="more-upcoming"')[0]
     assert next_section.count('<article ')==5
     assert 'id="more-upcoming"' in page and 'id="results" data-view-state' in page
     assert '01.01 10:45' in admin.get(path).text
@@ -631,3 +631,91 @@ def test_referee_pin_attempts_are_limited_and_expired_sessions_cannot_write():
         grants=s['referee_grants'];grants[str(mid)]['until']=0;s['referee_grants']=grants
     assert guest.get(f'/referee/{mid}/state').status_code==403
     assert guest.post(f'/referee/{mid}/action',json={'action':'point','side':0,'revision':0},headers={'X-CSRFToken':token}).status_code==403
+
+
+def test_event_deltas_are_scoped_private_and_do_not_send_whole_pages():
+    admin,atok,tid,mid,code=referee_fixture()
+    guest=app.test_client();url='/updates/ref-'+str(tid)
+    initial=guest.get(url);assert initial.status_code==200
+    patch=initial.json;key='match:'+str(mid)
+    assert key in patch['entities'] and patch['reset'] and '<!doctype' not in initial.text
+    assert 'Kod sędziego' not in initial.text and 'code_hash' not in initial.text
+    assert guest.get(url+'?cursor='+patch['cursor']).status_code==304
+    assert guest.get(f'/tournament/{tid}/updates').status_code==302
+    private=admin.get(f'/tournament/{tid}/updates').json
+    assert 'Kod sędziego' in private['entities'][key]
+    # No redirect to an HTML tournament document for event-aware action requests.
+    result=admin.post(f'/match/{mid}/timing',data={'action':'start','csrf_token':atok},headers={'X-Tournament-Action':'1'})
+    assert result.status_code==200 and result.json['ok'] and 'Location' not in result.headers
+    delta=guest.get(url+'?cursor='+patch['cursor']).json
+    assert key in delta['entities'] and 'standings' not in delta['entities']
+    assert not delta['reset']
+    recovery=guest.get(url+'?cursor=unknown').json
+    assert recovery['reset'] and len(recovery['entities'])>=len(delta['entities'])
+    admin.post(f'/tournament/{tid}/publish',data={'csrf_token':atok})
+    assert guest.get(url).status_code==404
+
+
+def test_point_statistics_time_quality_undo_and_backup_restore():
+    import json
+    from app import statistics_services,export_database_json,import_database_json
+    admin,atok,tid,mid,code=referee_fixture()
+    referee=app.test_client();token=csrf(referee,f'/referee/{mid}')
+    referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token})
+    state=referee.get(f'/referee/{mid}/state').json
+    def action(kind,side=None):
+        nonlocal state
+        r=referee.post(f'/referee/{mid}/action',json={'action':kind,'side':side,'revision':state['revision']},headers={'X-CSRFToken':token})
+        assert r.status_code==200,r.text
+        state=r.json
+    action('start');action('point',0);action('point',1);action('undo');action('point',0)
+    payload=referee.get(f'/match/{mid}/statistics/data').json
+    assert [p['score'] for p in payload['path']]==[[1,0],[2,0]]
+    assert all(p['at'] and '+00:00' in p['at'] for p in payload['path'])
+    assert [a['action'] for a in payload['audit']]==['start','point','point','undo','point']
+    assert payload['quality']=='explicit' and payload['duration_seconds'] is None
+    assert referee.get(f'/match/{mid}/statistics/data?version='+payload['version']).status_code==304
+    action('point',0)
+    for _ in range(3):action('point',0)
+    action('finish')
+    payload=referee.get(f'/match/{mid}/statistics/data').json
+    assert payload['complete'] and payload['duration_seconds']>=0 and len(payload['path'])==6
+    assert payload['estimate']['count']==0 # A seconds-long test game is not a useful duration sample.
+    assert admin.get(f'/match/{mid}/statistics').status_code==200
+    assert admin.get(f'/tournament/{tid}/statistics').status_code==200
+    with app.app_context():
+        original=db.session.get(Match,mid);number=original.order_index
+        backup=export_database_json(db.session.get(Tournament,tid))
+        assert 'desk_code' not in backup and 'code_hash' not in backup
+        imported=import_database_json(backup)
+        clone=next(m for m in imported.matches if m.order_index==number)
+        restored=statistics_services['details'](clone)
+        assert [p['score'] for p in restored['path']]==[p['score'] for p in payload['path']]
+        assert [a['action'] for a in restored['audit']]==[a['action'] for a in payload['audit']]
+        assert restored['duration_seconds']==payload['duration_seconds']
+    # First point without an explicit start is deliberately labelled approximate.
+    admin2,atok2,tid2,mid2,code2=referee_fixture()
+    r=app.test_client();tok2=csrf(r,f'/referee/{mid2}')
+    r.post(f'/referee/{mid2}/access',data={'code':code2,'csrf_token':tok2})
+    rev=r.get(f'/referee/{mid2}/state').json['revision']
+    assert r.post(f'/referee/{mid2}/action',json={'action':'point','side':1,'revision':rev},headers={'X-CSRFToken':tok2}).status_code==200
+    assert r.get(f'/match/{mid2}/statistics/data').json['quality']=='first_point'
+
+
+def test_duration_estimator_requires_five_full_comparable_samples():
+    import json
+    from app import create_tournament,generate_structure,statistics_services,meta_for,set_meta
+    with app.app_context():
+        t=create_tournament('Duration samples',8,'round_robin',True,2);generate_structure(t)
+        minutes=[20,25,30,35,40]
+        for m,duration in zip(t.matches,minutes):
+            m.score_json='[[21, 0], [21, 0]]';m.winner_id=m.player1_id;m.loser_id=m.player2_id
+            md=meta_for(m);md.update(actual_start='2026-01-01T10:00:00',actual_end=f'2026-01-01T10:{duration:02d}:00');set_meta(m,md)
+            statistics_services['sync'](m,quality='manual')
+        db.session.commit()
+        estimate=statistics_services['estimate'](t.matches[0])
+        assert estimate['count']==5 and estimate['median']==30 and estimate['suggested']==30
+        # An incomplete/missing result must not stay in the training set.
+        t.matches[0].winner_id=None;db.session.commit()
+        estimate=statistics_services['estimate'](t.matches[1])
+        assert estimate['count']==4 and estimate['suggested'] is None

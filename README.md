@@ -106,6 +106,30 @@ fazy z przewagą 2 punktów; większość wygranych setów pozwala zatwierdzić 
 punktu działa do zatwierdzenia i pozwala otworzyć ponownie właśnie zakończony set.
 Dopiero zatwierdzenie zapisuje oficjalny wynik, aktualizuje drabinkę i harmonogram.
 Organizator zachowuje możliwość korekty wyniku. Punkty live są w bazie Railway;
-standardowy eksport JSON zawiera oficjalne wyniki i przydziały, bez kodów i historii kliknięć.
+standardowy eksport JSON zawiera oficjalne wyniki, przydziały i historię punktów, bez kodów dostępu.
 Publiczny widok oraz telewizor pobierają punkty co 2 sekundy (wymagane połączenie).
 Przy niepewnym zapisie panel pobiera wynik z serwera i nie ponawia sam punktu.
+
+
+### Aktualizacje zdarzeń i statystyki meczów
+
+Widoki turnieju otrzymują co 2 sekundy małe różnice JSON z wersjonowanym kursorem:
+zmienione mecze, komórki drabinki, tabele grup i klasyfikację. Nie pobierają ponownie
+całego dokumentu turnieju. Brak zmian zwraca HTTP 304. Przeglądarka zachowuje węzły DOM,
+pełny ekran, rozwinięte sekcje, przewinięcie i niewysłane formularze. Po restarcie serwera
+kursor sam odbudowuje stan. Zapis wyniku i „Start teraz” zwracają JSON i pobierają różnicę.
+To transport HTTP delta z lokalnymi zdarzeniami `tournament:updated`, bez utrzymywania
+połączeń WebSocket zajmujących wątki Gunicorna.
+
+Sędzia rozpoczyna pomiar przyciskiem „Rozpocznij mecz i pomiar czasu”. Punkty mają znaczniki
+UTC; cofnięcia i resety zostają w osobnym, trwałym dzienniku. „Statystyki i przebieg punktów”
+pokazują skorygowany przebieg każdego seta, czas i historię korekt. Gdy brakuje historii
+punktowej lub rzeczywistego startu, program nie odtwarza ich z końcowego wyniku.
+Istniejąca historia bez znaczników czasu nadal pokazuje przebieg bez wymyślonych godzin.
+Eksport/import bazy JSON zachowuje historię i pomiary, generując nowe kody dostępu.
+
+„Statystyki czasu” zestawiają pomiary. Szacowanie porównuje mecze o tym samym limicie
+punktów, best of i typie fazy. Korzysta z pełnych pomiarów 1 minuta–6 godzin, wyklucza
+pomiary od pierwszego punktu oraz wyniki zmienione bez aktualizacji próbki. Pokazuje medianę
+i kwartyle; po 5 próbkach sugeruje slot zaokrąglony w górę do 5 minut. Jest to opisowa
+sugestia do ręcznej decyzji organizatora; domyślny slot nie zmienia się sam.

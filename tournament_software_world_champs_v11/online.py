@@ -32,7 +32,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if g.user and (not g.user.active or session.get('version') != g.user.version):
             session.clear()
             g.user = None
-        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores'}
+        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores', 'public_event_updates', 'match_statistics', 'match_statistics_data'}
         if request.endpoint in public:
             return
         if not g.user:

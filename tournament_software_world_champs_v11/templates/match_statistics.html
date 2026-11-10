@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block content %}
+<h1>Mecz #{{ match.order_index }} · statystyki</h1><p>{{ match.player1.name if match.player1 else 'TBD' }} — {{ match.player2.name if match.player2 else 'TBD' }}</p>
+<div id="match-stats" data-url="{{ url_for('match_statistics_data',match_id=match.id) }}">
+<div class="card mb"><h2>Czas meczu</h2><strong id="stat-duration" style="font-size:32px">—</strong><p id="stat-quality"></p><p id="stat-estimate" class="small muted"></p><button id="stats-export">Pobierz historię JSON</button><span id="stat-connection" class="pill" role="status"></span></div>
+<div class="card mb"><h2>Drzewko zdobywania punktów</h2><p class="small muted">Kolejne węzły pokazują wynik po każdym punkcie. Kolor oznacza zdobywcę punktu. Przebieg uwzględnia cofnięcia; ich ślad pozostaje w historii zdarzeń.</p><div id="stat-path"></div></div>
+<details class="section"><summary>Historia zdarzeń i korekt</summary><div class="section-body card"><table><thead><tr><th>Czas</th><th>Zdarzenie</th><th>Wynik</th></tr></thead><tbody id="stat-audit"></tbody></table></div></details>
+</div>
+<style>.point-path{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.point-node{padding:8px 12px;border:2px solid var(--accent);border-radius:8px;font-weight:700;background:var(--panel2)}.point-node[data-side="1"]{border-color:#b98243;background:color-mix(in srgb,#b98243 12%,var(--panel))}.point-node small{display:block;font-size:11px;font-weight:400;color:var(--muted)}</style>
+<script src="{{ url_for('static',filename='match-statistics.js') }}" defer></script>
+{% endblock %}

@@ -7,7 +7,7 @@ const tick=()=>new Promise(r=>setImmediate(r));
 async function setup(t){
  const dom=new JSDOM(`<div id="referee-app" data-state-url="/state" data-action-url="/action"><span id="ref-connection"></span><div id="ref-rules"></div><div id="ref-sets"></div><button class="point-tile" data-side="0"><span class="ref-name"></span><span id="ref-p0"></span></button><button class="point-tile" data-side="1"><span class="ref-name"></span><span id="ref-p1"></span></button><button id="ref-undo"></button><button id="ref-finish"></button></div>`,{url:'https://tournament.test/referee/1',runScripts:'outside-only',pretendToBeVisual:true});
  t.after(()=>dom.window.close());const w=dom.window;
- let server={revision:0,current:[0,0],sets:[],players:['A','B'],best_of:3,points_to:15,started:false,finalized:false,awaiting_confirmation:false,winner_id:null};
+ let server={revision:0,current:[0,0],sets:[],players:['A','B'],best_of:3,points_to:15,started:true,finalized:false,awaiting_confirmation:false,winner_id:null};
  const writes=[];let mode='ok',poll;
  w.setInterval=fn=>{poll=fn;};w.confirm=()=>true;
  w.fetch=async(url,opts)=>{

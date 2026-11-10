@@ -80,7 +80,7 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
 <body>
 <div class="wrap">
 {% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ 'Administrator' if is_admin else 'Odczyt' }}</span>{% if is_admin %}<a class="pill" href="/accounts">Konta</a>{% endif %}<a class="pill" href="/password">Zmień hasło</a><form method="post" action="/logout"><button>Wyloguj</button></form></div></div>{% endif %}
-  {% with messages = get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+  {% with messages = [] if request.endpoint in ('public_event_updates','tournament_event_updates') else get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
   {% block content %}{% endblock %}
 </div>
 <div class="creator-credit">created by Michał Klimczak (klimczak.sc@gmail.com)</div>
