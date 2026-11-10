@@ -133,3 +133,18 @@ punktów, best of i typie fazy. Korzysta z pełnych pomiarów 1 minuta–6 godzi
 pomiary od pierwszego punktu oraz wyniki zmienione bez aktualizacji próbki. Pokazuje medianę
 i kwartyle; po 5 próbkach sugeruje slot zaokrąglony w górę do 5 minut. Jest to opisowa
 sugestia do ręcznej decyzji organizatora; domyślny slot nie zmienia się sam.
+
+
+### Czas zawodnika i pozioma karta punktów
+
+Panel sędziego ma dwa przyciski czasu: 2:00, raz na set na stronę (zawodnika/drużynę).
+Limit i koniec przerwy sprawdza serwer, więc ponowne wejście ani drugi telefon nie
+przywracają limitu. Podczas aktywnego czasu punkty i cofanie są zablokowane. Sędzia
+może zakończyć przerwę wcześniej; wykorzystany limit pozostaje zużyty. Po zakończeniu
+seta każda strona otrzymuje nowy limit. Informacja o czasie jest też na ekranie zawodników.
+Historia zapisuje stronę, set i początek/koniec przerwy; czas całego meczu obejmuje przerwy.
+
+Przebieg punktów ma osobną poziomą tabelę na każdy set. Dwa wiersze odpowiadają stronom,
+a kolumny kolejnym zdobytym punktom. W komórce zdobywcy widnieje jego aktualny numer
+punktu, a komórka przeciwnika jest pusta. Przykład: A „1, 2, pusto, 3”, B „pusto, pusto, 1, pusto”.
+Tabele mają stałą kolumnę z nazwami i przewijanie poziome; cofnięcie usuwa odpowiednią kolumnę.

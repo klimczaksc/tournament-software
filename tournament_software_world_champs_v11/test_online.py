@@ -719,3 +719,52 @@ def test_duration_estimator_requires_five_full_comparable_samples():
         t.matches[0].winner_id=None;db.session.commit()
         estimate=statistics_services['estimate'](t.matches[1])
         assert estimate['count']==4 and estimate['suggested'] is None
+
+
+def test_two_minute_timeouts_each_side_once_per_set_and_persist_on_reload(monkeypatch):
+    from datetime import datetime,timezone,timedelta
+    import referees
+    admin,atok,tid,mid,code=referee_fixture()
+    client=app.test_client();token=csrf(client,f'/referee/{mid}')
+    assert client.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'203.0.113.91'}).status_code==302
+    state=client.get(f'/referee/{mid}/state').json
+    clock=[datetime(2026,11,10,10,0,tzinfo=timezone.utc)]
+    monkeypatch.setattr(referees,'utc_now',lambda:clock[0].isoformat())
+    def action(kind,side=None,revision=None):
+        nonlocal state
+        r=client.post(f'/referee/{mid}/action',json={'action':kind,'side':side,'revision':state['revision'] if revision is None else revision},headers={'X-CSRFToken':token})
+        if r.status_code==200:state=r.json
+        return r
+    assert action('timeout',0).status_code==409 # Not before the match starts.
+    assert action('start').status_code==200
+    before=state['revision']
+    assert action('timeout',0).status_code==200
+    pause=state['timeout']['active']
+    assert (datetime.fromisoformat(pause['until'])-datetime.fromisoformat(pause['started_at'])).total_seconds()==120
+    assert state['timeout']['used']==[True,False]
+    assert action('timeout',1).status_code==409
+    assert action('point',0).status_code==409 and action('undo').status_code==409
+    assert action('timeout',0,revision=before).status_code==409
+    assert client.get(f'/referee/{mid}/state').json['timeout']['active']['id']==pause['id']
+    public=app.test_client().get('/players/ref-'+str(tid)).text
+    assert 'data-timeout-until=' in public and 'data-timeout-clock' in public
+    clock[0]+=timedelta(seconds=119)
+    assert action('point',0).status_code==409
+    clock[0]+=timedelta(seconds=1)
+    assert action('point',0).status_code==200
+    assert not state['timeout']['active'] and state['timeout']['used']==[True,False]
+    assert action('timeout',0).status_code==409 # Refresh / expiration does not refund the quota.
+    assert action('timeout',1).status_code==200
+    clock[0]+=timedelta(seconds=20)
+    assert action('timeout_end').status_code==200
+    assert state['timeout']['used']==[True,True] and not state['timeout']['active']
+    assert action('timeout',1).status_code==409
+    assert action('point',0).status_code==200
+    assert action('point',0).status_code==200 # Set 1 ends 3:0.
+    assert state['sets']==[[3,0]] and state['timeout']['set']==2 and state['timeout']['used']==[False,False]
+    assert action('timeout',0).status_code==200
+    data=client.get(f'/match/{mid}/statistics/data').json
+    assert len(data['timeouts'])==3
+    assert [e['action'] for e in data['audit']].count('timeout_start')==3
+    assert [e['action'] for e in data['audit']].count('timeout_end')==1
+    assert data['audit'][-1]['side']==0 and data['audit'][-1]['set']==2

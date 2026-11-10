@@ -79,6 +79,8 @@
   })();
   return pending;
  }
+ function clocks(){document.querySelectorAll('[data-timeout-until]').forEach(el=>{const clock=el.querySelector('[data-timeout-clock]');if(!clock)return;const seconds=Math.max(0,Math.ceil((Date.parse(el.dataset.timeoutUntil)-Date.now())/1000));clock.textContent=seconds?Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'):'Koniec czasu';});}
+ clocks();setInterval(clocks,250);
  window.TournamentEvents={refresh,morph};
  refresh().catch(()=>{});setInterval(()=>{if(!document.hidden)refresh().catch(()=>{});},2000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(()=>{});});

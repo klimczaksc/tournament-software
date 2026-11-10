@@ -5,11 +5,11 @@ const fs=require('node:fs');
 const code=fs.readFileSync(__dirname+'/static/referee-score.js','utf8');
 const tick=()=>new Promise(r=>setImmediate(r));
 async function setup(t){
- const dom=new JSDOM(`<div id="referee-app" data-state-url="/state" data-action-url="/action"><span id="ref-connection"></span><div id="ref-rules"></div><div id="ref-sets"></div><button class="point-tile" data-side="0"><span class="ref-name"></span><span id="ref-p0"></span></button><button class="point-tile" data-side="1"><span class="ref-name"></span><span id="ref-p1"></span></button><button id="ref-undo"></button><button id="ref-finish"></button></div>`,{url:'https://tournament.test/referee/1',runScripts:'outside-only',pretendToBeVisual:true});
+ const dom=new JSDOM(`<div id="referee-app" data-state-url="/state" data-action-url="/action"><span id="ref-connection"></span><div id="ref-rules"></div><div id="ref-sets"></div><button class="point-tile" data-side="0"><span class="ref-name"></span><span id="ref-p0"></span></button><button class="point-tile" data-side="1"><span class="ref-name"></span><span id="ref-p1"></span></button><section id="ref-timeouts"><button data-timeout-side="0"></button><button data-timeout-side="1"></button><div id="ref-timeout-active"><span id="ref-timeout-clock"></span><span id="ref-timeout-owner"></span><button id="ref-timeout-end"></button></div></section><button id="ref-undo"></button><button id="ref-finish"></button></div>`,{url:'https://tournament.test/referee/1',runScripts:'outside-only',pretendToBeVisual:true});
  t.after(()=>dom.window.close());const w=dom.window;
  let server={revision:0,current:[0,0],sets:[],players:['A','B'],best_of:3,points_to:15,started:true,finalized:false,awaiting_confirmation:false,winner_id:null};
  const writes=[];let mode='ok',poll;
- w.setInterval=fn=>{poll=fn;};w.confirm=()=>true;
+ w.setInterval=(fn,delay)=>{if(delay===2000)poll=fn;};w.confirm=()=>true;
  w.fetch=async(url,opts)=>{
   if(url==='/state')return {ok:true,json:async()=>structuredClone(server)};
   const payload=JSON.parse(opts.body);writes.push(payload);
@@ -40,4 +40,10 @@ test('The final confirmation stops further point entry',async t=>{
  const {w,writes,server,poll}=await setup(t);server.awaiting_confirmation=true;server.sets=[[15,0],[15,0]];await poll();
  assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.equal(w.document.getElementById('ref-finish').hidden,false);
  w.document.getElementById('ref-finish').click();await tick();assert.equal(writes[0].action,'finish');assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.match(w.document.getElementById('ref-connection').textContent,/zakończony/);
+});
+
+test('Timeout shows 2:00, blocks scoring, and keeps used quota after expiry',async t=>{
+ const {w,server,poll}=await setup(t);const now=new Date();server.timeout={set:1,server_now:now.toISOString(),used:[true,false],active:{side:0,until:new Date(now.getTime()+120000).toISOString()}};await poll();
+ assert.equal(w.document.getElementById('ref-timeout-clock').textContent,'2:00');assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.equal(w.document.querySelector('[data-timeout-side="1"]').disabled,true);
+ server.timeout.active=null;server.timeout.server_now=new Date().toISOString();await poll();assert.equal(w.document.querySelector('[data-timeout-side="0"]').disabled,true);assert.equal(w.document.querySelector('[data-timeout-side="1"]').disabled,false);assert.equal(w.document.querySelector('[data-side="0"]').disabled,false);
 });

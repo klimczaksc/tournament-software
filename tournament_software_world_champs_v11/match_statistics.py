@@ -41,8 +41,8 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
     app.extensions['match_duration_sample']=MatchDurationSample
 
     def signature(m):return f'{m.player1_id}:{m.player2_id}:{m.phase.best_of if m.phase else 3}:{m.phase.points_to if m.phase else 21}'
-    def record(m,action,data,side=None):
-        db.session.add(MatchPointEvent(match_id=m.id,stream_id=data['stream_id'],action=action,recorded_at=utc_now(),payload=json.dumps({'side':side,'revision':data.get('revision'),'current':data['current'],'sets':data['sets'],'point_number':len(data['events'])})))
+    def record(m,action,data,side=None,extra=None):
+        db.session.add(MatchPointEvent(match_id=m.id,stream_id=data['stream_id'],action=action,recorded_at=utc_now(),payload=json.dumps({'side':side,'revision':data.get('revision'),'current':data['current'],'sets':data['sets'],'point_number':len(data['events']),**(extra or {})})))
     def sync(m,quality=None):
         sample=db.session.get(MatchDurationSample,m.id)
         md=meta_for(m);zone=settings_for(m.tournament).get('schedule_timezone','Europe/Warsaw')
@@ -95,7 +95,7 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
         sample=db.session.get(MatchDurationSample,m.id)
         if sample and sample.signature==signature(m) and sample.score_json==m.score_json and sample.quality=='manual':quality='manual'
         audit=[{'id':e.id,'action':e.action,'at':e.recorded_at,**json.loads(e.payload)} for e in MatchPointEvent.query.filter_by(match_id=m.id).order_by(MatchPointEvent.id).all()]
-        payload={'match_id':m.id,'players':[m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD'],'path':path,'audit':audit,'started_at':start.isoformat() if start else None,'ended_at':end.isoformat() if end else None,'duration_seconds':elapsed,'quality':quality,'complete':bool(m.winner_id),'historical_points':bool(events and any(p['at'] is None for p in path)),'points_missing':not bool(path),'estimate':estimate(m),'zone':zone}
+        payload={'match_id':m.id,'players':[m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD'],'path':path,'timeouts':data.get('timeouts',[]) if compatible else [],'audit':audit,'started_at':start.isoformat() if start else None,'ended_at':end.isoformat() if end else None,'duration_seconds':elapsed,'quality':quality,'complete':bool(m.winner_id),'historical_points':bool(events and any(p['at'] is None for p in path)),'points_missing':not bool(path),'estimate':estimate(m),'zone':zone}
         payload['version']=hashlib.sha256(json.dumps(payload,sort_keys=True).encode()).hexdigest()
         return payload
     def accessible(mid):
@@ -136,7 +136,7 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
             if isinstance(state,dict) and len(state.get('events',[]))<=2000 and all(type(side) is int and side in (0,1) for side in state.get('events',[])):
                 row=db.session.get(RefereeScore,m.id);row.data_json=json.dumps(state);row.signature=signature(m)
             for e in entry.get('audit',[])[:5000]:
-                if e.get('action') not in ('point','undo','start','finish','reset'):continue
+                if e.get('action') not in ('point','undo','start','finish','reset','timeout_start','timeout_end'):continue
                 db.session.add(MatchPointEvent(match_id=m.id,stream_id=str(e.get('stream_id') or uuid4().hex)[:32],action=e['action'],recorded_at=e['at'],payload=json.dumps(e.get('payload',{}))))
             sync(m)
         db.session.commit()

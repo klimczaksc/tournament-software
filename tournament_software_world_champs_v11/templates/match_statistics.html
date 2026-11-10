@@ -2,9 +2,15 @@
 <h1>Mecz #{{ match.order_index }} · statystyki</h1><p>{{ match.player1.name if match.player1 else 'TBD' }} — {{ match.player2.name if match.player2 else 'TBD' }}</p>
 <div id="match-stats" data-url="{{ url_for('match_statistics_data',match_id=match.id) }}">
 <div class="card mb"><h2>Czas meczu</h2><strong id="stat-duration" style="font-size:32px">—</strong><p id="stat-quality"></p><p id="stat-estimate" class="small muted"></p><button id="stats-export">Pobierz historię JSON</button><span id="stat-connection" class="pill" role="status"></span></div>
-<div class="card mb"><h2>Drzewko zdobywania punktów</h2><p class="small muted">Kolejne węzły pokazują wynik po każdym punkcie. Kolor oznacza zdobywcę punktu. Przebieg uwzględnia cofnięcia; ich ślad pozostaje w historii zdarzeń.</p><div id="stat-path"></div></div>
+<div class="card mb"><h2>Przebieg zdobywania punktów</h2><p class="small muted">Każda kolumna to kolejny zdobyty punkt. Numer pojawia się tylko w wierszu zdobywcy, a kratka przeciwnika zostaje pusta. Punkty liczymy od 1 w każdym secie. Na telefonie tabelę można przewijać poziomo. Cofnięcia i czasy zawodników pozostają w historii zdarzeń.</p><div id="stat-path"></div></div>
 <details class="section"><summary>Historia zdarzeń i korekt</summary><div class="section-body card"><table><thead><tr><th>Czas</th><th>Zdarzenie</th><th>Wynik</th></tr></thead><tbody id="stat-audit"></tbody></table></div></details>
 </div>
-<style>.point-path{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.point-node{padding:8px 12px;border:2px solid var(--accent);border-radius:8px;font-weight:700;background:var(--panel2)}.point-node[data-side="1"]{border-color:#b98243;background:color-mix(in srgb,#b98243 12%,var(--panel))}.point-node small{display:block;font-size:11px;font-weight:400;color:var(--muted)}</style>
+<style>
+#stat-path section{margin:20px 0 28px}.point-table-scroll{max-width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:10px;padding-bottom:4px;overscroll-behavior-x:contain}
+.point-table{display:table;width:max-content;border-collapse:separate;border-spacing:0;table-layout:fixed}.point-table th,.point-table td{min-width:44px;width:44px;height:46px;padding:8px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:17px}
+.point-table thead th{font-size:11px;color:var(--muted);background:var(--panel2)}.point-table .point-player{position:sticky;left:0;z-index:2;min-width:170px;width:170px;max-width:170px;white-space:normal;overflow-wrap:anywhere;text-align:left;background:var(--panel);font-size:14px;font-weight:700;border-right:2px solid var(--line)}
+.point-table tbody tr[data-side="0"] .point-won{background:color-mix(in srgb,var(--accent) 15%,var(--panel));color:var(--accent);font-weight:800}.point-table tbody tr[data-side="1"] .point-won{background:color-mix(in srgb,#b98243 16%,var(--panel));font-weight:800}.point-table tr>:nth-child(5n+1){border-right-width:2px}
+@media(max-width:600px){.point-table .point-player{min-width:120px;width:120px;max-width:120px;font-size:12px}.point-table th,.point-table td{min-width:40px;width:40px}}
+</style>
 <script src="{{ url_for('static',filename='match-statistics.js') }}" defer></script>
 {% endblock %}

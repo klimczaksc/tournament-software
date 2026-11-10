@@ -3,6 +3,7 @@ import json
 import secrets
 import time
 import uuid
+from datetime import timedelta
 from flask import request, session, g, abort, jsonify, render_template, redirect, url_for, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import update
@@ -103,7 +104,7 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
                 continue
             if data.get('finalized') and not m.winner_id:
                 continue
-            result[m.id] = {'current': data['current'], 'sets': data['sets'], 'complete': bool(m.winner_id), 'awaiting_confirmation': bool(data.get('finished_at') and not m.winner_id), 'revision': row.revision}
+            result[m.id] = {'current': data['current'], 'sets': data['sets'], 'complete': bool(m.winner_id), 'awaiting_confirmation': bool(data.get('finished_at') and not m.winner_id), 'revision': row.revision, 'timeout':timeout_info(data)}
         return result
 
     def match_public(mid):
@@ -122,12 +123,19 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
         if m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not groups_complete(m.tournament_id):
             abort(409, 'Najpierw zakończ fazę grupową.')
 
+    def timeout_info(data):
+        now=as_utc(utc_now())
+        number=len(data.get('sets',[]))+1
+        timeouts=data.get('timeouts',[])
+        active=next((item for item in reversed(timeouts) if not item.get('closed_at') and as_utc(item['until'])>now),None)
+        return {'active':active,'used':[any(item['set']==number and item['side']==side for item in timeouts) for side in (0,1)],'set':number,'server_now':now.isoformat()}
+
     def state_payload(m, row):
         d = data_for(row)
         playable = bool(m.player1_id and m.player2_id and not m.winner_id and not json.loads(m.score_json or '[]'))
         if m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not groups_complete(m.tournament_id):
             playable = False
-        return {'playable': playable, 'revision': row.revision, 'sets': d['sets'], 'current': d['current'], 'started': d['started'], 'finalized': d['finalized'], 'awaiting_confirmation': bool(d.get('finished_at')), 'winner_id': m.winner_id, 'players': [m.player1.name if m.player1 else 'TBD', m.player2.name if m.player2 else 'TBD'], 'best_of': m.phase.best_of if m.phase else 3, 'points_to': m.phase.points_to if m.phase else 21}
+        return {'timeout':timeout_info(d), 'playable': playable, 'revision': row.revision, 'sets': d['sets'], 'current': d['current'], 'started': d['started'], 'finalized': d['finalized'], 'awaiting_confirmation': bool(d.get('finished_at')), 'winner_id': m.winner_id, 'players': [m.player1.name if m.player1 else 'TBD', m.player2.name if m.player2 else 'TBD'], 'best_of': m.phase.best_of if m.phase else 3, 'points_to': m.phase.points_to if m.phase else 21}
 
     @app.route('/tournament/<int:tournament_id>/referees', methods=['POST'])
     def configure_referee_panel(tournament_id):
@@ -259,6 +267,28 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
             data.setdefault('stream_id',uuid.uuid4().hex)
             data.setdefault('event_times',[None]*len(data['events']))
             data['revision']=row.revision
+            data.setdefault('timeouts',[])
+            timeout=timeout_info(data)
+            if timeout['active'] and action!='timeout_end':
+                abort(409,'Trwa czas zawodnika. Zakończ go lub poczekaj na upływ 2 minut.')
+            if action in ('timeout','timeout_end'):
+                if not data.get('started') or data.get('finished_at'):
+                    abort(409,'Czas jest dostępny tylko w trakcie seta.')
+                if action=='timeout':
+                    side=payload.get('side')
+                    if type(side) is not int or side not in (0,1):abort(400)
+                    if timeout['used'][side]:abort(409,'Ten zawodnik lub drużyna wykorzystał już czas w tym secie.')
+                    now=as_utc(utc_now())
+                    item={'id':uuid.uuid4().hex,'side':side,'set':timeout['set'],'started_at':now.isoformat(),'until':(now+timedelta(seconds=120)).isoformat()}
+                    data['timeouts'].append(item)
+                else:
+                    item=next((item for item in reversed(data['timeouts']) if not item.get('closed_at')),None)
+                    if not item:abort(409,'Nie ma czasu do zakończenia.')
+                    now=as_utc(utc_now())
+                    item['closed_at']=min(now,as_utc(item['until'])).isoformat()
+                app.extensions['match_statistics']['record'](m,'timeout_start' if action=='timeout' else 'timeout_end',data,item['side'],{'set':item['set'],'timeout_id':item['id'],'until':item['until']})
+                row.data_json=json.dumps(data);db.session.commit()
+                return jsonify(state_payload(m,row))
             if action == 'finish':
                 if not data.get('finished_at'):
                     abort(409, 'Mecz nie ma jeszcze zwycięzcy.')
