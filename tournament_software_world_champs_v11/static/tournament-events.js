@@ -34,8 +34,8 @@
    keys.forEach((key,i)=>{const card=find(key);if(card&&target.children[i]!==card)target.insertBefore(card,target.children[i]||null);});
    if(!keys.length&&name!=='more'){const p=document.createElement('p');p.textContent=name==='next'?'Brak nadchodzących meczów.':'Nie ma jeszcze wyników.';target.append(p);}
   });
-  const more=document.getElementById('more-upcoming');if(more){more.hidden=layout.upcoming.length<=5;more.querySelector('summary').textContent='Pokaż pozostałe mecze ('+Math.max(0,layout.upcoming.length-5)+') · rozwiń / zwiń';}
-  const results=document.querySelector('#results > summary');if(results)results.textContent='Wyniki meczów ('+layout.completed.length+') · rozwiń / zwiń';
+  const more=document.getElementById('more-upcoming');if(more){more.hidden=layout.upcoming.length<=5;more.querySelector('summary').textContent='Pokaż pozostałe mecze ('+Math.max(0,layout.upcoming.length-5)+')';}
+  const results=document.querySelector('#results > summary');if(results)results.textContent='Wyniki meczów ('+layout.completed.length+')';
  }
  function apply(patch){
   const visible=[...document.querySelectorAll('[data-event-key^="match:"]')].find(el=>{const r=el.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;});
@@ -71,7 +71,7 @@
   announce(completed);
   document.dispatchEvent(new CustomEvent('tournament:updated',{detail:{changed:Object.keys(patch.entities||{}),cursor:patch.cursor}}));
  }
- function status(text){const el=document.getElementById('refresh-status');if(el)el.textContent=text;}
+ function status(text,failed=false){const el=document.getElementById('refresh-status');if(!el)return;if(el.dataset.compact==='1'){el.textContent=failed?'Brak połączenia':'';el.dataset.state=failed?'offline':'online';el.title=failed?text:'Aktualne wyniki';el.setAttribute('aria-label',el.title);}else el.textContent=text;}
  async function refresh(options={}){
   if(pending){await pending;if(options.submitted)return refresh(options);return;}
   submitted=options.submitted||null;if(submitted)dirty.delete(submitted);
@@ -82,7 +82,7 @@
     if(!response.ok)throw new Error('Brak aktualizacji — sprawdź połączenie i dostęp.');
     const patch=await response.json();apply(patch);cursor=patch.cursor;
     status('Zaktualizowano '+new Date().toLocaleTimeString('pl-PL')+' · tylko zmienione mecze');
-   }catch(e){status(e.message);throw e;}
+   }catch(e){status(e.message,true);throw e;}
    finally{submitted=null;pending=null;}
   })();
   return pending;

@@ -35,7 +35,7 @@ def test_full_access_lifecycle():
     assert admin.post('/accounts',data=dict(username='reader',password='Read123!',csrf_token=token)).status_code==302
     assert login(viewer,'reader','Read123!').status_code==302
     page=viewer.get(path)
-    assert page.status_code==200 and 'Save result' not in page.text and 'Tournament Draws' in page.text
+    assert page.status_code==200 and 'Save result' not in page.text and 'Drabinka' in page.text
     assert 'Delete' not in viewer.get('/').text
     assert viewer.get('/accounts').status_code==403
     assert viewer.get(path+'/export/db').status_code==403
