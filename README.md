@@ -87,3 +87,25 @@ się co 15 sekund w aktywnym oknie, bez przeładowania strony i utraty pełnego 
 „Tryb monitora” (`?display=1`) powiększa najbliższe mecze i dodaje zegar oraz pełny ekran.
 W systemie wybierz rozszerzony pulpit, otwórz ten widok w osobnym oknie na drugim
 monitorze, a na głównym pozostaw panel administratora. Wyłącz usypianie ekranu na czas turnieju.
+
+
+### Sędziowie i punkty live
+
+Włącz publiczny link oraz „Sędziowie · punkty live”. Przy każdym meczu administrator
+widzi osobny 3-cyfrowy kod (również z zerem na początku), przeznaczony do wydania
+przy stoliku. Sędzia otwiera mecz z publicznego widoku i wpisuje kod. Uprawnienie
+obejmuje tylko ten mecz, maksymalnie przez 8 godzin. Reset lub wyłączenie paneli
+unieważnia wcześniejszy dostęp; kodów nie ma w publicznym HTML ani JSON.
+
+Domyślny sędzia to przegrany wcześniejszego spotkania na danym korcie. Przy pierwszych
+meczach oraz konfliktach organizator wskazuje sędziego ręcznie. Można wybrać przegranego
+konkretnego wcześniejszego meczu lub wpisać imię wybranej osoby z drużyny.
+
+Kafelki +1 zapisują pojedyncze punkty na serwerze. Sety kończą się po osiągnięciu limitu
+fazy z przewagą 2 punktów; większość wygranych setów pozwala zatwierdzić mecz. Cofnięcie
+punktu działa do zatwierdzenia i pozwala otworzyć ponownie właśnie zakończony set.
+Dopiero zatwierdzenie zapisuje oficjalny wynik, aktualizuje drabinkę i harmonogram.
+Organizator zachowuje możliwość korekty wyniku. Punkty live są w bazie Railway;
+standardowy eksport JSON zawiera oficjalne wyniki i przydziały, bez kodów i historii kliknięć.
+Publiczny widok oraz telewizor pobierają punkty co 2 sekundy (wymagane połączenie).
+Przy niepewnym zapisie panel pobiera wynik z serwera i nie ponawia sam punktu.

@@ -23,6 +23,8 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     limiter = Limiter(get_remote_address, app=app, storage_uri='memory://', default_limits=[])
+    app.view_functions['referee_access'] = limiter.limit('8/minute;60/hour', methods=['POST'])(app.view_functions['referee_access'])
+    app.view_functions['referee_action'] = limiter.limit('300/minute', methods=['POST'])(app.view_functions['referee_action'])
     # Authorization runs before CSRF so unauthenticated and viewer writes cannot reach handlers.
     @app.before_request
     def authorize():
@@ -30,7 +32,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if g.user and (not g.user.active or session.get('version') != g.user.version):
             session.clear()
             g.user = None
-        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static'}
+        public = {'login', 'setup', 'health', 'public_tournament', 'public_short', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores'}
         if request.endpoint in public:
             return
         if not g.user:

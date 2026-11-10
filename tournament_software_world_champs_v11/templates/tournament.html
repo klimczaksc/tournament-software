@@ -7,6 +7,7 @@
   <a href="#overview">Overview</a><a href="#settings">Settings</a><a href="#seeding">Seeding</a>
   {% if tournament.system == 'group_knockout' %}<a href="#group-assignment">Group Assignment</a><a href="#group-tables">Group Tables</a>{% endif %}
   {% if groups_complete %}<a href="#knockout-pairing">Pairings</a>{% endif %}
+  <a href="#referees">Sędziowie</a>
   <a href="#timetable">Timetable</a>
   <a href="#matches">Matches</a><a href="#tree">Tournament Tree</a><a href="#standings">Standings</a>
   <div class="nav-sep"></div><div class="nav-muted">FILES & VIEW</div>
@@ -109,6 +110,7 @@
   </div>{% endfor %}
 </div></details>{% endif %}
 
+<details class="section" id="referees" open><summary>Sędziowie · punkty live</summary><div class="section-body card"><form method="post" action="{{ url_for('configure_referee_panel',tournament_id=tournament.id) }}" class="row"><label><input type="checkbox" name="enabled" {% if settings.get('referee_enabled') %}checked{% endif %}> Włącz panele sędziów i wskazywanie przegranego jako sędziego</label><button>Zapisz</button></form><p class="small muted">Włącz też publiczny link dla graczy. Każdy mecz ma własny 3-cyfrowy kod widoczny poniżej przy meczu. Podaj go sędziemu przy stoliku. Pierwsze mecze wymagają wskazania sędziego ręcznie; później domyślnie sędziuje przegrany wcześniejszego spotkania na danym korcie. Przy drużynach wybierz jedną osobę. Reguła punktowa: limit fazy + przewaga 2 punktów; po wygraniu większości setów sędzia zatwierdza koniec.</p></div></details>
 <details class="section" id="timetable" open><summary>Timetable · godziny meczów</summary><div class="section-body card">
 <form method="post" action="/tournament/{{ tournament.id }}/timetable" class="row">
 <label>Start turnieju / fazy grupowej<input type="datetime-local" name="schedule_start" value="{{ settings.get('schedule_start','')[:16] }}"></label>
@@ -133,7 +135,7 @@
         <button type="submit" {% if locked_after_groups or participants_pending %}disabled{% endif %}>Save result</button>
       </form>{% if locked_after_groups %}<div class="small muted mt-sm">Locked until Group Stage is complete.</div>{% elif participants_pending %}<div class="small muted mt-sm">Waiting for earlier result.</div>{% endif %}
     </div>
-  </div>{% include 'timing_controls.html' %}</div>{% endfor %}{% else %}<div class="muted">Generate the tournament structure first.</div>{% endif %}
+  </div>{% include 'timing_controls.html' %}{% include 'referee_controls.html' %}</div>{% endfor %}{% else %}<div class="muted">Generate the tournament structure first.</div>{% endif %}
 </div></details>
 
 {% if bracket_sections %}<details class="section" id="tree" open><summary>Tournament Draws</summary><div class="section-body card">

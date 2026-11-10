@@ -41,7 +41,7 @@ def test_full_access_lifecycle():
     assert viewer.get(path+'/export/db').status_code==403
     # Exercise EVERY existing write endpoint as guest and as viewer.
     for rule in app.url_map.iter_rules():
-        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout'}: continue
+        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout','referee_access','referee_action'}: continue
         target=rule.rule.replace('<int:tournament_id>',str(tid)).replace('<int:match_id>','1').replace('<int:phase_id>','1')
         assert guest.post(target).status_code==401, target
         assert viewer.post(target, data={'csrf_token':csrf(viewer,'/')}).status_code==403, target
@@ -491,3 +491,143 @@ def test_in_place_controls_and_clear_public_monitor_statuses():
     ongoing=public.split(f'data-match-id="{mid}"')[1].split('</article>')[0]
     assert 'match-time' not in ongoing # Actual start remains in the admin only.
     assert 'match-time' in public # Waiting matches retain their planned hours.
+
+
+def referee_fixture(players=4, system='single_elimination'):
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict
+    admin=app.test_client()
+    with app.app_context(): uid=User.query.filter_by(role='admin').first().id
+    with admin.session_transaction() as s:s.update(uid=uid,version=1)
+    token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('Referee Cup',players,system,True,2);generate_structure(t)
+        for ph in t.phases:ph.points_to=3;ph.best_of=3
+        md=settings_for(t);md.update(public_enabled=True,public_token='ref-'+str(t.id),public_slug='ref-'+str(t.id),schedule_start='2026-01-01T10:00')
+        save_settings_dict(t,md);db.session.commit();tid=t.id
+        mid=next(m.id for m in t.matches if m.player1_id and m.player2_id and not m.winner_id)
+    assert admin.post(f'/tournament/{tid}/referees',data={'enabled':'on','csrf_token':token}).status_code==302
+    with app.app_context(): code=app.extensions['referee_score'].query.get(mid).desk_code
+    return admin,token,tid,mid,code
+
+
+def test_referee_codes_scope_csrf_live_points_undo_and_official_propagation():
+    import json
+    from app import meta_for
+    admin,admin_token,tid,mid,code=referee_fixture()
+    assert len(code)==3 and code.isdigit()
+    referee=app.test_client();outsider=app.test_client()
+    assert referee.get(f'/referee/{mid}').status_code==200
+    assert 'inputmode="numeric"' in referee.get(f'/referee/{mid}').text
+    token=csrf(referee,f'/referee/{mid}')
+    assert referee.post(f'/referee/{mid}/access',data={'code':code}).status_code==400
+    wrong='999' if code!='999' else '998'
+    assert referee.post(f'/referee/{mid}/access',data={'code':wrong,'csrf_token':token}).status_code==403
+    assert referee.get(f'/referee/{mid}/state').status_code==403
+    assert referee.post(f'/referee/{mid}/action',json={'revision':0,'action':'point','side':0},headers={'X-CSRFToken':token}).status_code==403
+    assert referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token}).status_code==302
+    state=referee.get(f'/referee/{mid}/state').json
+    def action(kind,side=None,revision=None):
+        nonlocal state
+        r=referee.post(f'/referee/{mid}/action',json={'revision':state['revision'] if revision is None else revision,'action':kind,'side':side},headers={'X-CSRFToken':token})
+        if r.status_code==200:state=r.json
+        return r
+    assert action('point',0).status_code==200 and state['current']==[1,0]
+    with app.app_context():
+        m=db.session.get(Match,mid);assert m.score_json=='[]' and not m.winner_id and meta_for(m).get('actual_start')
+    public=outsider.get('/live/ref-'+str(tid)).json
+    assert public['scores'][str(mid)]['current']==[1,0]
+    assert 'code' not in json.dumps(public) and 'events' not in json.dumps(public)
+    assert 'Kod sędziego' not in outsider.get('/players/ref-'+str(tid)).text
+    assert 'Sędzia:' in outsider.get('/players/ref-'+str(tid)).text
+    # A stale tab / repeated delivery must not add a second point.
+    assert action('point',0,revision=0).status_code==409
+    assert action('undo').status_code==200 and state['current']==[0,0]
+    assert action('finish').status_code==409
+    # Deuce: 2:2 -> 3:2 does not finish a set; 4:2 does.
+    for side in [0,1,0,1,0]:assert action('point',side).status_code==200
+    assert state['sets']==[] and state['current']==[3,2]
+    assert action('point',0).status_code==200 and state['sets']==[[4,2]]
+    assert action('undo').status_code==200 and state['sets']==[] and state['current']==[3,2]
+    assert action('point',0).status_code==200
+    for _ in range(3):assert action('point',0).status_code==200
+    assert state['awaiting_confirmation'] and state['sets']==[[4,2],[3,0]]
+    assert action('point',1).status_code==409
+    with app.app_context(): assert db.session.get(Match,mid).winner_id is None
+    assert action('finish').status_code==200 and state['winner_id'] and state['finalized']
+    with app.app_context():
+        m=db.session.get(Match,mid);assert m.winner_id==m.player1_id and json.loads(m.score_json)==[[4,2],[3,0]]
+        assert any(meta_for(x).get('sources') and m.winner_id in (x.player1_id,x.player2_id) for x in m.tournament.matches if x.id!=m.id)
+    assert action('undo').status_code==409
+    assert outsider.get('/live/ref-'+str(tid)).json['scores'][str(mid)]['complete']
+    with app.app_context(): other=next(x.id for x in db.session.get(Tournament,tid).matches if x.id!=mid)
+    assert referee.get(f'/referee/{other}/state').status_code==403
+    # A referee session cannot use admin write endpoints.
+    assert referee.post(f'/match/{mid}/result',data={'csrf_token':token}).status_code==401
+    assert 'Kod sędziego' in admin.get(f'/tournament/{tid}').text
+
+
+def test_referee_reset_disable_admin_override_and_participant_changes_revoke_access():
+    from app import meta_for,set_meta
+    admin,atok,tid,mid,code=referee_fixture()
+    referee=app.test_client();token=csrf(referee,f'/referee/{mid}')
+    referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token})
+    state=referee.get(f'/referee/{mid}/state').json
+    assert referee.post(f'/referee/{mid}/action',json={'action':'point','side':0,'revision':state['revision']},headers={'X-CSRFToken':token}).status_code==200
+    assert admin.post(f'/match/{mid}/referee-reset',data={'csrf_token':atok}).status_code==302
+    assert referee.get(f'/referee/{mid}/state').status_code==403
+    with app.app_context(): code=app.extensions['referee_score'].query.get(mid).desk_code
+    referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token})
+    assert referee.get(f'/referee/{mid}/state').json['current']==[0,0]
+    # Admin result takes priority, including over an already unlocked scoring panel.
+    admin.post(f'/match/{mid}/result',data={'set_1_p1':3,'set_1_p2':0,'set_2_p1':3,'set_2_p2':0,'csrf_token':atok})
+    revision=referee.get(f'/referee/{mid}/state').json['revision']
+    assert referee.post(f'/referee/{mid}/action',json={'action':'point','side':0,'revision':revision},headers={'X-CSRFToken':token}).status_code==409
+    assert str(mid) not in referee.get('/live/ref-'+str(tid)).json['scores']
+    assert admin.post(f'/tournament/{tid}/referees',data={'csrf_token':atok}).status_code==302
+    assert referee.get(f'/referee/{mid}').status_code==404
+    admin.post(f'/tournament/{tid}/referees',data={'enabled':'on','csrf_token':atok})
+    assert referee.get(f'/referee/{mid}/state').status_code==403
+    referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token})
+    with app.app_context():
+        m=db.session.get(Match,mid);m.player1_id=m.tournament.players[-1].id;db.session.commit()
+    assert referee.get(f'/referee/{mid}/state').status_code==403
+    # Publishing disabled revokes all public referee and live endpoints too.
+    admin.post(f'/tournament/{tid}/publish',data={'csrf_token':atok})
+    assert referee.get(f'/referee/{mid}').status_code==404 and referee.get('/live/ref-'+str(tid)).status_code==404
+
+
+def test_referee_loser_assignments_manual_override_and_regeneration_cleanup():
+    from app import referee_services,generate_structure,meta_for
+    admin,token,tid,mid,code=referee_fixture(8,'round_robin')
+    with app.app_context():
+        t=db.session.get(Tournament,tid);first=next(x for x in t.matches if x.id==mid)
+        target=next(x for x in t.matches if x.order_index>first.order_index and first.player2_id not in (x.player1_id,x.player2_id))
+        target_id=target.id
+    admin.post(f'/match/{mid}/result',data={'set_1_p1':3,'set_1_p2':0,'set_2_p1':3,'set_2_p2':0,'csrf_token':token})
+    admin.post(f'/match/{target_id}/referee-assignment',data={'source_match':mid,'csrf_token':token})
+    with app.app_context():
+        t=db.session.get(Tournament,tid);first=db.session.get(Match,mid)
+        assert referee_services['assignments'](t,list(t.matches))[target_id]==first.loser.name
+    admin.post(f'/match/{target_id}/referee-assignment',data={'referee_name':'Sędzia testowy','csrf_token':token})
+    assert 'Sędzia testowy' in app.test_client().get('/players/ref-'+str(tid)).text
+    with app.app_context():
+        old_epochs={r.epoch for r in app.extensions['referee_score'].query.all()}
+        generate_structure(db.session.get(Tournament,tid))
+        rows=app.extensions['referee_score'].query.join(Match,Match.id==app.extensions['referee_score'].match_id).filter(Match.tournament_id==tid).all()
+        assert len(rows)==len(db.session.get(Tournament,tid).matches)
+        assert not old_epochs & {r.epoch for r in rows}
+
+
+def test_referee_pin_attempts_are_limited_and_expired_sessions_cannot_write():
+    admin,atok,tid,mid,code=referee_fixture()
+    guest=app.test_client();token=csrf(guest,f'/referee/{mid}')
+    wrong='999' if code!='999' else '998'
+    for _ in range(8):
+        assert guest.post(f'/referee/{mid}/access',data={'code':wrong,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'198.51.100.77'}).status_code==403
+    assert guest.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'198.51.100.77'}).status_code==429
+    # Separate IP only isolates this test's counter; no production rate limits are disabled.
+    assert guest.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'198.51.100.78'}).status_code==302
+    with guest.session_transaction() as s:
+        grants=s['referee_grants'];grants[str(mid)]['until']=0;s['referee_grants']=grants
+    assert guest.get(f'/referee/{mid}/state').status_code==403
+    assert guest.post(f'/referee/{mid}/action',json={'action':'point','side':0,'revision':0},headers={'X-CSRFToken':token}).status_code==403

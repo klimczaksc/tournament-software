@@ -203,6 +203,7 @@ def create_tournament(name, player_count, system, consolation, court_count):
 
 
 def clear_matches(tournament):
+    referee_services['clear'](tournament.id)
     Match.query.filter_by(tournament_id=tournament.id).delete()
     db.session.commit()
 
@@ -1184,6 +1185,8 @@ def generate_structure(t):
         generate_round_robin(t)
     else:
         generate_swiss(t)
+    if settings_for(t).get('referee_enabled'):
+        referee_services['ensure'](t)
 
 
 def group_stage_complete(tournament_id):
@@ -1708,6 +1711,8 @@ def import_database_json(payload):
         ))
     db.session.commit()
     repair_unplayed_brackets(t.id)
+    if settings_for(t).get('referee_enabled'):
+        referee_services['ensure'](t)
     return t
 
 
@@ -2269,6 +2274,9 @@ def tournament_view(tournament_id):
     timing = build_timetable(t, matches, settings_for(t), meta_for, closing_match_kind)
     upcoming = sorted([m for m in matches if not m.winner_id], key=lambda m: (0 if timing.get(m.id, {}).get('actual') else 1, timing[m.id]['start'] if m.id in timing else datetime.max, m.order_index))
     completed = [m for m in matches if m.winner_id]
+    referees = referee_services['assignments'](t, matches)
+    live_scores = referee_services['scores'](t, matches)
+    referee_codes = referee_services['codes'](t) if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else {}
     ranking = final_ranking(t) if matches else []
     group_tables = compute_group_tables(t)
     sections = bracket_sections(t)
@@ -2283,7 +2291,7 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
+    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, referees=referees, live_scores=live_scores, referee_codes=referee_codes, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=(url_for('tournament_logo', tournament_id=t.id) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])
@@ -2507,37 +2515,7 @@ def update_phase_rules(phase_id):
     return redirect(url_for('tournament_view', tournament_id=phase.tournament_id))
 
 
-@app.route('/match/<int:match_id>/result', methods=['POST'])
-def update_match_result(match_id):
-    m = Match.query.get_or_404(match_id)
-    if m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not group_stage_complete(m.tournament_id):
-        flash('Finish all Group Stage matches first. Championship and Placement matches unlock automatically afterwards.')
-        anchor = request.form.get('anchor') or ''
-        return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
-    if not m.player1_id or not m.player2_id:
-        flash('This match is not ready yet. Its participants are still being determined by earlier results.')
-        anchor = request.form.get('anchor') or ''
-        return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
-
-    # New score-grid format. Legacy text input remains supported for imported
-    # backups and older browsers.
-    sets = []
-    max_sets = m.phase.best_of if m.phase else 5
-    for idx in range(1, max_sets + 1):
-        a_raw = request.form.get(f'set_{idx}_p1', '').strip()
-        b_raw = request.form.get(f'set_{idx}_p2', '').strip()
-        if a_raw == '' and b_raw == '':
-            continue
-        try:
-            a, b = int(a_raw), int(b_raw)
-        except Exception:
-            flash(f'Set {idx}: enter both scores as whole numbers.')
-            anchor = request.form.get('anchor') or ''
-            return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
-        sets.append([a, b])
-    if not sets and request.form.get('score') is not None:
-        sets, _, _ = parse_score(request.form.get('score', '').strip())
-
+def save_match_sets(m, sets):
     p1_sets = sum(1 for a, b in sets if a > b)
     p2_sets = sum(1 for a, b in sets if b > a)
     winner_side = 1 if p1_sets > p2_sets else (2 if p2_sets > p1_sets else None)
@@ -2573,6 +2551,40 @@ def update_match_result(match_id):
         if not smart_byes:
             apply_recommended_entry_pairing(m.tournament)
     assign_schedule(m.tournament, renumber=False)
+
+
+@app.route('/match/<int:match_id>/result', methods=['POST'])
+def update_match_result(match_id):
+    m = Match.query.get_or_404(match_id)
+    if m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not group_stage_complete(m.tournament_id):
+        flash('Finish all Group Stage matches first. Championship and Placement matches unlock automatically afterwards.')
+        anchor = request.form.get('anchor') or ''
+        return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
+    if not m.player1_id or not m.player2_id:
+        flash('This match is not ready yet. Its participants are still being determined by earlier results.')
+        anchor = request.form.get('anchor') or ''
+        return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
+
+    # New score-grid format. Legacy text input remains supported for imported
+    # backups and older browsers.
+    sets = []
+    max_sets = m.phase.best_of if m.phase else 5
+    for idx in range(1, max_sets + 1):
+        a_raw = request.form.get(f'set_{idx}_p1', '').strip()
+        b_raw = request.form.get(f'set_{idx}_p2', '').strip()
+        if a_raw == '' and b_raw == '':
+            continue
+        try:
+            a, b = int(a_raw), int(b_raw)
+        except Exception:
+            flash(f'Set {idx}: enter both scores as whole numbers.')
+            anchor = request.form.get('anchor') or ''
+            return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
+        sets.append([a, b])
+    if not sets and request.form.get('score') is not None:
+        sets, _, _ = parse_score(request.form.get('score', '').strip())
+
+    save_match_sets(m, sets)
     flash('Result saved.')
     anchor = request.form.get('anchor') or ''
     return redirect(url_for('tournament_view', tournament_id=m.tournament_id) + (f'#{anchor}' if anchor else ''))
@@ -2844,11 +2856,15 @@ def export_excel(tournament_id):
 @app.route('/tournament/<int:tournament_id>/delete', methods=['POST'])
 def delete_tournament(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
+    referee_services['clear'](t.id)
     db.session.delete(t)
     db.session.commit()
     flash('Tournament deleted.')
     return redirect(url_for('index'))
 
+
+from referees import configure_referees
+referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets)
 
 from online import configure_online
 configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)

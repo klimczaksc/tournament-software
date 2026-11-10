@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% block content %}
+<h1>{{ tournament.name }} · Mecz #{{ match.order_index }}</h1><p>Kort {{ match.court_number }} · {{ match.round_name }}</p><p>Sędzia: <strong>{{ referee }}</strong></p>
+{% if not unlocked %}
+<div class="card"><h2>Panel sędziego</h2><p>Pobierz 3-cyfrowy kod tego meczu przy stoliku sędziowskim.</p>
+<form method="post" action="{{ url_for('referee_access', match_id=match.id) }}"><label>Kod meczu <input name="code" type="password" inputmode="numeric" pattern="[0-9]{3}" maxlength="3" minlength="3" autocomplete="off" required autofocus style="width:130px;font-size:24px"></label><button>Wejdź w mecz</button></form></div>
+{% else %}
+<div id="referee-app" data-state-url="{{ url_for('referee_state',match_id=match.id) }}" data-action-url="{{ url_for('referee_action',match_id=match.id) }}" class="card">
+<div class="row between mb"><strong id="ref-rules"></strong><span id="ref-connection" role="status" aria-live="polite">Łączenie…</span></div>
+<div id="ref-sets" class="mb" style="font-size:24px"></div>
+<div class="referee-tiles"><button type="button" class="point-tile" data-side="0" disabled><span class="ref-name">{{ match.player1.name if match.player1 else 'TBD' }}</span><strong id="ref-p0">0</strong><span>+1 punkt</span></button><button type="button" class="point-tile" data-side="1" disabled><span class="ref-name">{{ match.player2.name if match.player2 else 'TBD' }}</span><strong id="ref-p1">0</strong><span>+1 punkt</span></button></div>
+<div class="row mt"><button type="button" id="ref-undo" disabled>↶ Cofnij ostatni punkt</button><button type="button" id="ref-finish" hidden>Zatwierdź wynik i zakończ mecz</button></div>
+<p class="small muted">Set kończy się po osiągnięciu limitu z przewagą 2 punktów. Wynik każdego kliknięcia jest zapisywany na serwerze. Poczekaj na potwierdzenie zapisu; przy błędzie sprawdź wynik przed kolejnym kliknięciem. Po ostatnim punkcie zatwierdź zakończenie meczu.</p>
+</div><script src="{{ url_for('static',filename='referee-score.js') }}" defer></script>
+{% endif %}
+<style>.referee-tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px}.point-tile{display:flex;align-items:center;flex-direction:column;justify-content:center;gap:14px;min-height:300px;touch-action:manipulation;background:var(--panel2);color:var(--text);border:3px solid var(--accent)}.point-tile strong{font-size:100px;line-height:1}.ref-name{font-size:clamp(18px,3vw,32px);overflow-wrap:anywhere}.point-tile:active:not(:disabled){background:var(--accent);color:var(--accentText)}.point-tile:disabled{opacity:.65;cursor:wait}#ref-finish{background:var(--accent);font-size:20px}@media(max-width:600px){.referee-tiles{gap:8px}.point-tile{padding:14px 6px;min-height:240px}.point-tile strong{font-size:72px}}</style>
+{% endblock %}

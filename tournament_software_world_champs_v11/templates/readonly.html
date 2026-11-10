@@ -4,6 +4,7 @@
 <article class="match-card" data-match-id="{{ m.id }}"><div class="row between"><strong>#{{ m.order_index }} · Kort {{ m.court_number }}</strong><span class="pill match-status{% if slot and slot.state == 'W trakcie' %} match-status-live{% endif %}">{{ slot.state if slot else ('Zakończony' if m.winner_id else 'Oczekuje') }}</span></div>
 {% if slot and not slot.actual %}<div class="match-time"><strong>{{ format_time(slot.start) }}</strong> <span class="small muted">do {{ format_time(slot.end) }}</span></div>{% endif %}
 <p><strong>{{ m.player1.name if m.player1 else source_label(m,0) }}</strong> — <strong>{{ m.player2.name if m.player2 else source_label(m,1) }}</strong></p><div class="small muted">{{ m.phase.name if m.phase else '' }} · {{ m.round_name }}</div>
+{% if settings.get('referee_enabled') %}<p class="referee-label small">Sędzia: <strong>{{ referees.get(m.id,'Do wyznaczenia') }}</strong></p>{% set live=live_scores.get(m.id) %}<div class="live-score" {% if not live %}hidden{% endif %}>{% if live %}<strong>{% if live.complete %}Wynik końcowy{% elif live.awaiting_confirmation %}Do zatwierdzenia{% else %}{{ live.current|join(':') }}{% endif %}</strong> · Sety: {{ live.sets|map('join',':')|join(' · ') or '—' }}{% endif %}</div>{% if not m.winner_id %}<a class="pill referee-entry" href="{{ url_for('referee_page',match_id=m.id) }}">Sędziuj ten mecz · kod ze stolika</a>{% endif %}{% endif %}
 {% if m.winner_id %}<p>{{ score_to_text(m.score_json) or 'Wolny los' }}{% if m.winner %} · Zwycięzca: {{ m.winner.name }}{% endif %}</p>{% endif %}</article>
 {% endmacro %}
 <div class="row between mb"><nav class="actions"><a class="pill" href="#schedule">Nadchodzące mecze</a><a class="pill" href="#results">Wyniki</a><a class="pill" href="#tree">Drabinka</a></nav><div class="actions"><a class="pill" href="{{ request.path }}{{ '' if display_mode else '?display=1' }}" {% if not display_mode %}target="_blank" rel="noopener"{% endif %}>{{ 'Zwykły widok' if display_mode else 'Tryb monitora ↗' }}</a>{% if display_mode %}<button id="fullscreen" type="button">Pełny ekran</button><strong id="screen-clock"></strong>{% endif %}</div></div>
@@ -32,6 +33,7 @@
 <div id="page-bottom" aria-hidden="true"></div>
 <nav class="page-jumps" aria-label="Przewijanie strony"><a href="#page-top" aria-label="Na górę" title="Na górę">↑</a><a href="#page-bottom" aria-label="Na dół" title="Na dół">↓</a></nav>
 <style>
+.live-score{font-size:24px;margin:12px 0;color:var(--accent)}.monitor-mode .live-score{font-size:36px;font-weight:700}.monitor-mode .referee-entry{display:none}.monitor-mode .referee-label{font-size:20px}
 .match-time{margin-top:10px;font-size:20px;color:var(--accent)}
 .monitor-mode .next-matches{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.monitor-mode .match-card{font-size:22px}.monitor-mode .match-time{font-size:28px}
 html.monitor-mode .next-matches .match-status{font-size:clamp(22px,2vw,32px);font-weight:750;line-height:1.2;padding:12px 20px;border:2px solid var(--line);border-radius:10px}
@@ -60,6 +62,17 @@ window.addEventListener('load',()=>{
 });
 // Updating only the data keeps fullscreen, scroll and open panels intact.
 let refreshBusy=false;
+let publicLiveData=null;
+function paintLive(){
+  if(!publicLiveData)return;
+  document.querySelectorAll('article[data-match-id]').forEach(card=>{
+    const id=card.dataset.matchId,live=publicLiveData.scores[id],box=card.querySelector('.live-score'),ref=card.querySelector('.referee-label strong');
+    if(ref&&publicLiveData.referees[id])ref.textContent=publicLiveData.referees[id];
+    if(!box)return;box.hidden=!live;if(!live)return;
+    box.textContent=(live.complete?'Wynik końcowy':live.awaiting_confirmation?'Do zatwierdzenia':'Na żywo: '+live.current.join(':'))+' · Sety: '+(live.sets.map(s=>s.join(':')).join(' · ')||'—');
+    const badge=card.querySelector('.match-status');badge.textContent=live.complete?'Zakończony':'W trakcie';badge.classList.toggle('match-status-live',!live.complete);
+  });
+}
 setInterval(async()=>{
   if(document.hidden||refreshBusy)return;
   refreshBusy=true;
@@ -72,7 +85,7 @@ setInterval(async()=>{
     panels.forEach(id=>{const old=document.getElementById(id),next=doc.getElementById(id);if(!old&&next){document.getElementById('standings').before(next);return;}if(old&&next){if(id==='schedule')old.querySelector('.next-matches').replaceWith(next.querySelector('.next-matches'));else old.innerHTML=next.innerHTML;if(id==='schedule'){const more=old.querySelector('#more-upcoming'),fresh=next.querySelector('#more-upcoming');if(more)more.remove();if(fresh)old.append(fresh);}}});
     document.querySelectorAll('details[id]').forEach(d=>{if(d.id in opened)d.open=opened[d.id];});
     document.getElementById('schedule-note').textContent=doc.getElementById('schedule-note').textContent;
-    applyFilter();drawBracketConnectors();document.getElementById('refresh-status').textContent='Zaktualizowano '+new Date().toLocaleTimeString('pl-PL')+' · co 15 s';
+    applyFilter();paintLive();drawBracketConnectors();document.getElementById('refresh-status').textContent='Zaktualizowano '+new Date().toLocaleTimeString('pl-PL')+' · co 15 s';
   }catch(e){document.getElementById('refresh-status').textContent='Brak aktualizacji — sprawdź połączenie lub ważność linku';}finally{refreshBusy=false;}
 },15000);
 window.addEventListener('pagehide',()=>{try{const details={};document.querySelectorAll('details[id]').forEach(d=>details[d.id]=d.open);sessionStorage.setItem(viewKey,JSON.stringify({filter:filter.value,scroll:window.scrollY,details}));}catch(e){}});
@@ -82,6 +95,11 @@ if(displayMode){
   const clock=()=>document.getElementById('screen-clock').textContent=new Date().toLocaleTimeString('pl-PL',{timeZone:{{ settings.get('schedule_timezone', 'Europe/Warsaw')|tojson }},hour:'2-digit',minute:'2-digit',second:'2-digit'});
   clock();setInterval(clock,1000);
 }
+{% if settings.get('referee_enabled') and settings.get('public_enabled') %}
+let liveBusy=false;
+async function pollLive(){if(document.hidden||liveBusy)return;liveBusy=true;try{const response=await fetch({{ url_for('public_live_scores',token=settings.public_token)|tojson }},{cache:'no-store'});if(!response.ok)throw new Error();publicLiveData=await response.json();paintLive();}catch(e){document.getElementById('refresh-status').textContent='Brak aktualizacji live — sprawdź połączenie';}finally{liveBusy=false;}}
+pollLive();setInterval(pollLive,2000);
+{% endif %}
 function drawBracketConnectors(){
   document.querySelectorAll('.bracket-canvas').forEach(canvas=>{
     const svg=canvas.querySelector('.bracket-svg'), grid=canvas.querySelector('.bracket-grid');
