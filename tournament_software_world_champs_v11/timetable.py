@@ -16,20 +16,22 @@ def parse_time(value):
     return value
 
 
-def build_timetable(tournament, matches, settings, meta_for, closing_match_kind, now=None):
+def build_timetable(tournament, matches, settings, meta_for, closing_match_kind, now=None,
+                    duration_for=None, planned=False):
     start = parse_time(settings.get('schedule_start'))
     if not start:
         return {}
     now = now or local_now(settings)
-    duration = timedelta(minutes=int(settings.get('match_minutes', 30)))
+    default_minutes = int(settings.get('match_minutes', 30))
     courts, players, ends, result = {}, {}, {}, {}
     busy_courts, busy_players = {}, {}
     keyed = {meta_for(m).get('key'): m for m in matches if meta_for(m).get('key')}
     # Reserve ongoing matches before placing any waiting matches on their courts.
     for m in matches:
         md = meta_for(m)
-        actual = parse_time(md.get('actual_start'))
+        actual = None if planned else parse_time(md.get('actual_start'))
         if actual and not m.winner_id:
+            duration = timedelta(minutes=duration_for(m) if duration_for else default_minutes)
             end = max(actual + duration, now + timedelta(minutes=1))
             busy_courts[m.court_number] = max(busy_courts.get(m.court_number, start), end)
             for pid in (m.player1_id, m.player2_id):
@@ -48,9 +50,10 @@ def build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
             raise ValueError('Cyclic match dependency in timetable.')
         m = ready
         remaining.remove(m)
+        duration = timedelta(minutes=duration_for(m) if duration_for else default_minutes)
         md = meta_for(m)
-        actual = parse_time(md.get('actual_start'))
-        finished = parse_time(md.get('actual_end')) if m.winner_id else None
+        actual = None if planned else parse_time(md.get('actual_start'))
+        finished = parse_time(md.get('actual_end')) if m.winner_id and not planned else None
         manual = parse_time(md.get('manual_start'))
         deps = [ends[keyed[s['match_key']].id] for s in md.get('sources', [])
                 if s.get('kind') in ('winner', 'loser') and s.get('match_key') in keyed]
@@ -67,7 +70,13 @@ def build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
         if closing_match_kind(m):
             floor = max(floor, previous_end)
         bye = bool(m.winner_id and not (m.player1_id and m.player2_id))
-        if m.winner_id:
+        if planned:
+            # Keep the published plan independent of results and the ticking clock.
+            # Manual start floors and structural BYEs are still part of the plan.
+            begin = max(floor, manual or start)
+            end = begin + (timedelta() if bye else duration)
+            state = 'Wolny los' if bye else 'Oczekuje'
+        elif m.winner_id:
             # Never invent a real completion time for historical results or BYEs.
             begin = actual or max(floor, manual or start)
             end = finished or (max(floor, begin) + (timedelta() if bye else duration))
@@ -92,6 +101,32 @@ def build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
         result[m.id] = dict(start=begin, end=end, state=state, actual=bool(actual),
                             shifted=bool(manual and begin > manual), bye=bye)
     return result
+
+
+def build_forecast_timetable(tournament, matches, settings, meta_for, closing_match_kind,
+                            estimate_for, now=None):
+    """One fixed plan plus live predictions; never mutate the organiser's settings."""
+    if not settings.get('schedule_start'):
+        return {}
+    now = now or local_now(settings)
+    plan = build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
+                           now=now, planned=True)
+    estimates = {}
+
+    def duration_for(match):
+        phase = getattr(match, 'phase', None)
+        key = (phase.points_to, phase.best_of, phase.phase_type) if phase else (21, 3, 'main')
+        if key not in estimates:
+            estimates[key] = estimate_for(match)
+        suggested = estimates[key].get('suggested')
+        return suggested if suggested is not None else int(settings.get('match_minutes', 30))
+
+    live = build_timetable(tournament, matches, settings, meta_for, closing_match_kind,
+                           now=now, duration_for=duration_for)
+    for mid, slot in live.items():
+        slot['planned_start'] = plan[mid]['start']
+        slot['forecast_changed'] = slot['start'].replace(second=0, microsecond=0) != plan[mid]['start'].replace(second=0, microsecond=0)
+    return live
 
 
 def format_time(value):

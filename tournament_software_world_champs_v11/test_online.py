@@ -794,7 +794,7 @@ def test_referee_confirmation_updates_open_admin_card_and_next_match_without_nav
         assert 'match:'+str(following.id) in patch.json['entities']
         assert winner in patch.json['entities']['match:'+str(following.id)]
     public=app.test_client().get('/players/ref-'+str(tid)).text
-    clock_values=re.findall(r'<div class="match-time"><strong>([^<]+)</strong>',public)
+    clock_values=re.findall(r'<div class="match-time"><strong[^>]*>([^<]+)</strong>',public)
     assert clock_values and all(re.fullmatch(r'\d{2}:\d{2}',value) for value in clock_values)
     assert not re.search(r'Court \d+ · \d{2}\.\d{2} \d{2}:\d{2}',public)
 
@@ -1205,3 +1205,120 @@ def test_admin_accounts_lists_each_organizers_own_tournaments_and_empty_accounts
     with other.session_transaction() as sess:sess.update(uid=aid,version=1)
     assert other.get('/accounts').status_code==403 and other.post('/accounts',data={'csrf_token':csrf(other,'/')}).status_code==403
     assert other.get(f'/tournament/{tbid}').status_code==404
+
+
+def test_live_forecasts_keep_plan_and_respect_courts_players_manual_times_and_closing():
+    from datetime import datetime
+    from types import SimpleNamespace
+    from timetable import build_forecast_timetable
+    from app import closing_match_kind
+    phase=SimpleNamespace(points_to=17,best_of=1,phase_type='main')
+    def match(i,court,p1,p2,**meta):
+        return SimpleNamespace(id=i,order_index=i,court_number=court,player1_id=p1,player2_id=p2,
+                               winner_id=None,bracket='main',phase=phase,meta=meta,notes=__import__('json').dumps(meta))
+    a=match(1,1,1,2,key='a',actual_start='2030-05-01T10:00')
+    b=match(2,2,3,4,key='b')
+    c=match(3,1,5,6,key='c')
+    d=match(4,2,1,7,key='d',sources=[{'kind':'winner','match_key':'a'}])
+    bronze=match(5,1,8,9,place_start=3,place_end=4)
+    final=match(6,2,10,11,place_start=1,place_end=2)
+    t=SimpleNamespace(system='single_elimination')
+    settings=dict(schedule_start='2030-05-01T10:00',match_minutes=30)
+    calls=[]
+    def estimate(m):calls.append(m.id);return dict(count=5,suggested=35)
+    def build(now):return build_forecast_timetable(t,[a,b,c,d,bronze,final],settings,lambda m:m.meta,closing_match_kind,estimate,now)
+    slots=build(datetime(2030,5,1,9))
+    assert len(calls)==1 # One lookup per comparable format, not per card.
+    assert slots[3]['planned_start']==datetime(2030,5,1,10,30)
+    assert slots[3]['start']==datetime(2030,5,1,10,35) and slots[3]['forecast_changed']
+    later=build(datetime(2030,5,1,10,45))
+    assert later[3]['start']==datetime(2030,5,1,10,46)
+    assert later[3]['planned_start']==slots[3]['planned_start']
+    assert later[4]['start']>=max(later[1]['end'],later[2]['end'])
+    assert later[5]['start']>=max(later[i]['end'] for i in (1,2,3,4))
+    assert later[6]['start']>=later[5]['end']
+    a.winner_id=1;a.meta['actual_end']='2030-05-01T10:50'
+    finished=build(datetime(2030,5,1,10,50))
+    assert finished[3]['start']==datetime(2030,5,1,10,50)
+    assert finished[3]['planned_start']==datetime(2030,5,1,10,30)
+    c.meta['manual_start']='2030-05-01T12:00'
+    manual=build(datetime(2030,5,1,10,50))
+    assert manual[3]['start']==manual[3]['planned_start']==datetime(2030,5,1,12)
+    assert not manual[3]['forecast_changed']
+    c.meta.pop('manual_start');c.player1_id=3
+    shared=build(datetime(2030,5,1,10,50))
+    assert shared[3]['start']>=shared[2]['end']
+    assert settings==dict(schedule_start='2030-05-01T10:00',match_minutes=30)
+
+
+def test_fifth_full_sample_and_late_finish_update_public_forecasts_without_changing_plan(monkeypatch):
+    from datetime import datetime,timedelta
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict,meta_for,set_meta,statistics_services,timetable_for
+    import timetable
+    clock=[datetime(2030,5,1,9)]
+    monkeypatch.setattr(timetable,'local_now',lambda settings:clock[0])
+    with app.app_context():
+        training=create_tournament('Forecast training',4,'round_robin',False,1);generate_structure(training)
+        target=create_tournament('Forecast public',4,'round_robin',False,1);generate_structure(target)
+        for t in (training,target):
+            for phase in t.phases:phase.points_to=17;phase.best_of=1
+        cfg=settings_for(target);cfg.update(schedule_start='2030-05-01T10:00',match_minutes=30,public_enabled=True,public_token='forecast-public-test');save_settings_dict(target,cfg)
+        samples=sorted(training.matches,key=lambda m:m.order_index)
+        for m,minutes in zip(samples[:4],[28,30,32,36]):
+            m.score_json='[[17,0]]';m.winner_id=m.player1_id;m.loser_id=m.player2_id
+            start=datetime(2026,1,1,10);md=meta_for(m);md.update(actual_start=start.isoformat(),actual_end=(start+timedelta(minutes=minutes)).isoformat());set_meta(m,md);statistics_services['sync'](m,quality='manual')
+        db.session.commit()
+        matches=sorted(target.matches,key=lambda m:m.order_index);first,second=matches[:2];tid,firstid,secondid=target.id,first.id,second.id;fifthid=samples[4].id
+        before={m.id:(m.order_index,m.court_number,m.score_json,meta_for(m)) for m in matches}
+        assert not timetable_for(target,matches)[second.id]['forecast_changed']
+    guest=app.test_client();url='/players/forecast-public-test';updates='/updates/forecast-public-test'
+    assert 'match-start-forecast' not in guest.get(url).text.split('<style>')[0]
+    initial=guest.get(updates).json
+    with app.app_context():
+        m=db.session.get(Match,fifthid);m.score_json='[[17,0]]';m.winner_id=m.player1_id;m.loser_id=m.player2_id
+        md=meta_for(m);md.update(actual_start='2026-01-01T10:00',actual_end='2026-01-01T10:42');set_meta(m,md);statistics_services['sync'](m,quality='manual');db.session.commit()
+        t=db.session.get(Tournament,tid);assert settings_for(t)['match_minutes']==30
+        assert before=={m.id:(m.order_index,m.court_number,m.score_json,meta_for(m)) for m in t.matches}
+    learned=guest.get(updates+'?cursor='+initial['cursor']).json
+    html=learned['entities']['match:'+str(secondid)]
+    assert '10:30' in html and '10:35' in html and 'Prognoza: ok.' in html
+    assert '<small class="match-start-forecast">' in html
+    assert '10:35' in guest.get(url+'?display=1').text
+    # A finish at 10:50 pushes only the live start; the published 10:30 stays.
+    clock[0]=datetime(2030,5,1,10,50)
+    with app.app_context():
+        first=db.session.get(Match,firstid);first.score_json='[[17,0]]';first.winner_id=first.player1_id;first.loser_id=first.player2_id
+        md=meta_for(first);md.update(actual_start='2030-05-01T10:00',actual_end='2030-05-01T10:50');set_meta(first,md);statistics_services['sync'](first,quality='manual');db.session.commit()
+    delayed=guest.get(updates+'?cursor='+learned['cursor']).json
+    assert '10:30' in delayed['entities']['match:'+str(secondid)]
+    assert '10:50' in delayed['entities']['match:'+str(secondid)]
+    # The clock alone also revises a running overrun without a new result.
+    with app.app_context():
+        first=db.session.get(Match,firstid);first.winner_id=None;first.score_json='[]';md=meta_for(first);md.pop('actual_end');set_meta(first,md);db.session.commit()
+    running=guest.get(updates).json
+    clock[0]=datetime(2030,5,1,10,55)
+    # Bypass only the one-second render cache, without a database mutation.
+    monkeypatch.setattr('event_updates.time.monotonic',lambda:10**12)
+    ticking=guest.get(updates+'?cursor='+running['cursor']).json
+    assert '10:56' in ticking['entities']['match:'+str(secondid)]
+
+
+def test_duration_forecasts_use_only_the_same_organizers_workspace():
+    from app import create_tournament,generate_structure,statistics_services,meta_for,set_meta
+    from datetime import datetime,timedelta
+    Owner=app.extensions['tournament_owner']
+    with app.app_context():
+        user=User(username='forecast-owner',password_hash=generate_password_hash('Eight123'),role='organizer');db.session.add(user);db.session.commit()
+        training=create_tournament('Private duration samples',4,'round_robin',False,1);generate_structure(training)
+        target=create_tournament('Admin duration target',4,'round_robin',False,1);generate_structure(target)
+        for t in (training,target):
+            for p in t.phases:p.points_to=19;p.best_of=1
+        db.session.add(Owner(tournament_id=training.id,user_id=user.id))
+        for m in training.matches[:5]:
+            m.score_json='[[19,0]]';m.winner_id=m.player1_id;m.loser_id=m.player2_id
+            start=datetime(2026,1,1,10);md=meta_for(m);md.update(actual_start=start.isoformat(),actual_end=(start+timedelta(minutes=40)).isoformat());set_meta(m,md);statistics_services['sync'](m,quality='manual')
+        db.session.commit()
+        assert statistics_services['estimate'](training.matches[0])['suggested']==40
+        assert statistics_services['estimate'](target.matches[0])['count']==0
+        db.session.add(Owner(tournament_id=target.id,user_id=user.id));db.session.commit();db.session.expire_all()
+        assert statistics_services['estimate'](target.matches[0])['suggested']==40

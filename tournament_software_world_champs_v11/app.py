@@ -2211,7 +2211,7 @@ def write_schedule_pdf(t):
     matches=Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index,Match.id).all()
     pagesize=landscape(A4); buf=io.BytesIO(); c=canvas.Canvas(buf,pagesize=pagesize); width,height=pagesize; c.setTitle(f'{t.name} - Match Schedule')
     mx=8*mm; top=height-28*mm; bottom=8*mm; row_h=5.0*mm; section_h=5.5*mm
-    timing=build_timetable(t,matches,settings_for(t),meta_for,closing_match_kind)
+    timing=timetable_for(t,matches)
     cols=[(translate('No.'),0,5),(translate('Court'),10,5),(translate('Start'),24,18),(translate('Round'),52,25),(translate('Team 1'),107,23),(translate('Team 2'),159,23),(translate('Score'),212,40)]
     page=1
     def header():
@@ -2317,7 +2317,7 @@ def write_results_excel(t):
     for i, p in enumerate(ranking, start=1):
         ws1.append([places.get(p.id, i), p.name, p.club, p.seed])
     ws2 = wb.create_sheet(translate('Matches'))
-    timing=build_timetable(t,list(t.matches),settings_for(t),meta_for,closing_match_kind)
+    timing=timetable_for(t,list(t.matches))
     ws2.append([translate('Start')+' (' + settings_for(t).get('schedule_timezone','Europe/Warsaw') + ')', translate('Order'), translate('Court'), translate('Phase'), translate('Round'), translate('Bracket'), translate('Player 1'), translate('Player 2'), translate('Score'), translate('Winner')])
     for m in Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all():
         ws2.append([format_time(timing[m.id]['start']) if m.id in timing else '', m.order_index, m.court_number, translate(m.phase.name) if m.phase else '', translate(m.round_name), m.bracket,
@@ -2392,7 +2392,7 @@ def create():
 def tournament_view(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
     matches = Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all()
-    timing = build_timetable(t, matches, settings_for(t), meta_for, closing_match_kind)
+    timing = timetable_for(t, matches)
     upcoming = sorted([m for m in matches if not m.winner_id], key=lambda m: (0 if timing.get(m.id, {}).get('actual') else 1, timing[m.id]['start'] if m.id in timing else datetime.max, m.order_index))
     completed = [m for m in matches if m.winner_id]
     referees = referee_services['assignments'](t, matches)
@@ -2993,8 +2993,14 @@ def delete_tournament(tournament_id):
     return redirect(url_for('index'))
 
 
+def timetable_for(t, matches, now=None):
+    from timetable import build_forecast_timetable
+    return build_forecast_timetable(t,matches,settings_for(t),meta_for,closing_match_kind,
+                                    statistics_services['estimate'],now=now)
+
+
 from referees import configure_referees
-referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets, lambda t, matches: build_timetable(t, matches, settings_for(t), meta_for, closing_match_kind))
+referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets, timetable_for)
 
 app.extensions['referee_services']=referee_services
 

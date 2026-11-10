@@ -14,6 +14,16 @@ test('Unsaved forms and expanded details survive a score update and insertion',a
 test('Completed matches move between lists without recreating their card',async t=>{const {w,set}=await setup(t,true);const one=w.document.querySelector('[data-event-key="match:1"]');set({cursor:'n',entities:{},removed:[],layout:{upcoming:['match:2'],completed:['match:1']}});await w.TournamentEvents.refresh();assert.equal(w.document.querySelector('[data-event-list="completed"]').firstElementChild,one);assert.equal(w.document.getElementById('more-upcoming').hidden,true);});
 test('An unchanged cursor causes no DOM mutation',async t=>{const {w}=await setup(t);const old=w.document.querySelector('#matches').innerHTML;await w.TournamentEvents.refresh();assert.equal(w.document.querySelector('#matches').innerHTML,old);});
 
+for(const monitor of [false,true])test(`Live start forecast updates in place, keeping the plan and scroll (${monitor?'TV':'player'})`,async t=>{
+ const {w,set}=await setup(t,true,monitor);const one=w.document.querySelector('[data-event-key="match:1"]');
+ const times=time=>'<div class="match-time"><strong>10:30</strong><small class="match-start-forecast">Prognoza: ok. <time>'+time+'</time></small></div>';
+ one.insertAdjacentHTML('beforeend',times('10:50'));const plan=one.querySelector('.match-time > strong'),forecast=one.querySelector('.match-start-forecast time');
+ Object.defineProperty(w,'scrollY',{value:90});one.getBoundingClientRect=()=>({top:20,bottom:200,height:180});const scrolls=[];w.scrollTo=p=>scrolls.push(p);
+ set({cursor:'forecast-updated',entities:{'match:1':one.outerHTML.replace('10:50','10:56')},removed:[]});await w.TournamentEvents.refresh();
+ assert.equal(w.document.querySelector('[data-event-key="match:1"]'),one);assert.equal(one.querySelector('.match-time > strong'),plan);assert.equal(plan.textContent,'10:30');
+ assert.equal(one.querySelector('.match-start-forecast time'),forecast);assert.equal(forecast.textContent,'10:56');assert.ok(scrolls.every(p=>p.top===90));
+});
+
 test('Confirmed remote result replaces only that result draft and announces the saved match',async t=>{
  const {w,set}=await setup(t);
  const one=w.document.querySelector('[data-event-key="match:1"]'),two=w.document.querySelector('[data-event-key="match:2"]');

@@ -65,7 +65,13 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
         MatchDurationSample.query.filter(MatchDurationSample.match_id.in_(ids)).delete(synchronize_session=False)
     def estimate(m):
         target=m.phase.points_to if m.phase else 21;bo=m.phase.best_of if m.phase else 3;phase=m.phase.phase_type if m.phase else 'main'
-        rows=MatchDurationSample.query.filter_by(points_to=target,best_of=bo,phase_type=phase).all()
+        Owner=app.extensions['tournament_owner']
+        owner=m.tournament.ownership
+        owner_id=owner.user_id if owner else None
+        rows=(MatchDurationSample.query.filter_by(points_to=target,best_of=bo,phase_type=phase)
+              .join(Match,Match.id==MatchDurationSample.match_id)
+              .outerjoin(Owner,Owner.tournament_id==Match.tournament_id)
+              .filter(Owner.user_id==owner_id).all())
         values=[]
         for row in rows:
             current=db.session.get(Match,row.match_id)

@@ -3688,5 +3688,17 @@
     "en": "No tournaments.",
     "de": "Keine Turniere.",
     "fr": "Aucun tournoi."
+  },
+  "Planowany start:": {
+    "pl": "Planowany start:",
+    "en": "Planned start:",
+    "de": "Geplanter Start:",
+    "fr": "Début prévu :"
+  },
+  "Prognoza: ok.": {
+    "pl": "Prognoza: ok.",
+    "en": "Estimated: approx.",
+    "de": "Prognose: ca.",
+    "fr": "Estimation : vers"
   }
 }
