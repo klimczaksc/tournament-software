@@ -1979,10 +1979,22 @@ def draw_pdf_logo(c, t, width, height):
     except Exception:
         pass
 
+def _pdf_interface_font(bold=False):
+    if not bold:return _pdf_unicode_font()
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    if 'InterfaceBold' in pdfmetrics.getRegisteredFontNames():return 'InterfaceBold'
+    for path in ('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',r'C:\Windows\Fonts\arialbd.ttf','/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf'):
+        if os.path.isfile(path):
+            pdfmetrics.registerFont(TTFont('InterfaceBold',path));return 'InterfaceBold'
+    return _pdf_unicode_font()
+
+
 def _pdf_title(c, title, subtitle, width, height):
-    c.setFont('Helvetica-Bold', 18)
+    subtitle=translate(subtitle)
+    c.setFont(_pdf_interface_font(True), 18)
     c.drawString(14 * mm, height - 14 * mm, title[:90])
-    c.setFont('Helvetica', 10)
+    c.setFont(_pdf_interface_font(), 10)
     c.setFillGray(0.35)
     c.drawString(14 * mm, height - 21 * mm, subtitle[:120])
     c.setFillGray(0)
@@ -2041,8 +2053,8 @@ def _render_pdf_draw(c, t, section, x0, y_top, width_avail, height_avail):
     rounds = section.get('rounds') or []
     if not rounds:
         return
-    c.setFont('Helvetica-Bold', 11)
-    c.drawString(x0, y_top, section['name'][:70])
+    c.setFont(_pdf_interface_font(True), 11)
+    c.drawString(x0, y_top, translate(section['name'])[:70])
     top = y_top - 7 * mm
     bottom = y_top - height_avail + 3 * mm
     round_count = len(rounds)
@@ -2054,8 +2066,8 @@ def _render_pdf_draw(c, t, section, x0, y_top, width_avail, height_avail):
     keypos={}; layouts=[]
     for ri,rmatches in enumerate(rounds):
         x=x0+ri*(col_w+gap)
-        title=_draw_round_title(rmatches,ri,round_count,section['name'])
-        c.setFont('Helvetica-Bold',8.1); c.setFillGray(.34); c.drawCentredString(x+col_w/2,top+2.8*mm,title); c.setFillGray(0)
+        title=translate(_draw_round_title(rmatches,ri,round_count,section['name']))
+        c.setFont(_pdf_interface_font(True),8.1); c.setFillGray(.34); c.drawCentredString(x+col_w/2,top+2.8*mm,title); c.setFillGray(0)
         usable_top=top-3*mm; usable_bottom=bottom+1*mm
         raw=[]
         for mi,m in enumerate(rmatches):
@@ -2096,10 +2108,10 @@ def _render_pdf_draw(c, t, section, x0, y_top, width_avail, height_avail):
         card_y=y-box_h/2
         c.setFillGray(1); c.setStrokeGray(.62); c.setLineWidth(.45); c.roundRect(x,card_y,cw,box_h,1.4*mm,stroke=1,fill=1)
         c.setStrokeGray(.8); c.line(x,y,x+cw,y); c.setStrokeGray(0); c.setFillGray(0)
-        p1=m.player1.name if m.player1 else source_label(m,0); p2=m.player2.name if m.player2 else source_label(m,1)
-        c.setFont('Helvetica-Bold' if m.winner_id==m.player1_id and m.player1_id else 'Helvetica',8.2); c.drawString(x+1.7*mm,y+1.7*mm,p1[:34])
-        c.setFont('Helvetica-Bold' if m.winner_id==m.player2_id and m.player2_id else 'Helvetica',8.2); c.drawString(x+1.7*mm,y-5.0*mm,p2[:34])
-        c.setFont('Helvetica',6.3); c.setFillGray(.42); meta_text=f'#{m.order_index}'; score=score_to_text(m.score_json)
+        p1=m.player1.name if m.player1 else translate(source_label(m,0)); p2=m.player2.name if m.player2 else translate(source_label(m,1))
+        c.setFont(_pdf_interface_font(True) if m.winner_id==m.player1_id and m.player1_id else _pdf_interface_font(),8.2); c.drawString(x+1.7*mm,y+1.7*mm,p1[:34])
+        c.setFont(_pdf_interface_font(True) if m.winner_id==m.player2_id and m.player2_id else _pdf_interface_font(),8.2); c.drawString(x+1.7*mm,y-5.0*mm,p2[:34])
+        c.setFont(_pdf_interface_font(),6.3); c.setFillGray(.42); meta_text=f'#{m.order_index}'; score=score_to_text(m.score_json)
         if score: meta_text+=f'  {score}'
         c.drawRightString(x+cw-1.4*mm,card_y+1.5*mm,meta_text[:42]); c.setFillGray(0)
 
@@ -2110,7 +2122,7 @@ def write_bracket_pdf(t):
     width,height=pagesize; c.setTitle(f'{t.name} - Tournament Draws')
     stages=[x for x in bracket_sections(t) if x['stage']!='Group Stage']; sections=stages[0]['sections'] if stages else []
     if not sections:
-        _pdf_title(c,t.name,'Tournament Draws',width,height); c.setFont('Helvetica',11); c.drawString(14*mm,height-40*mm,'No knockout bracket has been generated yet.'); draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
+        _pdf_title(c,t.name,translate('Tournament Draws'),width,height); c.setFont(_pdf_interface_font(),11); c.drawString(14*mm,height-40*mm,translate('No knockout bracket has been generated yet.')); draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
     margin_x=10*mm; usable_w=width-20*mm; y=height-31*mm; page_open=False
     for section in sections:
         band_h=_section_height_mm(section)*mm
@@ -2119,11 +2131,11 @@ def write_bracket_pdf(t):
         if (not page_open) or y-band_h<14*mm:
             if page_open:
                 draw_pdf_logo(c,t,width,height); c.showPage()
-            _pdf_title(c,t.name,'Tournament Draws - Championship + exact placement',width,height)
+            _pdf_title(c,t.name,translate('Tournament Draws - Championship + exact placement'),width,height)
             y=height-31*mm; page_open=True
         _render_pdf_draw(c,t,section,margin_x,y,usable_w,band_h)
         y-=band_h+5*mm
-    c.setFont('Helvetica',6.5); c.setFillGray(.45); c.drawString(10*mm,6.5*mm,'Future slots show Winner / Loser of match #.'); c.setFillGray(0); draw_pdf_logo(c,t,width,height)
+    c.setFont(_pdf_interface_font(),6.5); c.setFillGray(.45); c.drawString(10*mm,6.5*mm,translate('Future slots show Winner / Loser of match #.')); c.setFillGray(0); draw_pdf_logo(c,t,width,height)
     c.save(); buf.seek(0); return buf
 
 
@@ -2139,10 +2151,10 @@ def write_groups_pdf(t):
     buf=io.BytesIO(); pagesize=landscape(A4); c=canvas.Canvas(buf,pagesize=pagesize)
     width,height=pagesize; c.setTitle(f'{t.name} - Groups & Results'); tables=compute_group_tables(t)
     if not tables:
-        _pdf_title(c,t.name,'Groups & Results',width,height); c.setFont('Helvetica',10); c.drawString(12*mm,height-36*mm,'No group tables available.'); draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
+        _pdf_title(c,t.name,translate('Groups & Results'),width,height); c.setFont(_pdf_interface_font(),10); c.drawString(12*mm,height-36*mm,translate('No group tables available.')); draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
     mx=9*mm; top=height-29*mm; bottom=9*mm; gap=4*mm; groups_per_page=4
     block_h=(top-bottom-gap*(groups_per_page-1))/groups_per_page
-    def head(): _pdf_title(c,t.name,'Group Stage - Tables & Match Results',width,height)
+    def head(): _pdf_title(c,t.name,translate('Group Stage - Tables & Match Results'),width,height)
     head()
     for gi,(gname,rows) in enumerate(tables):
         slot=gi%groups_per_page
@@ -2151,23 +2163,23 @@ def write_groups_pdf(t):
         ytop=top-slot*(block_h+gap); ybot=ytop-block_h
         title=gname.replace('group_','Group ')
         c.setFillGray(.965); c.roundRect(mx, ybot, width-2*mx, block_h, 1.7*mm, stroke=0, fill=1); c.setFillGray(0)
-        c.setFont('Helvetica-Bold',10.5); c.drawString(mx+3*mm,ytop-5*mm,title)
+        c.setFont(_pdf_interface_font(True),10.5); c.drawString(mx+3*mm,ytop-5*mm,translate(title))
         split=width*.57; sx=mx+3*mm; sy=ytop-11*mm
-        headers=['#','Team','M','W','L','Pts','Sets','PD']; rel=[0,7,61,73,84,95,108,126]
-        c.setFont('Helvetica-Bold',7.8)
-        for h,dx in zip(headers,rel): c.drawString(sx+dx*mm,sy,h)
+        headers=['#',translate('Team'),translate('M'),translate('W'),translate('L'),translate('Pts'),translate('Sets'),translate('PD')]; rel=[0,7,61,73,84,95,108,126]
+        c.setFont(_pdf_interface_font(True),7.8)
+        for h,dx in zip(headers,rel): c.drawString(sx+dx*mm,sy,translate(h))
         c.setStrokeGray(.75); c.line(sx,sy-2*mm,split-4*mm,sy-2*mm); c.setStrokeGray(0)
-        y=sy-6*mm; c.setFont('Helvetica',8.5)
+        y=sy-6*mm; c.setFont(_pdf_interface_font(),8.5)
         for idx,r in enumerate(rows,1):
             vals=[idx,r['player'].name,r['matches'],r['wins'],r['losses'],r['points'],f"{r['sets_won']}:{r['sets_lost']}",r['point_diff']]
             limits=[2,28,2,2,2,3,6,6]
             for v,dx,lim in zip(vals,rel,limits): c.drawString(sx+dx*mm,y,str(v)[:lim])
             y-=4.2*mm
         # Match list on the right; no grid lines through text.
-        rx=split+2*mm; ry=ytop-5*mm; c.setFont('Helvetica-Bold',8.8); c.drawString(rx,ry,'Matches'); ry-=5*mm
-        gm=Match.query.filter_by(tournament_id=t.id,bracket=gname).order_by(Match.order_index).all(); c.setFont('Helvetica',8.0)
+        rx=split+2*mm; ry=ytop-5*mm; c.setFont(_pdf_interface_font(True),8.8); c.drawString(rx,ry,translate('Matches')); ry-=5*mm
+        gm=Match.query.filter_by(tournament_id=t.id,bracket=gname).order_by(Match.order_index).all(); c.setFont(_pdf_interface_font(),8.0)
         for m in gm:
-            p1=m.player1.name if m.player1 else 'TBD'; p2=m.player2.name if m.player2 else 'TBD'; sc=score_to_text(m.score_json) or '-'
+            p1=m.player1.name if m.player1 else translate('TBD'); p2=m.player2.name if m.player2 else translate('TBD'); sc=score_to_text(m.score_json) or '-'
             c.drawString(rx,ry,f"#{m.order_index}  {p1}  {sc}  {p2}"[:72]); ry-=4.1*mm
     draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
 
@@ -2178,24 +2190,24 @@ def write_schedule_pdf(t):
     pagesize=landscape(A4); buf=io.BytesIO(); c=canvas.Canvas(buf,pagesize=pagesize); width,height=pagesize; c.setTitle(f'{t.name} - Match Schedule')
     mx=8*mm; top=height-28*mm; bottom=8*mm; row_h=5.0*mm; section_h=5.5*mm
     timing=build_timetable(t,matches,settings_for(t),meta_for,closing_match_kind)
-    cols=[('No.',0,5),('Court',10,5),('Start',24,18),('Round',52,25),('Team 1',107,23),('Team 2',159,23),('Score',212,40)]
+    cols=[(translate('No.'),0,5),(translate('Court'),10,5),(translate('Start'),24,18),(translate('Round'),52,25),(translate('Team 1'),107,23),(translate('Team 2'),159,23),(translate('Score'),212,40)]
     page=1
     def header():
-        _pdf_title(c,t.name,'Match Schedule',width,height); c.setFont('Helvetica',7); c.setFillGray(.45); c.drawRightString(width-mx,height-18*mm,f'Page {page}'); c.setFillGray(0)
-        y=top; c.setFont('Helvetica-Bold',8.3)
+        _pdf_title(c,t.name,translate('Match Schedule'),width,height); c.setFont(_pdf_interface_font(),7); c.setFillGray(.45); c.drawRightString(width-mx,height-18*mm,f'{translate("Page")} {page}'); c.setFillGray(0)
+        y=top; c.setFont(_pdf_interface_font(True),8.3)
         for txt,x,_ in cols:c.drawString(mx+x*mm,y,txt)
         c.setStrokeGray(.55); c.line(mx,y-2*mm,width-mx,y-2*mm); c.setStrokeGray(0); return y-6*mm
     y=header(); prev_stage=None
     for m in matches:
-        stage=_short_stage_name(m.phase.name if m.phase else '')
+        stage=translate(_short_stage_name(m.phase.name if m.phase else ''))
         need= row_h + (section_h if stage!=prev_stage else 0)
         if y-need<bottom:
             draw_pdf_logo(c,t,width,height); c.showPage(); page+=1; y=header(); prev_stage=None
         if stage!=prev_stage:
             c.setFillGray(.94); c.roundRect(mx,y-section_h+1.1*mm,width-2*mx,section_h-1.4*mm,1*mm,stroke=0,fill=1); c.setFillGray(0)
-            c.setFont('Helvetica-Bold',8.4); c.drawString(mx+2*mm,y-2.3*mm,stage.upper()); y-=section_h
-        vals=[m.order_index,m.court_number,format_time(timing[m.id]['start']) if m.id in timing else '',m.round_name,m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD',score_to_text(m.score_json) or '']
-        c.setFont('Helvetica',8.5)
+            c.setFont(_pdf_interface_font(True),8.4); c.drawString(mx+2*mm,y-2.3*mm,stage.upper()); y-=section_h
+        vals=[m.order_index,m.court_number,format_time(timing[m.id]['start']) if m.id in timing else '',translate(m.round_name),m.player1.name if m.player1 else translate('TBD'),m.player2.name if m.player2 else translate('TBD'),score_to_text(m.score_json) or '']
+        c.setFont(_pdf_interface_font(),8.5)
         for v,(_,x,lim) in zip(vals,cols): c.drawString(mx+x*mm,y,str(v)[:lim])
         c.setStrokeGray(.88); c.setLineWidth(.25); c.line(mx,y-1.8*mm,width-mx,y-1.8*mm); c.setStrokeGray(0); y-=row_h; prev_stage=stage
     draw_pdf_logo(c,t,width,height); c.save(); buf.seek(0); return buf
@@ -2222,21 +2234,21 @@ def write_final_standings_pdf(t):
     page = 1
 
     def header():
-        _pdf_title(c, t.name, 'Final Standings', width, height)
-        c.setFont('Helvetica', 7.2)
+        _pdf_title(c, t.name, translate('Final Standings'), width, height)
+        c.setFont(_pdf_interface_font(), 7.2)
         c.setFillGray(.48)
-        status = 'FINAL' if exact_known else 'CURRENT / PROVISIONAL'
-        c.drawRightString(width - mx, height - 20.5 * mm, f'{status} · Page {page}')
+        status = translate('FINAL') if exact_known else translate('CURRENT / PROVISIONAL')
+        c.drawRightString(width - mx, height - 20.5 * mm, f'{status} · {translate("Page")} {page}')
         c.setFillGray(0)
         y = top
         c.setFillGray(.94)
         c.roundRect(mx, y - 7 * mm, width - 2 * mx, 7 * mm, 1 * mm, stroke=0, fill=1)
         c.setFillGray(0)
-        c.setFont('Helvetica-Bold', 9.2)
-        c.drawString(mx + 2 * mm, y - 4.7 * mm, 'Place')
-        c.drawString(mx + 25 * mm, y - 4.7 * mm, 'Team')
-        c.drawString(mx + 105 * mm, y - 4.7 * mm, 'Club')
-        c.drawRightString(width - mx - 2 * mm, y - 4.7 * mm, 'Original seed')
+        c.setFont(_pdf_interface_font(True), 9.2)
+        c.drawString(mx + 2 * mm, y - 4.7 * mm, translate('Place'))
+        c.drawString(mx + 25 * mm, y - 4.7 * mm, translate('Team'))
+        c.drawString(mx + 105 * mm, y - 4.7 * mm, translate('Club'))
+        c.drawRightString(width - mx - 2 * mm, y - 4.7 * mm, translate('Original seed'))
         return y - 11 * mm
 
     y = header()
@@ -2248,11 +2260,11 @@ def write_final_standings_pdf(t):
             y = header()
         place = places.get(p.id)
         place_text = str(place if place is not None else idx)
-        c.setFont('Helvetica-Bold', 10.2)
+        c.setFont(_pdf_interface_font(True), 10.2)
         c.drawString(mx + 2 * mm, y, place_text)
-        c.setFont('Helvetica-Bold', 10.2 if place and place <= 3 else 9.8)
+        c.setFont(_pdf_interface_font(True), 10.2 if place and place <= 3 else 9.8)
         c.drawString(mx + 25 * mm, y, (p.name or '')[:42])
-        c.setFont('Helvetica', 8.8)
+        c.setFont(_pdf_interface_font(), 8.8)
         c.setFillGray(.25)
         c.drawString(mx + 105 * mm, y, (p.club or '')[:30])
         c.drawRightString(width - mx - 2 * mm, y, f'#{p.seed}')
@@ -2264,8 +2276,8 @@ def write_final_standings_pdf(t):
         y -= row_h
 
     if not ranking:
-        c.setFont('Helvetica', 10)
-        c.drawString(mx, y, 'No standings available yet.')
+        c.setFont(_pdf_interface_font(), 10)
+        c.drawString(mx, y, translate('No standings available yet.'))
 
     draw_pdf_logo(c, t, width, height)
     c.save()
@@ -2276,22 +2288,22 @@ def write_final_standings_pdf(t):
 def write_results_excel(t):
     wb = Workbook()
     ws1 = wb.active
-    ws1.title = 'Standings'
-    ws1.append(['Place', 'Player', 'Club', 'Seed'])
+    ws1.title = translate('Standings')
+    ws1.append([translate('Place'), translate('Player'), translate('Club'), translate('Seed')])
     ranking = final_ranking(t)
     places = placement_map(t)
     for i, p in enumerate(ranking, start=1):
         ws1.append([places.get(p.id, i), p.name, p.club, p.seed])
-    ws2 = wb.create_sheet('Matches')
+    ws2 = wb.create_sheet(translate('Matches'))
     timing=build_timetable(t,list(t.matches),settings_for(t),meta_for,closing_match_kind)
-    ws2.append(['Start (' + settings_for(t).get('schedule_timezone','Europe/Warsaw') + ')', 'Order', 'Court', 'Phase', 'Round', 'Bracket', 'Player 1', 'Player 2', 'Score', 'Winner'])
+    ws2.append([translate('Start')+' (' + settings_for(t).get('schedule_timezone','Europe/Warsaw') + ')', translate('Order'), translate('Court'), translate('Phase'), translate('Round'), translate('Bracket'), translate('Player 1'), translate('Player 2'), translate('Score'), translate('Winner')])
     for m in Match.query.filter_by(tournament_id=t.id).order_by(Match.order_index).all():
-        ws2.append([format_time(timing[m.id]['start']) if m.id in timing else '', m.order_index, m.court_number, m.phase.name if m.phase else '', m.round_name, m.bracket,
+        ws2.append([format_time(timing[m.id]['start']) if m.id in timing else '', m.order_index, m.court_number, translate(m.phase.name) if m.phase else '', translate(m.round_name), m.bracket,
                     m.player1.name if m.player1 else '', m.player2.name if m.player2 else '', score_to_text(m.score_json), m.winner.name if m.winner else ''])
     if t.system == 'group_knockout':
         for group_name, rows in compute_group_tables(t):
-            ws = wb.create_sheet(group_name.replace('group_', 'Group '))
-            ws.append(['Place', 'Player', 'Matches', 'Wins', 'Losses', 'Points', 'Sets +', 'Sets -', 'Set Diff', 'Points +', 'Points -'])
+            ws = wb.create_sheet(translate(group_name.replace('group_', 'Group ')))
+            ws.append([translate('Place'), translate('Player'), translate('Matches'), translate('Wins'), translate('Losses'), translate('Points'), translate('Sets +'), translate('Sets -'), translate('Set Diff'), translate('Points +'), translate('Points -')])
             for i, row in enumerate(rows, start=1):
                 p = row['player']
                 ws.append([i, p.name, row['matches'], row['wins'], row['losses'], row['points'], row['sets_won'], row['sets_lost'], row['set_diff'], row['points_won'], row['points_lost']])
@@ -2348,6 +2360,7 @@ def create():
     consolation = request.form.get('consolation') == 'on'
     court_count = int(request.form.get('court_count', 1))
     t = create_tournament(name, player_count, system, consolation, court_count)
+    cfg=settings_for(t);cfg['language']=getattr(g,'language','pl');save_settings_dict(t,cfg);db.session.commit()
     return redirect(url_for('tournament_view', tournament_id=t.id))
 
 
@@ -2961,6 +2974,9 @@ statistics_services = configure_statistics(app, db, Tournament, Match, settings_
 
 from event_updates import configure_event_updates
 configure_event_updates(app, db, Tournament, settings_for, tournament_view)
+
+from i18n import configure_i18n, translate
+configure_i18n(app,db,Tournament,Match,Phase,settings_for,save_settings_dict)
 
 from online import configure_online
 configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)

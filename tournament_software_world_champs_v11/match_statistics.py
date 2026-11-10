@@ -4,6 +4,7 @@ from zoneinfo import ZoneInfo
 from statistics import median, quantiles
 import hashlib,json,math
 from flask import request,g,abort,jsonify,render_template
+from i18n import language
 
 
 def utc_now():return datetime.now(timezone.utc).isoformat()
@@ -96,6 +97,7 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
         if sample and sample.signature==signature(m) and sample.score_json==m.score_json and sample.quality=='manual':quality='manual'
         audit=[{'id':e.id,'action':e.action,'at':e.recorded_at,**json.loads(e.payload)} for e in MatchPointEvent.query.filter_by(match_id=m.id).order_by(MatchPointEvent.id).all()]
         payload={'match_id':m.id,'players':[m.player1.name if m.player1 else 'TBD',m.player2.name if m.player2 else 'TBD'],'path':path,'timeouts':data.get('timeouts',[]) if compatible else [],'audit':audit,'started_at':start.isoformat() if start else None,'ended_at':end.isoformat() if end else None,'duration_seconds':elapsed,'quality':quality,'complete':bool(m.winner_id),'historical_points':bool(events and any(p['at'] is None for p in path)),'points_missing':not bool(path),'estimate':estimate(m),'zone':zone}
+        payload['language']=language()
         payload['version']=hashlib.sha256(json.dumps(payload,sort_keys=True).encode()).hexdigest()
         return payload
     def accessible(mid):

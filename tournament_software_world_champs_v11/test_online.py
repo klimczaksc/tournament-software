@@ -41,7 +41,7 @@ def test_full_access_lifecycle():
     assert viewer.get(path+'/export/db').status_code==403
     # Exercise EVERY existing write endpoint as guest and as viewer.
     for rule in app.url_map.iter_rules():
-        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout','referee_access','referee_action'}: continue
+        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout','referee_access','referee_action','set_language'}: continue
         target=rule.rule.replace('<int:tournament_id>',str(tid)).replace('<int:match_id>','1').replace('<int:phase_id>','1')
         assert guest.post(target).status_code==401, target
         assert viewer.post(target, data={'csrf_token':csrf(viewer,'/')}).status_code==403, target
@@ -966,3 +966,80 @@ def test_consolation_seeding_separates_top_seeds_avoids_group_rematches_and_pres
         before={m.id:meta_for(m).get('sources') for m in t.matches};db.session.commit();propagate_all(t.id)
         assert {m.id:meta_for(m).get('sources') for m in t.matches}==before
 
+
+
+def test_language_flags_home_preference_and_tournament_language_scope():
+    import json,io
+    from openpyxl import load_workbook
+    from app import settings_for,meta_for
+    admin,atok,tid,mid,code=referee_fixture()
+    home=admin.get('/').text
+    assert 'class="language-flags"' in home
+    for value in ('pl','en','de','fr'):assert f'name="language" value="{value}"' in home
+    assert admin.post('/language',data={'language':'de','next':'/','csrf_token':atok}).status_code==302
+    home=admin.get('/').text
+    assert '<html lang="de"' in home and 'Turnier erstellen' in home
+    # The homepage preference is used only when a new tournament is created.
+    response=admin.post('/create',data={'name':'Final','player_count':4,'court_count':2,'system':'single_elimination','consolation':'on','csrf_token':atok})
+    assert response.status_code==302
+    new_path=response.headers['Location'];new_id=int(new_path.rsplit('/',1)[1])
+    with app.app_context():
+        assert settings_for(db.session.get(Tournament,new_id))['language']=='de'
+        t=db.session.get(Tournament,tid)
+        next(p for p in t.players if p.id==db.session.get(Match,mid).player1_id).name='Final'
+        db.session.commit()
+        before={m.id:(m.order_index,m.score_json,m.player1_id,m.player2_id,meta_for(m).get('sources')) for m in t.matches}
+    assert admin.post('/language',data={'language':'fr','tournament_id':tid,'csrf_token':atok}).status_code==302
+    assert '<html lang="fr"' in admin.get(f'/tournament/{tid}').text
+    assert '<html lang="de"' in admin.get(new_path).text and '<html lang="de"' in admin.get('/').text
+    guest=app.test_client();public='/players/ref-'+str(tid)
+    for suffix in ('','?display=1'):
+        html=guest.get(public+suffix).text
+        assert '<html lang="fr"' in html and 'Prochains matchs' in html
+        assert '>Final</strong>' in html and 'class="language-flags"' not in html
+    referee=app.test_client();rtok=csrf(referee,f'/referee/{mid}')
+    assert 'Code du match' in referee.get(f'/referee/{mid}').text
+    assert referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':rtok},environ_overrides={'REMOTE_ADDR':'198.51.100.121'}).status_code==302
+    assert referee.get(f'/referee/{mid}/state').json['language']=='fr'
+    assert referee.get(f'/referee/{mid}/state').json['players'][0]=='Final'
+    # Exports use the same locale, without rewriting names or business data.
+    exported=admin.get(f'/tournament/{tid}/export/excel')
+    book=load_workbook(io.BytesIO(exported.data))
+    assert 'Classement' in book.sheetnames and book['Classement'].cell(1,2).value=='Joueur'
+    assert any(row[1]=='Final' for row in book['Classement'].iter_rows(min_row=2,values_only=True))
+    with app.app_context():
+        assert before=={m.id:(m.order_index,m.score_json,m.player1_id,m.player2_id,meta_for(m).get('sources')) for m in db.session.get(Tournament,tid).matches}
+    # Switching a shared tournament is an admin-only write and requires CSRF.
+    gtok=csrf(guest,public)
+    assert guest.post('/language',data={'language':'en','tournament_id':tid,'csrf_token':gtok}).status_code==403
+    assert admin.post('/language',data={'language':'en','tournament_id':tid}).status_code==400
+    assert admin.post('/language',data={'language':'xx','tournament_id':tid,'csrf_token':atok}).status_code==400
+    assert settings_for_in_test(tid)['language']=='fr'
+    # Preference redirects cannot leave the application.
+    response=guest.post('/language',data={'language':'en','next':'https://example.org','csrf_token':gtok})
+    assert response.status_code==302 and response.headers['Location']=='/'
+
+
+def settings_for_in_test(tid):
+    from app import settings_for
+    with app.app_context():return settings_for(db.session.get(Tournament,tid))
+
+
+def test_live_language_changes_are_localised_and_do_not_reuse_other_language_cursors():
+    admin,atok,tid,mid,code=referee_fixture()
+    guest=app.test_client();url='/updates/ref-'+str(tid)
+    first=guest.get(url).json
+    key='match:'+str(mid)
+    translations={'en':'Next matches','de':'Nächste Spiele','fr':'Prochains matchs','pl':'Najbliższe mecze'}
+    for lang,title in translations.items():
+        assert admin.post('/language',data={'language':lang,'tournament_id':tid,'csrf_token':atok}).status_code==302
+        patch=guest.get(url+'?cursor='+first['cursor'])
+        assert patch.status_code==200 and 'language' in patch.json['entities']
+        assert f'data-language="{lang}"' in patch.json['entities']['language']
+        assert title in guest.get('/players/ref-'+str(tid)+'?display=1').text
+        assert guest.get(url+'?cursor='+patch.json['cursor']).status_code==304
+        first=patch.json
+    # Shared catalog can be loaded without a login and is cache-busted by content.
+    data=guest.get('/ui/catalog.js')
+    assert data.status_code==200 and data.mimetype=='application/javascript'
+    assert 'window.UITranslations=' in data.text

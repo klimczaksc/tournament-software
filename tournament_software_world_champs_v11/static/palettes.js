@@ -1,4 +1,5 @@
 (() => {
+ const T=window.uiText||((text)=>text);
  const initial=document.getElementById('palette-initial'),catalogNode=document.getElementById('palette-catalog');if(!initial||!catalogNode)return;
  const catalog=JSON.parse(catalogNode.textContent),root=document.documentElement;
  const clone=value=>JSON.parse(JSON.stringify(value));
@@ -37,7 +38,7 @@
   fields.forEach(key=>{document.querySelector('[data-color="'+key+'"]').value=c[key];const text=document.querySelector('[data-hex="'+key+'"]');if(document.activeElement!==text)text.value=c[key];});
   document.getElementById('custom-palette-json').value=JSON.stringify(draft.custom);
   const low=ratio(c.text,c.body)<4.5||ratio(c.text,c.panel)<4.5;
-  document.getElementById('palette-preview-note').textContent=(dirty?'Podgląd — zapisz, aby zastosować na wszystkich ekranach. ':'Zapisana paleta turnieju. ')+(low?'Uwaga: tekst może być słabo czytelny przy wybranych kolorach.':'');
+  document.getElementById('palette-preview-note').textContent=(dirty?T('Podgląd — zapisz, aby zastosować na wszystkich ekranach. '):T('Zapisana paleta turnieju. '))+(low?T('Uwaga: tekst może być słabo czytelny przy wybranych kolorach.'):'');
  }
  function preview(){dirty=true;apply(draft);show();}
  function fromServer(){const node=document.getElementById('tournament-palette');return node?JSON.parse(node.dataset.config):saved;}

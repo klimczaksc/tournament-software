@@ -1,8 +1,10 @@
 <!doctype html>
 {% set interface_style = settings.get('interface_style', 'classic') if settings is defined else session.get('interface_style', 'classic') %}
-<html lang="pl" data-style="{{ 'modern' if interface_style == 'modern' else 'classic' }}">
+<html lang="{{ ui_language }}" data-style="{{ 'modern' if interface_style == 'modern' else 'classic' }}">
 <head>
   <meta charset="utf-8">
+  <script src="{{ url_for('ui_catalog_script',v=ui_catalog_version) }}"></script>
+  <script src="{{ url_for('static',filename='i18n.js') }}"></script>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ title or 'Tournament Software' }}</title>
   <script>
@@ -85,10 +87,12 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
 @media(min-width:1101px) and (max-width:1250px){.match-row{grid-template-columns:1fr}.match-row .score-grid{max-width:700px}}
 </style></head>
 <body>
+<div id="tournament-language" data-event-key="language" data-language="{{ ui_language }}" hidden></div>
+{% include 'language_flags.html' %}
 <div id="tournament-palette" data-event-key="palette" data-config="{{ current_palette|tojson|forceescape }}" hidden></div>
 <div class="wrap">
-{% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ 'Administrator' if is_admin else 'Odczyt' }}</span>{% if is_admin %}<a class="pill" href="/accounts">Konta</a>{% endif %}<a class="pill" href="/password">Zmień hasło</a><form method="post" action="/logout"><button>Wyloguj</button></form></div></div>{% endif %}
-  {% with messages = [] if request.endpoint in ('public_event_updates','tournament_event_updates') else get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+{% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ _('Administrator') if is_admin else _('Odczyt') }}</span>{% if is_admin %}<a class="pill" href="/accounts"><span data-ui-key="Konta">{{ _('Konta') }}</span></a>{% endif %}<a class="pill" href="/password"><span data-ui-key="Zmień hasło">{{ _('Zmień hasło') }}</span></a><form method="post" action="/logout"><button><span data-ui-key="Wyloguj">{{ _('Wyloguj') }}</span></button></form></div></div>{% endif %}
+  {% with messages = [] if request.endpoint in ('public_event_updates','tournament_event_updates') else get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m|tr }}</div>{% endfor %}{% endif %}{% endwith %}
   {% block content %}{% endblock %}
 </div>
 <div class="creator-credit">created by Michał Klimczak (klimczak.sc@gmail.com)</div>
@@ -96,7 +100,7 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
   document.querySelectorAll('details.section:not([data-view-state])').forEach((el,idx)=>{const key='section-open-'+(el.id||idx);const saved=localStorage.getItem(key);if(saved!==null)el.open=saved==='1';el.addEventListener('toggle',()=>localStorage.setItem(key,el.open?'1':'0'));});
   const themeBtn=document.getElementById('theme-toggle');
   function currentTheme(){return document.documentElement.dataset.theme==='light'?'light':'dark'}
-  function refreshThemeButton(){if(themeBtn)themeBtn.textContent=currentTheme()==='light'?'Dark mode':'Light mode'}
+  function refreshThemeButton(){if(themeBtn)themeBtn.textContent=currentTheme()==='light'?window.uiText('Dark mode'):window.uiText('Light mode')}
   if(themeBtn){themeBtn.addEventListener('click',()=>{const next=currentTheme()==='light'?'dark':'light';document.documentElement.dataset.theme=next;if(window.TournamentPalette)window.TournamentPalette.setMode(next);localStorage.setItem(document.documentElement.dataset.style==='modern'?'tournament-theme-modern':'tournament-theme',next);refreshThemeButton();});refreshThemeButton();}
 </script>
 </body>

@@ -1,0 +1,3554 @@
+{
+  "Language": {
+    "pl": "Język",
+    "en": "Language",
+    "de": "Sprache",
+    "fr": "Langue"
+  },
+  "Create Tournament": {
+    "pl": "Utwórz turniej",
+    "en": "Create tournament",
+    "de": "Turnier erstellen",
+    "fr": "Créer un tournoi"
+  },
+  "Tournament name": {
+    "pl": "Nazwa turnieju",
+    "en": "Tournament name",
+    "de": "Turniername",
+    "fr": "Nom du tournoi"
+  },
+  "Tournament system": {
+    "pl": "System turnieju",
+    "en": "Tournament system",
+    "de": "Turniersystem",
+    "fr": "Format du tournoi"
+  },
+  "Players": {
+    "pl": "Zawodnicy",
+    "en": "Players",
+    "de": "Spieler",
+    "fr": "Joueurs"
+  },
+  "Teams": {
+    "pl": "Drużyny",
+    "en": "Teams",
+    "de": "Teams",
+    "fr": "Équipes"
+  },
+  "Courts": {
+    "pl": "Korty",
+    "en": "Courts",
+    "de": "Spielfelder",
+    "fr": "Terrains"
+  },
+  "Court": {
+    "pl": "Kort",
+    "en": "Court",
+    "de": "Spielfeld",
+    "fr": "Terrain"
+  },
+  "Available courts": {
+    "pl": "Dostępne korty",
+    "en": "Available courts",
+    "de": "Verfügbare Spielfelder",
+    "fr": "Terrains disponibles"
+  },
+  "System": {
+    "pl": "System",
+    "en": "Format",
+    "de": "System",
+    "fr": "Format"
+  },
+  "Create": {
+    "pl": "Utwórz",
+    "en": "Create",
+    "de": "Erstellen",
+    "fr": "Créer"
+  },
+  "Import Database": {
+    "pl": "Importuj bazę danych",
+    "en": "Import database",
+    "de": "Datenbank importieren",
+    "fr": "Importer la base de données"
+  },
+  "Import JSON": {
+    "pl": "Importuj JSON",
+    "en": "Import JSON",
+    "de": "JSON importieren",
+    "fr": "Importer JSON"
+  },
+  "Your Tournaments": {
+    "pl": "Twoje turnieje",
+    "en": "Your tournaments",
+    "de": "Deine Turniere",
+    "fr": "Vos tournois"
+  },
+  "Name": {
+    "pl": "Nazwa",
+    "en": "Name",
+    "de": "Name",
+    "fr": "Nom"
+  },
+  "Actions": {
+    "pl": "Działania",
+    "en": "Actions",
+    "de": "Aktionen",
+    "fr": "Actions"
+  },
+  "Open": {
+    "pl": "Otwórz",
+    "en": "Open",
+    "de": "Öffnen",
+    "fr": "Ouvrir"
+  },
+  "Backup": {
+    "pl": "Kopia zapasowa",
+    "en": "Backup",
+    "de": "Sicherung",
+    "fr": "Sauvegarde"
+  },
+  "Backup JSON": {
+    "pl": "Kopia zapasowa JSON",
+    "en": "JSON backup",
+    "de": "JSON-Sicherung",
+    "fr": "Sauvegarde JSON"
+  },
+  "Delete": {
+    "pl": "Usuń",
+    "en": "Delete",
+    "de": "Löschen",
+    "fr": "Supprimer"
+  },
+  "No tournaments yet.": {
+    "pl": "Nie ma jeszcze turniejów.",
+    "en": "No tournaments yet.",
+    "de": "Noch keine Turniere.",
+    "fr": "Aucun tournoi pour le moment."
+  },
+  "Archiwum turniejów · harmonogramy · wyniki · drabinki": {
+    "pl": "Archiwum turniejów · harmonogramy · wyniki · drabinki",
+    "en": "Tournament archive · schedules · results · brackets",
+    "de": "Turnierarchiv · Zeitpläne · Ergebnisse · Turnierbäume",
+    "fr": "Archives · calendriers · résultats · tableaux"
+  },
+  "README / Help": {
+    "pl": "Instrukcja / Pomoc",
+    "en": "Guide / Help",
+    "de": "Anleitung / Hilfe",
+    "fr": "Guide / Aide"
+  },
+  "TOURNAMENT MENU": {
+    "pl": "MENU TURNIEJU",
+    "en": "TOURNAMENT MENU",
+    "de": "TURNIERMENÜ",
+    "fr": "MENU DU TOURNOI"
+  },
+  "Tournament navigation": {
+    "pl": "Nawigacja turnieju",
+    "en": "Tournament navigation",
+    "de": "Turniernavigation",
+    "fr": "Navigation du tournoi"
+  },
+  "← Dashboard": {
+    "pl": "← Panel główny",
+    "en": "← Dashboard",
+    "de": "← Übersicht",
+    "fr": "← Tableau de bord"
+  },
+  "Back to Dashboard": {
+    "pl": "Wróć do panelu głównego",
+    "en": "Back to dashboard",
+    "de": "Zurück zur Übersicht",
+    "fr": "Retour au tableau de bord"
+  },
+  "Overview": {
+    "pl": "Przegląd",
+    "en": "Overview",
+    "de": "Übersicht",
+    "fr": "Aperçu"
+  },
+  "Settings": {
+    "pl": "Ustawienia",
+    "en": "Settings",
+    "de": "Einstellungen",
+    "fr": "Paramètres"
+  },
+  "Seeding": {
+    "pl": "Rozstawienie",
+    "en": "Seeding",
+    "de": "Setzliste",
+    "fr": "Têtes de série"
+  },
+  "Group Assignment": {
+    "pl": "Przydział do grup",
+    "en": "Group assignment",
+    "de": "Gruppenzuteilung",
+    "fr": "Répartition des groupes"
+  },
+  "Group assignment": {
+    "pl": "Przydział do grup",
+    "en": "Group assignment",
+    "de": "Gruppenzuteilung",
+    "fr": "Répartition des groupes"
+  },
+  "Group Tables": {
+    "pl": "Tabele grupowe",
+    "en": "Group standings",
+    "de": "Gruppentabellen",
+    "fr": "Classements des groupes"
+  },
+  "Pairings": {
+    "pl": "Pary meczowe",
+    "en": "Pairings",
+    "de": "Paarungen",
+    "fr": "Rencontres"
+  },
+  "Statystyki czasu": {
+    "pl": "Statystyki czasu",
+    "en": "Match duration statistics",
+    "de": "Spielzeitstatistik",
+    "fr": "Statistiques de durée"
+  },
+  "Sędziowie": {
+    "pl": "Sędziowie",
+    "en": "Referees",
+    "de": "Schiedsrichter",
+    "fr": "Arbitres"
+  },
+  "Timetable": {
+    "pl": "Harmonogram",
+    "en": "Schedule",
+    "de": "Zeitplan",
+    "fr": "Calendrier"
+  },
+  "Matches": {
+    "pl": "Mecze",
+    "en": "Matches",
+    "de": "Spiele",
+    "fr": "Matchs"
+  },
+  "Tournament Tree": {
+    "pl": "Drabinka turnieju",
+    "en": "Tournament bracket",
+    "de": "Turnierbaum",
+    "fr": "Tableau du tournoi"
+  },
+  "Standings": {
+    "pl": "Klasyfikacja",
+    "en": "Standings",
+    "de": "Platzierungen",
+    "fr": "Classement"
+  },
+  "FILES & VIEW": {
+    "pl": "PLIKI I WIDOK",
+    "en": "FILES & DISPLAY",
+    "de": "DATEIEN & ANSICHT",
+    "fr": "FICHIERS ET AFFICHAGE"
+  },
+  "Bracket PDF": {
+    "pl": "Drabinka PDF",
+    "en": "Bracket PDF",
+    "de": "Turnierbaum-PDF",
+    "fr": "Tableau PDF"
+  },
+  "Groups PDF": {
+    "pl": "Grupy PDF",
+    "en": "Groups PDF",
+    "de": "Gruppen-PDF",
+    "fr": "Groupes PDF"
+  },
+  "Schedule PDF": {
+    "pl": "Harmonogram PDF",
+    "en": "Schedule PDF",
+    "de": "Zeitplan-PDF",
+    "fr": "Calendrier PDF"
+  },
+  "Final Standings PDF": {
+    "pl": "Klasyfikacja końcowa PDF",
+    "en": "Final standings PDF",
+    "de": "Endplatzierungen-PDF",
+    "fr": "Classement final PDF"
+  },
+  "Results Excel": {
+    "pl": "Wyniki Excel",
+    "en": "Results Excel",
+    "de": "Ergebnisse Excel",
+    "fr": "Résultats Excel"
+  },
+  "Light mode": {
+    "pl": "Tryb jasny",
+    "en": "Light mode",
+    "de": "Heller Modus",
+    "fr": "Mode clair"
+  },
+  "Dark mode": {
+    "pl": "Tryb ciemny",
+    "en": "Dark mode",
+    "de": "Dunkler Modus",
+    "fr": "Mode sombre"
+  },
+  "Toggle light and dark mode": {
+    "pl": "Zmień tryb jasny / ciemny",
+    "en": "Toggle light / dark mode",
+    "de": "Hellen / dunklen Modus wechseln",
+    "fr": "Changer de mode clair / sombre"
+  },
+  "Link dla graczy": {
+    "pl": "Link dla graczy",
+    "en": "Player link",
+    "de": "Spielerlink",
+    "fr": "Lien des joueurs"
+  },
+  "Publiczny harmonogram, wyniki i drabinka": {
+    "pl": "Publiczny harmonogram, wyniki i drabinka",
+    "en": "Public schedule, results and bracket",
+    "de": "Öffentlicher Zeitplan, Ergebnisse und Turnierbaum",
+    "fr": "Calendrier, résultats et tableau publics"
+  },
+  "Zapisz": {
+    "pl": "Zapisz",
+    "en": "Save",
+    "de": "Speichern",
+    "fr": "Enregistrer"
+  },
+  "Otwórz widok na monitor ↗": {
+    "pl": "Otwórz widok na monitor ↗",
+    "en": "Open TV display ↗",
+    "de": "TV-Anzeige öffnen ↗",
+    "fr": "Ouvrir l’affichage TV ↗"
+  },
+  "Skopiuj i udostępnij graczom. Każdy z linkiem zobaczy dane turnieju.": {
+    "pl": "Skopiuj i udostępnij graczom. Każdy z linkiem zobaczy dane turnieju.",
+    "en": "Copy and share with players. Anyone with the link can view the tournament.",
+    "de": "Kopiere den Link für die Spieler. Jeder mit dem Link kann das Turnier ansehen.",
+    "fr": "Copiez et partagez le lien. Toute personne disposant du lien peut consulter le tournoi."
+  },
+  "teams": {
+    "pl": "drużyn",
+    "en": "teams",
+    "de": "Teams",
+    "fr": "équipes"
+  },
+  "courts": {
+    "pl": "kortów",
+    "en": "courts",
+    "de": "Spielfelder",
+    "fr": "terrains"
+  },
+  "exact placement": {
+    "pl": "gra o wszystkie miejsca",
+    "en": "exact placement",
+    "de": "alle Plätze ausspielen",
+    "fr": "classement intégral"
+  },
+  "Pairing:": {
+    "pl": "Pary:",
+    "en": "Pairing:",
+    "de": "Paarungen:",
+    "fr": "Rencontres :"
+  },
+  "reseed every round": {
+    "pl": "reseeding w każdej rundzie",
+    "en": "reseed every round",
+    "de": "jede Runde neu setzen",
+    "fr": "reclassement à chaque tour"
+  },
+  "fixed bracket": {
+    "pl": "stała drabinka",
+    "en": "fixed bracket",
+    "de": "fester Turnierbaum",
+    "fr": "tableau fixe"
+  },
+  "first knockout round only": {
+    "pl": "tylko pierwsza runda pucharowa",
+    "en": "first knockout round only",
+    "de": "nur erste K.-o.-Runde",
+    "fr": "premier tour éliminatoire uniquement"
+  },
+  "Settings & Phase Rules": {
+    "pl": "Ustawienia i zasady faz",
+    "en": "Settings and phase rules",
+    "de": "Einstellungen und Phasenregeln",
+    "fr": "Paramètres et règles des phases"
+  },
+  "Tournament Settings": {
+    "pl": "Ustawienia turnieju",
+    "en": "Tournament settings",
+    "de": "Turniereinstellungen",
+    "fr": "Paramètres du tournoi"
+  },
+  "Number of groups": {
+    "pl": "Liczba grup",
+    "en": "Number of groups",
+    "de": "Anzahl der Gruppen",
+    "fr": "Nombre de groupes"
+  },
+  "Qualifiers per group": {
+    "pl": "Awansujących z grupy",
+    "en": "Qualifiers per group",
+    "de": "Qualifikanten je Gruppe",
+    "fr": "Qualifiés par groupe"
+  },
+  "Best teams from next place": {
+    "pl": "Najlepsi z kolejnego miejsca",
+    "en": "Best teams from next place",
+    "de": "Beste Teams des nächsten Rangs",
+    "fr": "Meilleures équipes du rang suivant"
+  },
+  "Example: 2/group + 2 = two best 3rd-placed teams.": {
+    "pl": "Przykład: 2 z grupy + 2 najlepsze trzecie miejsca.",
+    "en": "Example: 2 per group + the two best third-placed teams.",
+    "de": "Beispiel: 2 pro Gruppe + die zwei besten Gruppendritten.",
+    "fr": "Exemple : 2 par groupe + les deux meilleurs troisièmes."
+  },
+  "Porównanie dodatkowo awansujących między grupami": {
+    "pl": "Porównanie dodatkowo awansujących między grupami",
+    "en": "Wildcard comparison across groups",
+    "de": "Gruppenübergreifender Wildcard-Vergleich",
+    "fr": "Comparaison des qualifiés supplémentaires"
+  },
+  "PPM — wszystkie mecze grupowe": {
+    "pl": "PPM — wszystkie mecze grupowe",
+    "en": "Points per match — all group matches",
+    "de": "Punkte pro Spiel — alle Gruppenspiele",
+    "fr": "Points par match — tous les matchs de groupe"
+  },
+  "Pomiń wyniki z ostatnim miejscem w większych grupach": {
+    "pl": "Pomiń wyniki z ostatnim miejscem w większych grupach",
+    "en": "Exclude results against the bottom team in larger groups",
+    "de": "Ergebnisse gegen das Schlusslicht größerer Gruppen ausnehmen",
+    "fr": "Exclure les résultats contre le dernier des groupes plus grands"
+  },
+  "Metoda jest zablokowana po wpisaniu pierwszego wyniku.": {
+    "pl": "Metoda jest zablokowana po wpisaniu pierwszego wyniku.",
+    "en": "This setting is locked after the first result.",
+    "de": "Nach dem ersten Ergebnis ist diese Einstellung gesperrt.",
+    "fr": "Ce paramètre est verrouillé après le premier résultat."
+  },
+  "Automatic from seeding": {
+    "pl": "Automatycznie z rozstawienia",
+    "en": "Automatic from seeding",
+    "de": "Automatisch nach Setzliste",
+    "fr": "Automatique selon les têtes de série"
+  },
+  "Manual": {
+    "pl": "Ręcznie",
+    "en": "Manual",
+    "de": "Manuell",
+    "fr": "Manuel"
+  },
+  "Protected BYEs": {
+    "pl": "Chronione wolne losy",
+    "en": "Protected byes",
+    "de": "Geschützte Freilose",
+    "fr": "Exemptions protégées"
+  },
+  "Highest Tournament Seeds receive unavoidable BYEs": {
+    "pl": "Najwyższe seedy otrzymują nieuniknione wolne losy",
+    "en": "Highest seeds receive unavoidable byes",
+    "de": "Höchste Setzplätze erhalten notwendige Freilose",
+    "fr": "Les meilleures têtes de série reçoivent les exemptions nécessaires"
+  },
+  "Keep structural source order": {
+    "pl": "Zachowaj kolejność struktury",
+    "en": "Keep structural source order",
+    "de": "Strukturelle Reihenfolge beibehalten",
+    "fr": "Conserver l’ordre de la structure"
+  },
+  "Pairing / reseeding mode": {
+    "pl": "Tryb parowania / reseedingu",
+    "en": "Pairing / reseeding mode",
+    "de": "Paarungs- / Neusetzmodus",
+    "fr": "Mode de rencontres / reclassement"
+  },
+  "First knockout round only — then follow the bracket": {
+    "pl": "Tylko pierwsza runda pucharowa — potem stała drabinka",
+    "en": "First knockout round only — then fixed bracket",
+    "de": "Nur erste K.-o.-Runde — danach fester Turnierbaum",
+    "fr": "Premier tour uniquement — puis tableau fixe"
+  },
+  "Reseed every round — manual override available": {
+    "pl": "Reseeding w każdej rundzie — możliwa ręczna zmiana",
+    "en": "Reseed every round — manual override available",
+    "de": "Jede Runde neu setzen — manuell anpassbar",
+    "fr": "Reclassement à chaque tour — modification manuelle possible"
+  },
+  "Fixed bracket — no reseeding": {
+    "pl": "Stała drabinka — bez reseedingu",
+    "en": "Fixed bracket — no reseeding",
+    "de": "Fester Turnierbaum — keine Neusetzung",
+    "fr": "Tableau fixe — sans reclassement"
+  },
+  "Exact placement / consolation": {
+    "pl": "Gra o wszystkie miejsca / consolation",
+    "en": "Exact placement / consolation",
+    "de": "Alle Plätze / Trostrunde",
+    "fr": "Classement intégral / consolante"
+  },
+  "Exact placement / consolation for all players": {
+    "pl": "Gra o wszystkie miejsca / consolation dla wszystkich",
+    "en": "Exact placement / consolation for all players",
+    "de": "Alle Plätze / Trostrunde für alle Spieler",
+    "fr": "Classement intégral / consolante pour tous"
+  },
+  "Qualification field:": {
+    "pl": "Podział awansów:",
+    "en": "Qualification field:",
+    "de": "Qualifikationsfeld:",
+    "fr": "Répartition des qualifiés :"
+  },
+  "to Championship": {
+    "pl": "do drabinki głównej",
+    "en": "to championship",
+    "de": "ins Hauptfeld",
+    "fr": "dans le tableau principal"
+  },
+  "to placement/consolation": {
+    "pl": "do consolation",
+    "en": "to consolation",
+    "de": "in die Trostrunde",
+    "fr": "dans la consolante"
+  },
+  "Save settings": {
+    "pl": "Zapisz ustawienia",
+    "en": "Save settings",
+    "de": "Einstellungen speichern",
+    "fr": "Enregistrer les paramètres"
+  },
+  "Save & Generate Structure": {
+    "pl": "Zapisz i wygeneruj strukturę",
+    "en": "Save and generate structure",
+    "de": "Speichern und Struktur erzeugen",
+    "fr": "Enregistrer et générer la structure"
+  },
+  "Save & generate structure": {
+    "pl": "Zapisz i wygeneruj strukturę",
+    "en": "Save and generate structure",
+    "de": "Speichern und Struktur erzeugen",
+    "fr": "Enregistrer et générer la structure"
+  },
+  "Phase Rules": {
+    "pl": "Zasady faz",
+    "en": "Phase rules",
+    "de": "Phasenregeln",
+    "fr": "Règles des phases"
+  },
+  "Best of": {
+    "pl": "Do wygrania większości z",
+    "en": "Best of",
+    "de": "Best of",
+    "fr": "Au meilleur des"
+  },
+  "Race to": {
+    "pl": "Do punktów",
+    "en": "Points target",
+    "de": "Punktziel",
+    "fr": "Points à atteindre"
+  },
+  "Save": {
+    "pl": "Zapisz",
+    "en": "Save",
+    "de": "Speichern",
+    "fr": "Enregistrer"
+  },
+  "Win-by-two / deuce scores are accepted.": {
+    "pl": "Wymagana przewaga dwóch punktów; obsługujemy grę na przewagi.",
+    "en": "Win by two; deuce scores are accepted.",
+    "de": "Zwei Punkte Vorsprung; Verlängerung wird unterstützt.",
+    "fr": "Deux points d’écart ; prolongations acceptées."
+  },
+  "Tournament logo": {
+    "pl": "Logo turnieju",
+    "en": "Tournament logo",
+    "de": "Turnierlogo",
+    "fr": "Logo du tournoi"
+  },
+  "Upload logo": {
+    "pl": "Wgraj logo",
+    "en": "Upload logo",
+    "de": "Logo hochladen",
+    "fr": "Importer le logo"
+  },
+  "Remove logo": {
+    "pl": "Usuń logo",
+    "en": "Remove logo",
+    "de": "Logo entfernen",
+    "fr": "Supprimer le logo"
+  },
+  "Import Excel Rank / Name": {
+    "pl": "Importuj Excel Rank / Name",
+    "en": "Import Excel Rank / Name",
+    "de": "Excel Rank / Name importieren",
+    "fr": "Importer Excel Rank / Name"
+  },
+  "Expected columns:": {
+    "pl": "Wymagane kolumny:",
+    "en": "Expected columns:",
+    "de": "Erwartete Spalten:",
+    "fr": "Colonnes attendues :"
+  },
+  "Rank": {
+    "pl": "Rozstawienie",
+    "en": "Seed",
+    "de": "Setzplatz",
+    "fr": "Tête de série"
+  },
+  "and": {
+    "pl": "i",
+    "en": "and",
+    "de": "und",
+    "fr": "et"
+  },
+  ". Drag to change seeding.": {
+    "pl": ". Przeciągnij, aby zmienić rozstawienie.",
+    "en": ". Drag to change seeding.",
+    "de": ". Zum Ändern der Setzliste ziehen.",
+    "fr": ". Faites glisser pour modifier les têtes de série."
+  },
+  "Club": {
+    "pl": "Klub",
+    "en": "Club",
+    "de": "Verein",
+    "fr": "Club"
+  },
+  "Save seeding": {
+    "pl": "Zapisz rozstawienie",
+    "en": "Save seeding",
+    "de": "Setzliste speichern",
+    "fr": "Enregistrer les têtes de série"
+  },
+  "Generate Structure": {
+    "pl": "Wygeneruj strukturę",
+    "en": "Generate structure",
+    "de": "Struktur erzeugen",
+    "fr": "Générer la structure"
+  },
+  "Assign teams to groups": {
+    "pl": "Przydziel drużyny do grup",
+    "en": "Assign teams to groups",
+    "de": "Teams den Gruppen zuweisen",
+    "fr": "Répartir les équipes dans les groupes"
+  },
+  "Select group": {
+    "pl": "Wybierz grupę",
+    "en": "Select group",
+    "de": "Gruppe wählen",
+    "fr": "Choisir un groupe"
+  },
+  "Save manual groups": {
+    "pl": "Zapisz przydział grup",
+    "en": "Save group assignment",
+    "de": "Gruppenzuteilung speichern",
+    "fr": "Enregistrer les groupes"
+  },
+  "Highest-ranked team inside a group remains position #1.": {
+    "pl": "Najwyżej rozstawiona drużyna pozostaje pierwsza w grupie.",
+    "en": "The highest seed remains first within its group.",
+    "de": "Der höchste Setzplatz bleibt innerhalb der Gruppe an erster Stelle.",
+    "fr": "La meilleure tête de série reste première dans son groupe."
+  },
+  "Group": {
+    "pl": "Grupa",
+    "en": "Group",
+    "de": "Gruppe",
+    "fr": "Groupe"
+  },
+  "Team": {
+    "pl": "Drużyna",
+    "en": "Team",
+    "de": "Team",
+    "fr": "Équipe"
+  },
+  "Place": {
+    "pl": "Miejsce",
+    "en": "Place",
+    "de": "Platz",
+    "fr": "Place"
+  },
+  "Original seed": {
+    "pl": "Pierwotny seed",
+    "en": "Original seed",
+    "de": "Ursprünglicher Setzplatz",
+    "fr": "Tête de série initiale"
+  },
+  "Group pos.": {
+    "pl": "Miejsce w grupie",
+    "en": "Group position",
+    "de": "Gruppenplatz",
+    "fr": "Rang dans le groupe"
+  },
+  "PPM": {
+    "pl": "PPM",
+    "en": "PPM",
+    "de": "P/Spiel",
+    "fr": "Pts/match"
+  },
+  "Set diff/M": {
+    "pl": "Bilans setów/mecz",
+    "en": "Set difference/match",
+    "de": "Satzdifferenz/Spiel",
+    "fr": "Différence de sets/match"
+  },
+  "Point diff": {
+    "pl": "Bilans punktów",
+    "en": "Point difference",
+    "de": "Punktdifferenz",
+    "fr": "Différence de points"
+  },
+  "First Knockout Round Pairing": {
+    "pl": "Pary pierwszej rundy pucharowej",
+    "en": "First knockout round pairings",
+    "de": "Paarungen der ersten K.-o.-Runde",
+    "fr": "Rencontres du premier tour éliminatoire"
+  },
+  "Tournament ranking after groups": {
+    "pl": "Rozstawienie po grupach",
+    "en": "Post-group seeding",
+    "de": "Setzliste nach der Gruppenphase",
+    "fr": "Têtes de série après les groupes"
+  },
+  "Locked until Group Stage is complete.": {
+    "pl": "Zablokowane do zakończenia grup.",
+    "en": "Locked until the group stage is complete.",
+    "de": "Bis zum Ende der Gruppenphase gesperrt.",
+    "fr": "Verrouillé jusqu’à la fin des groupes."
+  },
+  "Group Stage complete.": {
+    "pl": "Faza grupowa zakończona.",
+    "en": "Group stage complete.",
+    "de": "Gruppenphase abgeschlossen.",
+    "fr": "Phase de groupes terminée."
+  },
+  "Group Stage in progress.": {
+    "pl": "Faza grupowa trwa.",
+    "en": "Group stage in progress.",
+    "de": "Gruppenphase läuft.",
+    "fr": "Phase de groupes en cours."
+  },
+  "Save First-Round Pairing": {
+    "pl": "Zapisz pary pierwszej rundy",
+    "en": "Save first-round pairings",
+    "de": "Erstrundenpaarungen speichern",
+    "fr": "Enregistrer les rencontres du premier tour"
+  },
+  "Reseed / Manual Pairing for Later Rounds": {
+    "pl": "Reseeding / ręczne pary kolejnych rund",
+    "en": "Reseed / manual pairings for later rounds",
+    "de": "Neusetzung / manuelle Paarungen weiterer Runden",
+    "fr": "Reclassement / rencontres manuelles des tours suivants"
+  },
+  "Round depth": {
+    "pl": "Poziom rundy",
+    "en": "Round depth",
+    "de": "Rundentiefe",
+    "fr": "Niveau du tour"
+  },
+  "Save Pairing for This Round": {
+    "pl": "Zapisz pary tej rundy",
+    "en": "Save pairings for this round",
+    "de": "Paarungen dieser Runde speichern",
+    "fr": "Enregistrer les rencontres de ce tour"
+  },
+  "Waiting for earlier result.": {
+    "pl": "Oczekuje na wcześniejszy wynik.",
+    "en": "Waiting for an earlier result.",
+    "de": "Warten auf vorheriges Ergebnis.",
+    "fr": "En attente d’un résultat précédent."
+  },
+  "You may reseed this round.": {
+    "pl": "Możesz zmienić rozstawienie tej rundy.",
+    "en": "You may reseed this round.",
+    "de": "Diese Runde kann neu gesetzt werden.",
+    "fr": "Vous pouvez reclasser ce tour."
+  },
+  "Locked because this round or a downstream round already has a user-entered result.": {
+    "pl": "Zablokowane: ta lub kolejna runda ma zapisany wynik.",
+    "en": "Locked: this or a later round has a saved result.",
+    "de": "Gesperrt: Diese oder eine spätere Runde hat ein Ergebnis.",
+    "fr": "Verrouillé : ce tour ou un tour suivant possède un résultat."
+  },
+  "Match": {
+    "pl": "Mecz",
+    "en": "Match",
+    "de": "Spiel",
+    "fr": "Match"
+  },
+  "Match #": {
+    "pl": "Mecz #",
+    "en": "Match #",
+    "de": "Spiel #",
+    "fr": "Match n°"
+  },
+  "Order / Court": {
+    "pl": "Numer / Kort",
+    "en": "Number / Court",
+    "de": "Nummer / Spielfeld",
+    "fr": "Numéro / Terrain"
+  },
+  "Winner:": {
+    "pl": "Zwycięzca:",
+    "en": "Winner:",
+    "de": "Sieger:",
+    "fr": "Vainqueur :"
+  },
+  "Save result": {
+    "pl": "Zapisz wynik",
+    "en": "Save result",
+    "de": "Ergebnis speichern",
+    "fr": "Enregistrer le résultat"
+  },
+  "Stage": {
+    "pl": "Faza",
+    "en": "Stage",
+    "de": "Phase",
+    "fr": "Phase"
+  },
+  "Tournament Draws": {
+    "pl": "Drabinki turnieju",
+    "en": "Tournament brackets",
+    "de": "Turnierbäume",
+    "fr": "Tableaux du tournoi"
+  },
+  "PDF / Exports": {
+    "pl": "PDF / Eksporty",
+    "en": "PDF / Exports",
+    "de": "PDF / Exporte",
+    "fr": "PDF / Exports"
+  },
+  "Tournament Bracket PDF": {
+    "pl": "Drabinka turnieju PDF",
+    "en": "Tournament bracket PDF",
+    "de": "Turnierbaum-PDF",
+    "fr": "Tableau du tournoi PDF"
+  },
+  "Groups & Results PDF": {
+    "pl": "Grupy i wyniki PDF",
+    "en": "Groups and results PDF",
+    "de": "Gruppen und Ergebnisse PDF",
+    "fr": "Groupes et résultats PDF"
+  },
+  "Match Schedule PDF": {
+    "pl": "Harmonogram meczów PDF",
+    "en": "Match schedule PDF",
+    "de": "Spielplan-PDF",
+    "fr": "Calendrier des matchs PDF"
+  },
+  "Final Standings": {
+    "pl": "Klasyfikacja końcowa",
+    "en": "Final standings",
+    "de": "Endplatzierungen",
+    "fr": "Classement final"
+  },
+  "Standings populate as results are entered.": {
+    "pl": "Klasyfikacja uzupełnia się wraz z wynikami.",
+    "en": "Standings update as results are entered.",
+    "de": "Platzierungen werden mit den Ergebnissen aktualisiert.",
+    "fr": "Le classement évolue avec les résultats."
+  },
+  "Recalculate courts": {
+    "pl": "Przelicz korty",
+    "en": "Recalculate courts",
+    "de": "Spielfelder neu berechnen",
+    "fr": "Recalculer les terrains"
+  },
+  "Top": {
+    "pl": "Na górę",
+    "en": "Top",
+    "de": "Nach oben",
+    "fr": "En haut"
+  },
+  "Settings and phase rules": {
+    "pl": "Ustawienia i zasady faz",
+    "en": "Settings and phase rules",
+    "de": "Einstellungen und Phasenregeln",
+    "fr": "Paramètres et règles des phases"
+  },
+  "Login": {
+    "pl": "Login",
+    "en": "Username",
+    "de": "Benutzername",
+    "fr": "Identifiant"
+  },
+  "Obecne hasło": {
+    "pl": "Obecne hasło",
+    "en": "Current password",
+    "de": "Aktuelles Passwort",
+    "fr": "Mot de passe actuel"
+  },
+  "Nowe hasło": {
+    "pl": "Nowe hasło",
+    "en": "New password",
+    "de": "Neues Passwort",
+    "fr": "Nouveau mot de passe"
+  },
+  "Hasło": {
+    "pl": "Hasło",
+    "en": "Password",
+    "de": "Passwort",
+    "fr": "Mot de passe"
+  },
+  "Hasło (min. 8 znaków)": {
+    "pl": "Hasło (min. 8 znaków)",
+    "en": "Password (min. 8 characters)",
+    "de": "Passwort (mind. 8 Zeichen)",
+    "fr": "Mot de passe (8 caractères min.)"
+  },
+  "Nowe hasło (min. 8 znaków)": {
+    "pl": "Nowe hasło (min. 8 znaków)",
+    "en": "New password (min. 8 characters)",
+    "de": "Neues Passwort (mind. 8 Zeichen)",
+    "fr": "Nouveau mot de passe (8 caractères min.)"
+  },
+  "Pierwsze konto administratora": {
+    "pl": "Pierwsze konto administratora",
+    "en": "First administrator account",
+    "de": "Erstes Administratorkonto",
+    "fr": "Premier compte administrateur"
+  },
+  "Logowanie": {
+    "pl": "Logowanie",
+    "en": "Sign in",
+    "de": "Anmelden",
+    "fr": "Connexion"
+  },
+  "Zaloguj się": {
+    "pl": "Zaloguj się",
+    "en": "Sign in",
+    "de": "Anmelden",
+    "fr": "Se connecter"
+  },
+  "Zmień hasło": {
+    "pl": "Zmień hasło",
+    "en": "Change password",
+    "de": "Passwort ändern",
+    "fr": "Changer le mot de passe"
+  },
+  "Wyloguj": {
+    "pl": "Wyloguj",
+    "en": "Sign out",
+    "de": "Abmelden",
+    "fr": "Se déconnecter"
+  },
+  "Administrator": {
+    "pl": "Administrator",
+    "en": "Administrator",
+    "de": "Administrator",
+    "fr": "Administrateur"
+  },
+  "Odczyt": {
+    "pl": "Odczyt",
+    "en": "Read-only",
+    "de": "Lesezugriff",
+    "fr": "Lecture seule"
+  },
+  "Konta": {
+    "pl": "Konta",
+    "en": "Accounts",
+    "de": "Konten",
+    "fr": "Comptes"
+  },
+  "Dodaj konto tylko do odczytu": {
+    "pl": "Dodaj konto tylko do odczytu",
+    "en": "Add read-only account",
+    "de": "Konto mit Lesezugriff hinzufügen",
+    "fr": "Ajouter un compte en lecture seule"
+  },
+  "Dodaj": {
+    "pl": "Dodaj",
+    "en": "Add",
+    "de": "Hinzufügen",
+    "fr": "Ajouter"
+  },
+  "Zresetuj hasło": {
+    "pl": "Zresetuj hasło",
+    "en": "Reset password",
+    "de": "Passwort zurücksetzen",
+    "fr": "Réinitialiser le mot de passe"
+  },
+  "Wygląd · styl i paleta kolorów": {
+    "pl": "Wygląd · styl i paleta kolorów",
+    "en": "Appearance · style and colour palette",
+    "de": "Darstellung · Stil und Farbpalette",
+    "fr": "Apparence · style et palette de couleurs"
+  },
+  "Styl interfejsu": {
+    "pl": "Styl interfejsu",
+    "en": "Interface style",
+    "de": "Oberflächenstil",
+    "fr": "Style de l’interface"
+  },
+  "Klasyczny": {
+    "pl": "Klasyczny",
+    "en": "Classic",
+    "de": "Klassisch",
+    "fr": "Classique"
+  },
+  "Nowoczesny": {
+    "pl": "Nowoczesny",
+    "en": "Modern",
+    "de": "Modern",
+    "fr": "Moderne"
+  },
+  "Paleta": {
+    "pl": "Paleta",
+    "en": "Palette",
+    "de": "Palette",
+    "fr": "Palette"
+  },
+  "Własna paleta": {
+    "pl": "Własna paleta",
+    "en": "Custom palette",
+    "de": "Eigene Palette",
+    "fr": "Palette personnalisée"
+  },
+  "Tryb": {
+    "pl": "Tryb",
+    "en": "Mode",
+    "de": "Modus",
+    "fr": "Mode"
+  },
+  "Jasny": {
+    "pl": "Jasny",
+    "en": "Light",
+    "de": "Hell",
+    "fr": "Clair"
+  },
+  "Ciemny": {
+    "pl": "Ciemny",
+    "en": "Dark",
+    "de": "Dunkel",
+    "fr": "Sombre"
+  },
+  "Zapisz styl i paletę": {
+    "pl": "Zapisz styl i paletę",
+    "en": "Save style and palette",
+    "de": "Stil und Palette speichern",
+    "fr": "Enregistrer le style et la palette"
+  },
+  "Anuluj podgląd": {
+    "pl": "Anuluj podgląd",
+    "en": "Cancel preview",
+    "de": "Vorschau abbrechen",
+    "fr": "Annuler l’aperçu"
+  },
+  "Domyślna": {
+    "pl": "Domyślna",
+    "en": "Default",
+    "de": "Standard",
+    "fr": "Par défaut"
+  },
+  "Zieleń": {
+    "pl": "Zieleń",
+    "en": "Forest",
+    "de": "Wald",
+    "fr": "Forêt"
+  },
+  "Papier": {
+    "pl": "Papier",
+    "en": "Paper",
+    "de": "Papier",
+    "fr": "Papier"
+  },
+  "Kamień": {
+    "pl": "Kamień",
+    "en": "Stone",
+    "de": "Stein",
+    "fr": "Pierre"
+  },
+  "Grafit": {
+    "pl": "Grafit",
+    "en": "Graphite",
+    "de": "Graphit",
+    "fr": "Graphite"
+  },
+  "Czerń": {
+    "pl": "Czerń",
+    "en": "Black",
+    "de": "Schwarz",
+    "fr": "Noir"
+  },
+  "Tło strony": {
+    "pl": "Tło strony",
+    "en": "Page background",
+    "de": "Seitenhintergrund",
+    "fr": "Arrière-plan"
+  },
+  "Karty i panele": {
+    "pl": "Karty i panele",
+    "en": "Cards and panels",
+    "de": "Karten und Bereiche",
+    "fr": "Cartes et panneaux"
+  },
+  "Pola i nagłówki": {
+    "pl": "Pola i nagłówki",
+    "en": "Fields and headers",
+    "de": "Felder und Kopfzeilen",
+    "fr": "Champs et en-têtes"
+  },
+  "Tekst główny": {
+    "pl": "Tekst główny",
+    "en": "Main text",
+    "de": "Haupttext",
+    "fr": "Texte principal"
+  },
+  "Tekst pomocniczy": {
+    "pl": "Tekst pomocniczy",
+    "en": "Secondary text",
+    "de": "Hilfstext",
+    "fr": "Texte secondaire"
+  },
+  "Obramowania": {
+    "pl": "Obramowania",
+    "en": "Borders",
+    "de": "Rahmen",
+    "fr": "Bordures"
+  },
+  "Akcent i przyciski": {
+    "pl": "Akcent i przyciski",
+    "en": "Accent and buttons",
+    "de": "Akzent und Schaltflächen",
+    "fr": "Accent et boutons"
+  },
+  "Błędy i ostrzeżenia": {
+    "pl": "Błędy i ostrzeżenia",
+    "en": "Errors and warnings",
+    "de": "Fehler und Warnungen",
+    "fr": "Erreurs et avertissements"
+  },
+  "Nadchodzące mecze": {
+    "pl": "Nadchodzące mecze",
+    "en": "Upcoming matches",
+    "de": "Anstehende Spiele",
+    "fr": "Matchs à venir"
+  },
+  "Najbliższe mecze": {
+    "pl": "Najbliższe mecze",
+    "en": "Next matches",
+    "de": "Nächste Spiele",
+    "fr": "Prochains matchs"
+  },
+  "Wyniki": {
+    "pl": "Wyniki",
+    "en": "Results",
+    "de": "Ergebnisse",
+    "fr": "Résultats"
+  },
+  "Drabinka": {
+    "pl": "Drabinka",
+    "en": "Bracket",
+    "de": "Turnierbaum",
+    "fr": "Tableau"
+  },
+  "Zwykły widok": {
+    "pl": "Zwykły widok",
+    "en": "Standard view",
+    "de": "Standardansicht",
+    "fr": "Vue standard"
+  },
+  "Tryb monitora ↗": {
+    "pl": "Tryb monitora ↗",
+    "en": "TV display ↗",
+    "de": "TV-Anzeige ↗",
+    "fr": "Affichage TV ↗"
+  },
+  "Pełny ekran": {
+    "pl": "Pełny ekran",
+    "en": "Full screen",
+    "de": "Vollbild",
+    "fr": "Plein écran"
+  },
+  "Szukaj drużyny / zawodnika": {
+    "pl": "Szukaj drużyny / zawodnika",
+    "en": "Find team / player",
+    "de": "Team / Spieler suchen",
+    "fr": "Chercher une équipe / un joueur"
+  },
+  "Brak nadchodzących meczów.": {
+    "pl": "Brak nadchodzących meczów.",
+    "en": "No upcoming matches.",
+    "de": "Keine anstehenden Spiele.",
+    "fr": "Aucun match à venir."
+  },
+  "Pokaż pozostałe mecze (": {
+    "pl": "Pokaż pozostałe mecze (",
+    "en": "Show remaining matches (",
+    "de": "Weitere Spiele anzeigen (",
+    "fr": "Afficher les autres matchs ("
+  },
+  "Wyniki meczów (": {
+    "pl": "Wyniki meczów (",
+    "en": "Match results (",
+    "de": "Spielergebnisse (",
+    "fr": "Résultats des matchs ("
+  },
+  "Nie ma jeszcze wyników.": {
+    "pl": "Nie ma jeszcze wyników.",
+    "en": "No results yet.",
+    "de": "Noch keine Ergebnisse.",
+    "fr": "Aucun résultat pour le moment."
+  },
+  "Grupy": {
+    "pl": "Grupy",
+    "en": "Groups",
+    "de": "Gruppen",
+    "fr": "Groupes"
+  },
+  "Brak tabel grupowych.": {
+    "pl": "Brak tabel grupowych.",
+    "en": "No group standings.",
+    "de": "Keine Gruppentabellen.",
+    "fr": "Aucun classement de groupe."
+  },
+  "Zawodnik / drużyna": {
+    "pl": "Zawodnik / drużyna",
+    "en": "Player / team",
+    "de": "Spieler / Team",
+    "fr": "Joueur / équipe"
+  },
+  "M": {
+    "pl": "M",
+    "en": "MP",
+    "de": "Sp",
+    "fr": "MJ"
+  },
+  "W": {
+    "pl": "W",
+    "en": "W",
+    "de": "S",
+    "fr": "V"
+  },
+  "P": {
+    "pl": "P",
+    "en": "L",
+    "de": "N",
+    "fr": "D"
+  },
+  "Pkt": {
+    "pl": "Pkt",
+    "en": "Pts",
+    "de": "Pkt",
+    "fr": "Pts"
+  },
+  "Pts": {
+    "pl": "Pkt",
+    "en": "Pts",
+    "de": "Pkt",
+    "fr": "Pts"
+  },
+  "Sets": {
+    "pl": "Sety",
+    "en": "Sets",
+    "de": "Sätze",
+    "fr": "Sets"
+  },
+  "Sety": {
+    "pl": "Sety",
+    "en": "Sets",
+    "de": "Sätze",
+    "fr": "Sets"
+  },
+  "Bilans": {
+    "pl": "Bilans",
+    "en": "Diff.",
+    "de": "Differenz",
+    "fr": "Diff."
+  },
+  "Różnica punktów": {
+    "pl": "Różnica punktów",
+    "en": "Point difference",
+    "de": "Punktdifferenz",
+    "fr": "Différence de points"
+  },
+  "Klasyfikacja": {
+    "pl": "Klasyfikacja",
+    "en": "Standings",
+    "de": "Platzierungen",
+    "fr": "Classement"
+  },
+  "Miejsce": {
+    "pl": "Miejsce",
+    "en": "Place",
+    "de": "Platz",
+    "fr": "Place"
+  },
+  "Klub": {
+    "pl": "Klub",
+    "en": "Club",
+    "de": "Verein",
+    "fr": "Club"
+  },
+  "Seed": {
+    "pl": "Seed",
+    "en": "Seed",
+    "de": "Setzplatz",
+    "fr": "Tête de série"
+  },
+  "Brak klasyfikacji.": {
+    "pl": "Brak klasyfikacji.",
+    "en": "No standings yet.",
+    "de": "Noch keine Platzierungen.",
+    "fr": "Aucun classement pour le moment."
+  },
+  "Na górę": {
+    "pl": "Na górę",
+    "en": "Go to top",
+    "de": "Nach oben",
+    "fr": "Aller en haut"
+  },
+  "Na dół": {
+    "pl": "Na dół",
+    "en": "Go to bottom",
+    "de": "Nach unten",
+    "fr": "Aller en bas"
+  },
+  "Przewijanie strony": {
+    "pl": "Przewijanie strony",
+    "en": "Page navigation",
+    "de": "Seitennavigation",
+    "fr": "Navigation dans la page"
+  },
+  "Logo zawodów": {
+    "pl": "Logo zawodów",
+    "en": "Tournament logo",
+    "de": "Turnierlogo",
+    "fr": "Logo du tournoi"
+  },
+  "Aktualne wyniki": {
+    "pl": "Aktualne wyniki",
+    "en": "Results up to date",
+    "de": "Aktuelle Ergebnisse",
+    "fr": "Résultats à jour"
+  },
+  "W trakcie": {
+    "pl": "W trakcie",
+    "en": "In progress",
+    "de": "Läuft",
+    "fr": "En cours"
+  },
+  "Oczekuje": {
+    "pl": "Oczekuje",
+    "en": "Waiting",
+    "de": "Wartet",
+    "fr": "En attente"
+  },
+  "Zakończony": {
+    "pl": "Zakończony",
+    "en": "Completed",
+    "de": "Beendet",
+    "fr": "Terminé"
+  },
+  "Wolny los": {
+    "pl": "Wolny los",
+    "en": "Bye",
+    "de": "Freilos",
+    "fr": "Exemption"
+  },
+  "Sędzia:": {
+    "pl": "Sędzia:",
+    "en": "Referee:",
+    "de": "Schiedsrichter:",
+    "fr": "Arbitre :"
+  },
+  "Sędziuj": {
+    "pl": "Sędziuj",
+    "en": "Referee match",
+    "de": "Spiel leiten",
+    "fr": "Arbitrer"
+  },
+  "Statystyki": {
+    "pl": "Statystyki",
+    "en": "Statistics",
+    "de": "Statistiken",
+    "fr": "Statistiques"
+  },
+  "Wynik końcowy": {
+    "pl": "Wynik końcowy",
+    "en": "Final score",
+    "de": "Endergebnis",
+    "fr": "Score final"
+  },
+  "Do zatwierdzenia": {
+    "pl": "Do zatwierdzenia",
+    "en": "Awaiting confirmation",
+    "de": "Bestätigung ausstehend",
+    "fr": "À confirmer"
+  },
+  "Czas:": {
+    "pl": "Czas:",
+    "en": "Timeout:",
+    "de": "Auszeit:",
+    "fr": "Temps mort :"
+  },
+  "· Sety:": {
+    "pl": "· Sety:",
+    "en": "· Sets:",
+    "de": "· Sätze:",
+    "fr": "· Sets :"
+  },
+  "· Kort": {
+    "pl": "· Kort",
+    "en": "· Court",
+    "de": "· Spielfeld",
+    "fr": "· Terrain"
+  },
+  "· Court": {
+    "pl": "· Kort",
+    "en": "· Court",
+    "de": "· Spielfeld",
+    "fr": "· Terrain"
+  },
+  "Mecz #": {
+    "pl": "Mecz #",
+    "en": "Match #",
+    "de": "Spiel #",
+    "fr": "Match n°"
+  },
+  "· Mecz #": {
+    "pl": "· Mecz #",
+    "en": "· Match #",
+    "de": "· Spiel #",
+    "fr": "· Match n°"
+  },
+  "· statystyki": {
+    "pl": "· statystyki",
+    "en": "· statistics",
+    "de": "· Statistiken",
+    "fr": "· statistiques"
+  },
+  "· statystyki czasu": {
+    "pl": "· statystyki czasu",
+    "en": "· duration statistics",
+    "de": "· Spielzeitstatistik",
+    "fr": "· statistiques de durée"
+  },
+  "Panel sędziego": {
+    "pl": "Panel sędziego",
+    "en": "Referee panel",
+    "de": "Schiedsrichterbereich",
+    "fr": "Panneau d’arbitrage"
+  },
+  "Kod meczu": {
+    "pl": "Kod meczu",
+    "en": "Match code",
+    "de": "Spielcode",
+    "fr": "Code du match"
+  },
+  "Pobierz 3-cyfrowy kod tego meczu przy stoliku sędziowskim.": {
+    "pl": "Pobierz 3-cyfrowy kod tego meczu przy stoliku sędziowskim.",
+    "en": "Get this match’s 3-digit code at the tournament desk.",
+    "de": "Hole den dreistelligen Spielcode am Turniertisch.",
+    "fr": "Demandez le code à 3 chiffres du match à la table d’arbitrage."
+  },
+  "Wejdź w mecz": {
+    "pl": "Wejdź w mecz",
+    "en": "Open match",
+    "de": "Spiel öffnen",
+    "fr": "Accéder au match"
+  },
+  "Łączenie…": {
+    "pl": "Łączenie…",
+    "en": "Connecting…",
+    "de": "Verbindung wird hergestellt…",
+    "fr": "Connexion…"
+  },
+  "▶ Rozpocznij mecz i pomiar czasu": {
+    "pl": "▶ Rozpocznij mecz i pomiar czasu",
+    "en": "▶ Start match and timer",
+    "de": "▶ Spiel und Zeitmessung starten",
+    "fr": "▶ Démarrer le match et le chronomètre"
+  },
+  "+1 punkt": {
+    "pl": "+1 punkt",
+    "en": "+1 point",
+    "de": "+1 Punkt",
+    "fr": "+1 point"
+  },
+  "Czas zawodnika · 2 minuty · 1× na set": {
+    "pl": "Czas zawodnika · 2 minuty · 1× na set",
+    "en": "Player timeout · 2 minutes · once per set",
+    "de": "Spielerauszeit · 2 Minuten · einmal pro Satz",
+    "fr": "Temps mort · 2 minutes · une fois par set"
+  },
+  "Czas —": {
+    "pl": "Czas —",
+    "en": "Timeout —",
+    "de": "Auszeit —",
+    "fr": "Temps mort —"
+  },
+  "Zakończ czas i wznów grę": {
+    "pl": "Zakończ czas i wznów grę",
+    "en": "End timeout and resume",
+    "de": "Auszeit beenden und fortsetzen",
+    "fr": "Terminer le temps mort et reprendre"
+  },
+  "↶ Cofnij ostatni punkt": {
+    "pl": "↶ Cofnij ostatni punkt",
+    "en": "↶ Undo last point",
+    "de": "↶ Letzten Punkt zurücknehmen",
+    "fr": "↶ Annuler le dernier point"
+  },
+  "Zatwierdź wynik i zakończ mecz": {
+    "pl": "Zatwierdź wynik i zakończ mecz",
+    "en": "Confirm score and finish match",
+    "de": "Ergebnis bestätigen und Spiel beenden",
+    "fr": "Confirmer le résultat et terminer le match"
+  },
+  "← Wróć do panelu zawodnika": {
+    "pl": "← Wróć do panelu zawodnika",
+    "en": "← Back to player view",
+    "de": "← Zur Spieleransicht",
+    "fr": "← Retour à la vue des joueurs"
+  },
+  "Przekaż sędziowanie — idę grać": {
+    "pl": "Przekaż sędziowanie — idę grać",
+    "en": "Hand over refereeing — I need to play",
+    "de": "Spielleitung übergeben — ich muss spielen",
+    "fr": "Passer l’arbitrage — je dois jouer"
+  },
+  "Poproś stolik o zastępstwo. Nowy sędzia wchodzi tym samym kodem; punkty i czas pozostają zapisane.": {
+    "pl": "Poproś stolik o zastępstwo. Nowy sędzia wchodzi tym samym kodem; punkty i czas pozostają zapisane.",
+    "en": "Ask the desk for a replacement. The new referee uses the same code; scores and timing are preserved.",
+    "de": "Bitte am Turniertisch um Ersatz. Der neue Schiedsrichter nutzt denselben Code; Punkte und Zeiten bleiben gespeichert.",
+    "fr": "Demandez un remplaçant à la table. Le nouvel arbitre utilise le même code ; points et temps sont conservés."
+  },
+  "Kod sędziego:": {
+    "pl": "Kod sędziego:",
+    "en": "Referee code:",
+    "de": "Schiedsrichtercode:",
+    "fr": "Code arbitre :"
+  },
+  "Otwórz panel sędziego ↗": {
+    "pl": "Otwórz panel sędziego ↗",
+    "en": "Open referee panel ↗",
+    "de": "Schiedsrichterbereich öffnen ↗",
+    "fr": "Ouvrir le panneau d’arbitrage ↗"
+  },
+  "Zapisany wynik końcowy": {
+    "pl": "Zapisany wynik końcowy",
+    "en": "Final score saved",
+    "de": "Endergebnis gespeichert",
+    "fr": "Résultat final enregistré"
+  },
+  "Oczekuje na zatwierdzenie sędziego": {
+    "pl": "Oczekuje na zatwierdzenie sędziego",
+    "en": "Awaiting referee confirmation",
+    "de": "Bestätigung durch Schiedsrichter ausstehend",
+    "fr": "En attente de confirmation par l’arbitre"
+  },
+  "Wynik live:": {
+    "pl": "Wynik live:",
+    "en": "Live score:",
+    "de": "Live-Ergebnis:",
+    "fr": "Score en direct :"
+  },
+  "Zmień sędziego / kod": {
+    "pl": "Zmień sędziego / kod",
+    "en": "Change referee / code",
+    "de": "Schiedsrichter / Code ändern",
+    "fr": "Changer d’arbitre / de code"
+  },
+  "Przegrany spotkania": {
+    "pl": "Przegrany spotkania",
+    "en": "Loser of match",
+    "de": "Verlierer des Spiels",
+    "fr": "Perdant du match"
+  },
+  "Automatycznie — wcześniejszy mecz na tym korcie": {
+    "pl": "Automatycznie — wcześniejszy mecz na tym korcie",
+    "en": "Automatic — previous match on this court",
+    "de": "Automatisch — vorheriges Spiel auf diesem Feld",
+    "fr": "Automatique — match précédent sur ce terrain"
+  },
+  "Lub konkretna osoba": {
+    "pl": "Lub konkretna osoba",
+    "en": "Or a named person",
+    "de": "Oder eine bestimmte Person",
+    "fr": "Ou une personne désignée"
+  },
+  "Zapisz przydział": {
+    "pl": "Zapisz przydział",
+    "en": "Save assignment",
+    "de": "Zuteilung speichern",
+    "fr": "Enregistrer l’affectation"
+  },
+  "Nowy kod i reset punktów live": {
+    "pl": "Nowy kod i reset punktów live",
+    "en": "New code and reset live score",
+    "de": "Neuer Code und Live-Punkte zurücksetzen",
+    "fr": "Nouveau code et remise à zéro du score"
+  },
+  "Sędziowie · punkty live": {
+    "pl": "Sędziowie · punkty live",
+    "en": "Referees · live scoring",
+    "de": "Schiedsrichter · Live-Punkte",
+    "fr": "Arbitres · score en direct"
+  },
+  "Włącz panele sędziów i wskazywanie przegranego jako sędziego": {
+    "pl": "Włącz panele sędziów i wskazywanie przegranego jako sędziego",
+    "en": "Enable referee panels and loser-as-referee assignments",
+    "de": "Schiedsrichterbereiche und Verlierer als Schiedsrichter aktivieren",
+    "fr": "Activer les panneaux d’arbitrage et l’affectation des perdants"
+  },
+  "Timetable · godziny meczów": {
+    "pl": "Timetable · godziny meczów",
+    "en": "Schedule · match times",
+    "de": "Zeitplan · Spielzeiten",
+    "fr": "Calendrier · horaires des matchs"
+  },
+  "Start turnieju / fazy grupowej": {
+    "pl": "Start turnieju / fazy grupowej",
+    "en": "Tournament / group stage start",
+    "de": "Beginn des Turniers / der Gruppenphase",
+    "fr": "Début du tournoi / des groupes"
+  },
+  "Minut na mecz": {
+    "pl": "Minut na mecz",
+    "en": "Minutes per match",
+    "de": "Minuten pro Spiel",
+    "fr": "Minutes par match"
+  },
+  "Strefa czasowa": {
+    "pl": "Strefa czasowa",
+    "en": "Time zone",
+    "de": "Zeitzone",
+    "fr": "Fuseau horaire"
+  },
+  "Zapisz timetable": {
+    "pl": "Zapisz timetable",
+    "en": "Save schedule",
+    "de": "Zeitplan speichern",
+    "fr": "Enregistrer le calendrier"
+  },
+  "Kolejka": {
+    "pl": "Kolejka",
+    "en": "Wave",
+    "de": "Spielblock",
+    "fr": "Créneau"
+  },
+  "Zastosuj przeplataną kolejność": {
+    "pl": "Zastosuj przeplataną kolejność",
+    "en": "Apply interleaved match order",
+    "de": "Verschachtelte Spielreihenfolge anwenden",
+    "fr": "Appliquer l’alternance des matchs"
+  },
+  "▶ Start teraz": {
+    "pl": "▶ Start teraz",
+    "en": "▶ Start now",
+    "de": "▶ Jetzt starten",
+    "fr": "▶ Démarrer maintenant"
+  },
+  "Edytuj godziny meczu": {
+    "pl": "Edytuj godziny meczu",
+    "en": "Edit match times",
+    "de": "Spielzeiten bearbeiten",
+    "fr": "Modifier les horaires"
+  },
+  "Planowany start (najwcześniej)": {
+    "pl": "Planowany start (najwcześniej)",
+    "en": "Planned start (earliest)",
+    "de": "Geplanter Beginn (frühestens)",
+    "fr": "Début prévu (au plus tôt)"
+  },
+  "Rzeczywisty start": {
+    "pl": "Rzeczywisty start",
+    "en": "Actual start",
+    "de": "Tatsächlicher Beginn",
+    "fr": "Début réel"
+  },
+  "Rzeczywisty koniec (po wpisaniu wyniku)": {
+    "pl": "Rzeczywisty koniec (po wpisaniu wyniku)",
+    "en": "Actual finish (after entering score)",
+    "de": "Tatsächliches Ende (nach Ergebniseingabe)",
+    "fr": "Fin réelle (après saisie du résultat)"
+  },
+  "Zapisz godziny": {
+    "pl": "Zapisz godziny",
+    "en": "Save times",
+    "de": "Zeiten speichern",
+    "fr": "Enregistrer les horaires"
+  },
+  "Puste pole usuwa korektę. Czasy w strefie": {
+    "pl": "Puste pole usuwa korektę. Czasy w strefie",
+    "en": "An empty field removes the override. Time zone:",
+    "de": "Ein leeres Feld entfernt die Korrektur. Zeitzone:",
+    "fr": "Un champ vide supprime la correction. Fuseau :"
+  },
+  "· do": {
+    "pl": "· do",
+    "en": "· until",
+    "de": "· bis",
+    "fr": "· jusqu’à"
+  },
+  "Mecz": {
+    "pl": "Mecz",
+    "en": "Match",
+    "de": "Spiel",
+    "fr": "Match"
+  },
+  "Czas": {
+    "pl": "Czas",
+    "en": "Time",
+    "de": "Zeit",
+    "fr": "Temps"
+  },
+  "Czas meczu": {
+    "pl": "Czas meczu",
+    "en": "Match duration",
+    "de": "Spieldauer",
+    "fr": "Durée du match"
+  },
+  "Pobierz historię JSON": {
+    "pl": "Pobierz historię JSON",
+    "en": "Download JSON history",
+    "de": "JSON-Verlauf herunterladen",
+    "fr": "Télécharger l’historique JSON"
+  },
+  "Przebieg zdobywania punktów": {
+    "pl": "Przebieg zdobywania punktów",
+    "en": "Point-by-point timeline",
+    "de": "Punkteverlauf",
+    "fr": "Évolution des points"
+  },
+  "Historia zdarzeń i korekt": {
+    "pl": "Historia zdarzeń i korekt",
+    "en": "Events and corrections",
+    "de": "Ereignisse und Korrekturen",
+    "fr": "Événements et corrections"
+  },
+  "Zdarzenie": {
+    "pl": "Zdarzenie",
+    "en": "Event",
+    "de": "Ereignis",
+    "fr": "Événement"
+  },
+  "Wynik": {
+    "pl": "Wynik",
+    "en": "Score",
+    "de": "Ergebnis",
+    "fr": "Score"
+  },
+  "Podobne pomiary": {
+    "pl": "Podobne pomiary",
+    "en": "Comparable measurements",
+    "de": "Vergleichbare Messungen",
+    "fr": "Mesures comparables"
+  },
+  "Mediana": {
+    "pl": "Mediana",
+    "en": "Median",
+    "de": "Median",
+    "fr": "Médiane"
+  },
+  "Sugestia slotu": {
+    "pl": "Sugestia slotu",
+    "en": "Suggested time slot",
+    "de": "Empfohlenes Zeitfenster",
+    "fr": "Créneau suggéré"
+  },
+  "Za mało pomiarów": {
+    "pl": "Za mało pomiarów",
+    "en": "Not enough measurements",
+    "de": "Zu wenige Messungen",
+    "fr": "Pas assez de mesures"
+  },
+  "(przybliżony)": {
+    "pl": "(przybliżony)",
+    "en": "(approximate)",
+    "de": "(ungefähr)",
+    "fr": "(approximatif)"
+  },
+  "← Turniej": {
+    "pl": "← Turniej",
+    "en": "← Tournament",
+    "de": "← Turnier",
+    "fr": "← Tournoi"
+  },
+  "Group Stage": {
+    "pl": "Faza grupowa",
+    "en": "Group stage",
+    "de": "Gruppenphase",
+    "fr": "Phase de groupes"
+  },
+  "Knockout Stage": {
+    "pl": "Faza pucharowa",
+    "en": "Knockout stage",
+    "de": "K.-o.-Phase",
+    "fr": "Phase éliminatoire"
+  },
+  "Championship": {
+    "pl": "Drabinka główna",
+    "en": "Championship",
+    "de": "Hauptfeld",
+    "fr": "Tableau principal"
+  },
+  "Championship Draw": {
+    "pl": "Drabinka główna",
+    "en": "Championship bracket",
+    "de": "Hauptfeld",
+    "fr": "Tableau principal"
+  },
+  "3rd Place": {
+    "pl": "Mecz o 3. miejsce",
+    "en": "Third-place match",
+    "de": "Spiel um Platz 3",
+    "fr": "Match pour la troisième place"
+  },
+  "Final": {
+    "pl": "Finał",
+    "en": "Final",
+    "de": "Finale",
+    "fr": "Finale"
+  },
+  "Semi Finals": {
+    "pl": "Półfinały",
+    "en": "Semi-finals",
+    "de": "Halbfinale",
+    "fr": "Demi-finales"
+  },
+  "Quarter Finals": {
+    "pl": "Ćwierćfinały",
+    "en": "Quarter-finals",
+    "de": "Viertelfinale",
+    "fr": "Quarts de finale"
+  },
+  "Round of 16": {
+    "pl": "1/8 finału",
+    "en": "Round of 16",
+    "de": "Achtelfinale",
+    "fr": "Huitièmes de finale"
+  },
+  "Round of 32": {
+    "pl": "1/16 finału",
+    "en": "Round of 32",
+    "de": "Sechzehntelfinale",
+    "fr": "Seizièmes de finale"
+  },
+  "Single Elimination": {
+    "pl": "Pucharowy",
+    "en": "Single elimination",
+    "de": "Einfach-K.-o.",
+    "fr": "Élimination directe"
+  },
+  "Double Elimination": {
+    "pl": "Podwójna eliminacja",
+    "en": "Double elimination",
+    "de": "Doppel-K.-o.",
+    "fr": "Double élimination"
+  },
+  "Round Robin": {
+    "pl": "Każdy z każdym",
+    "en": "Round robin",
+    "de": "Jeder gegen jeden",
+    "fr": "Toutes rondes"
+  },
+  "Group Stage + Championship": {
+    "pl": "Grupy + faza pucharowa",
+    "en": "Groups + knockout",
+    "de": "Gruppen + K.-o.-Phase",
+    "fr": "Groupes + élimination directe"
+  },
+  "Swiss": {
+    "pl": "System szwajcarski",
+    "en": "Swiss",
+    "de": "Schweizer System",
+    "fr": "Système suisse"
+  },
+  "L": {
+    "pl": "P",
+    "en": "L",
+    "de": "N",
+    "fr": "D"
+  },
+  "Kort": {
+    "pl": "Kort",
+    "en": "Court",
+    "de": "Spielfeld",
+    "fr": "Terrain"
+  },
+  "First knockout round only": {
+    "pl": "Tylko pierwsza runda pucharowa",
+    "en": "First knockout round only",
+    "de": "Nur erste K.-o.-Runde",
+    "fr": "Premier tour éliminatoire uniquement"
+  },
+  "Reseed every round": {
+    "pl": "Reseeding w każdej rundzie",
+    "en": "Reseed every round",
+    "de": "Jede Runde neu setzen",
+    "fr": "Reclassement à chaque tour"
+  },
+  "Fixed bracket": {
+    "pl": "Stała drabinka",
+    "en": "Fixed bracket",
+    "de": "Fester Turnierbaum",
+    "fr": "Tableau fixe"
+  },
+  "Automatyczny odbiór wyników sędziów": {
+    "pl": "Automatyczny odbiór wyników sędziów",
+    "en": "Automatic referee score updates",
+    "de": "Automatische Schiedsrichter-Ergebnisse",
+    "fr": "Réception automatique des résultats arbitraux"
+  },
+  "BO": {
+    "pl": "BO",
+    "en": "BO",
+    "de": "BO",
+    "fr": "BO"
+  },
+  "/ race to": {
+    "pl": "/ do punktów",
+    "en": "/ points target",
+    "de": "/ Punktziel",
+    "fr": "/ points à atteindre"
+  },
+  "Active because": {
+    "pl": "Aktywne, ponieważ",
+    "en": "Active because",
+    "de": "Aktiv, weil",
+    "fr": "Actif car"
+  },
+  "Statystyki i przebieg punktów": {
+    "pl": "Statystyki i przebieg punktów",
+    "en": "Statistics and point timeline",
+    "de": "Statistiken und Punkteverlauf",
+    "fr": "Statistiques et évolution des points"
+  },
+  "from each group qualify automatically + best": {
+    "pl": "z każdej grupy awansuje automatycznie + najlepsze",
+    "en": "qualify automatically from each group + best",
+    "de": "qualifizieren sich automatisch je Gruppe + beste",
+    "fr": "qualifiés automatiquement par groupe + meilleurs"
+  },
+  "team(s) from position": {
+    "pl": "zespoły z miejsca",
+    "en": "team(s) from position",
+    "de": "Team(s) von Platz",
+    "fr": "équipe(s) du rang"
+  },
+  "is selected. If you choose": {
+    "pl": "jest wybrane. Jeśli wybierzesz",
+    "en": "is selected. If you choose",
+    "de": "ist ausgewählt. Bei Auswahl von",
+    "fr": "est sélectionné. Si vous choisissez"
+  },
+  ", these rounds follow the fixed tree automatically.": {
+    "pl": ", kolejne rundy przebiegają zgodnie z drabinką.",
+    "en": ", these rounds follow the fixed bracket.",
+    "de": "folgen diese Runden dem festen Turnierbaum.",
+    "fr": ", ces tours suivent automatiquement le tableau fixe."
+  },
+  "Reseeding may change future-round pairings": {
+    "pl": "Reseeding może zmienić pary kolejnych rund",
+    "en": "Reseeding may change later pairings",
+    "de": "Neusetzung kann spätere Paarungen ändern",
+    "fr": "Le reclassement peut modifier les rencontres suivantes"
+  },
+  "Generate the structure to display group tables.": {
+    "pl": "Wygeneruj strukturę, aby wyświetlić grupy.",
+    "en": "Generate the structure to display group standings.",
+    "de": "Struktur erzeugen, um Gruppentabellen anzuzeigen.",
+    "fr": "Générez la structure pour afficher les groupes."
+  },
+  "Generate the tournament structure first.": {
+    "pl": "Najpierw wygeneruj strukturę turnieju.",
+    "en": "Generate the tournament structure first.",
+    "de": "Zuerst die Turnierstruktur erzeugen.",
+    "fr": "Générez d’abord la structure du tournoi."
+  },
+  "Championship and placement remain locked until every group match has a result.": {
+    "pl": "Faza pucharowa jest zablokowana do zakończenia wszystkich meczów grupowych.",
+    "en": "Knockout matches remain locked until all group matches have results.",
+    "de": "K.-o.-Spiele bleiben bis zum Abschluss aller Gruppenspiele gesperrt.",
+    "fr": "Les matchs éliminatoires restent verrouillés jusqu’à la fin de tous les matchs de groupe."
+  },
+  "This entry structure contains play-ins/byes and therefore uses the generated slot structure.": {
+    "pl": "Ta struktura ma rundę wstępną lub wolne losy i korzysta z wygenerowanej drabinki.",
+    "en": "This field includes play-ins or byes and uses the generated slots.",
+    "de": "Dieses Feld enthält Vorrunden oder Freilose und nutzt die erzeugte Struktur.",
+    "fr": "Ce tableau comporte des tours préliminaires ou exemptions et utilise les places générées."
+  },
+  "This restores tournament settings, players, phases and all recorded match results.": {
+    "pl": "Przywraca ustawienia turnieju, zawodników, fazy i zapisane wyniki.",
+    "en": "Restores tournament settings, players, phases and saved results.",
+    "de": "Stellt Turniereinstellungen, Spieler, Phasen und Ergebnisse wieder her.",
+    "fr": "Restaure les paramètres du tournoi, les joueurs, les phases et les résultats enregistrés."
+  },
+  "Shown as a large, subtle fixed watermark behind the tournament view and as a small logo in the bottom-right corner of PDFs.": {
+    "pl": "Logo pojawia się jako znak wodny w panelu, w rogu TV oraz na eksportach PDF.",
+    "en": "Shown as a watermark in the panel, in the TV corner and on PDF exports.",
+    "de": "Als Wasserzeichen im Bereich, in der TV-Ecke und auf PDF-Exporten angezeigt.",
+    "fr": "Affiché en filigrane dans le panneau, dans l’angle TV et sur les exports PDF."
+  },
+  "PDF layouts are designed for clean printing: neutral typography, thin rules and no dashboard styling.": {
+    "pl": "Eksporty PDF mają przejrzysty układ przygotowany do druku.",
+    "en": "PDF exports use a clean layout designed for printing.",
+    "de": "PDF-Exporte haben ein übersichtliches Drucklayout.",
+    "fr": "Les exports PDF utilisent une mise en page claire pour l’impression."
+  },
+  "Suggested pairing uses tournament ranking and avoids Group Stage rematches whenever mathematically possible. You can override it manually before a result from this round is entered.": {
+    "pl": "Proponowane pary wykorzystują rozstawienie po grupach i unikają rewanżów, gdy to możliwe. Możesz je zmienić przed wpisaniem wyniku tej rundy.",
+    "en": "Suggested pairings use post-group seeding and avoid group rematches where possible. You can edit them before this round has a result.",
+    "de": "Vorgeschlagene Paarungen nutzen die Setzliste nach den Gruppen und vermeiden Wiederholungen, wenn möglich. Vor dem ersten Ergebnis dieser Runde sind Änderungen möglich.",
+    "fr": "Les rencontres proposées utilisent le classement après les groupes et évitent les revanches si possible. Elles sont modifiables avant le premier résultat du tour."
+  },
+  "Draws are split into Championship and exact-placement sheets. Future slots show their source (for example": {
+    "pl": "Drabinki główna i dalszych miejsc są rozdzielone. Przyszłe pary pokazują źródło (np.",
+    "en": "The main and placement brackets are separate. Future slots show their source (e.g.",
+    "de": "Haupt- und Platzierungsbäume sind getrennt. Zukünftige Plätze zeigen ihre Quelle (z. B.",
+    "fr": "Les tableaux principal et de classement sont séparés. Les places futures indiquent leur origine (par ex."
+  },
+  "), so every route is visible before the team is known.": {
+    "pl": "), więc ścieżka jest widoczna przed poznaniem zespołu.",
+    "en": "), so each route is visible before the team is known.",
+    "de": "), damit jeder Weg bereits vor Bekanntwerden des Teams sichtbar ist.",
+    "fr": "), pour rendre chaque parcours visible avant de connaître l’équipe."
+  },
+  "Godzina przesunięta: kort, zawodnik lub wcześniejszy mecz nie jest jeszcze dostępny.": {
+    "pl": "Godzina przesunięta: kort, zawodnik lub wcześniejszy mecz nie jest jeszcze dostępny.",
+    "en": "Time shifted: a court, player or preceding result is not yet available.",
+    "de": "Zeit verschoben: Spielfeld, Spieler oder vorheriges Ergebnis noch nicht verfügbar.",
+    "fr": "Horaire décalé : terrain, joueur ou résultat précédent indisponible."
+  },
+  "Podgląd działa od razu. Zapis dotyczy tego turnieju: administratora, sędziego, zawodników i telewizora. Możesz dobrać osobne kolory dla trybu jasnego i ciemnego.": {
+    "pl": "Podgląd działa od razu. Zapis dotyczy tego turnieju: administratora, sędziego, zawodników i telewizora. Możesz dobrać osobne kolory dla trybu jasnego i ciemnego.",
+    "en": "Preview is immediate. Saving applies to this tournament’s admin, referee, player and TV views. Light and dark modes have independent colours.",
+    "de": "Die Vorschau wirkt sofort. Speichern gilt für Admin-, Schiedsrichter-, Spieler- und TV-Ansichten dieses Turniers. Heller und dunkler Modus haben eigene Farben.",
+    "fr": "L’aperçu est immédiat. L’enregistrement s’applique aux vues administrateur, arbitre, joueurs et TV du tournoi. Les couleurs des modes clair et sombre sont indépendantes."
+  },
+  "Dotyczy dodatkowych awansów, np. najlepszych trzecich miejsc. Przy grupach 5 + 4 + 4 pomijany jest mecz z piątym zawodnikiem większej grupy — punkty, sety i małe punkty. Tabela grupowa nadal obejmuje wszystkie mecze. W grupach tej samej wielkości liczą się wszystkie mecze.": {
+    "pl": "Dotyczy dodatkowych awansów, np. najlepszych trzecich miejsc. Przy grupach 5 + 4 + 4 pomijany jest mecz z piątym zawodnikiem większej grupy — punkty, sety i małe punkty. Tabela grupowa nadal obejmuje wszystkie mecze. W grupach tej samej wielkości liczą się wszystkie mecze.",
+    "en": "Applies to wildcard qualification, such as the best third-placed teams. With groups of 5 + 4 + 4, the larger group’s match against fifth place is excluded from this comparison, including points and sets. Group standings still include every match. Equal-sized groups use all results.",
+    "de": "Gilt für Zusatzqualifikationen, etwa die besten Gruppendritten. Bei Gruppen mit 5 + 4 + 4 wird das Spiel gegen Platz 5 der größeren Gruppe samt Punkten und Sätzen im Vergleich ausgeschlossen. Die Gruppentabelle enthält weiterhin alle Spiele. Gleich große Gruppen nutzen alle Ergebnisse.",
+    "fr": "S’applique aux qualifications supplémentaires, par exemple les meilleurs troisièmes. Avec des groupes de 5 + 4 + 4, le match contre le cinquième du grand groupe est exclu de la comparaison, points et sets compris. Le classement du groupe conserve tous les matchs. Pour des groupes égaux, tous les résultats comptent."
+  },
+  "If the qualified field does not fill a complete 4/8/16/32 draw, the strongest post-group seeds are protected into the next round. Example: 10 qualifiers → Seeds #1–#6 BYE, Seeds #7–#10 play two preliminary matches.": {
+    "pl": "Jeśli liczba awansujących nie wypełnia drabinki 4/8/16/32, najwyższe seedy otrzymują wolny los. Przykład: 10 awansujących → seedy 1–6 mają wolny los, seedy 7–10 grają dwa mecze wstępne.",
+    "en": "If qualifiers do not fill a 4/8/16/32 bracket, top post-group seeds receive byes. Example: 10 qualifiers → seeds 1–6 receive byes and seeds 7–10 play two preliminary matches.",
+    "de": "Wenn die Qualifikanten keinen 4/8/16/32-Baum füllen, erhalten die höchsten Setzplätze Freilose. Beispiel: 10 Qualifikanten → Plätze 1–6 mit Freilos, Plätze 7–10 spielen zwei Vorrundenspiele.",
+    "fr": "Si les qualifiés ne remplissent pas un tableau de 4/8/16/32, les meilleures têtes de série sont exemptées. Exemple : 10 qualifiés → exemptions pour les rangs 1–6, deux matchs préliminaires pour les rangs 7–10."
+  },
+  "Ustaw datę i godzinę rozpoczęcia. Pusta data wyłącza godziny. Prognoza uwzględnia liczbę kortów, dostępność zawodników i wcześniejsze rundy. Mecz o 3. miejsce oraz finał pozostają na końcu.": {
+    "pl": "Ustaw datę i godzinę rozpoczęcia. Pusta data wyłącza godziny. Prognoza uwzględnia liczbę kortów, dostępność zawodników i wcześniejsze rundy. Mecz o 3. miejsce oraz finał pozostają na końcu.",
+    "en": "Set the start date and time. An empty date hides times. Estimates consider courts, players and preceding rounds. The third-place match and final remain last.",
+    "de": "Startdatum und Uhrzeit einstellen. Ohne Datum werden Zeiten ausgeblendet. Die Prognose berücksichtigt Felder, Spieler und vorherige Runden. Spiel um Platz 3 und Finale bleiben am Ende.",
+    "fr": "Définissez la date et l’heure de début. Une date vide masque les horaires. Les estimations tiennent compte des terrains, joueurs et tours précédents. La petite finale et la finale restent à la fin."
+  },
+  "Mecze głównej drabinki i consolation są przeplatane. Ta sama kolejka oznacza mecze równoległe na różnych boiskach. Przedostatni jest mecz o 3. miejsce, ostatni finał.": {
+    "pl": "Mecze głównej drabinki i consolation są przeplatane. Ta sama kolejka oznacza mecze równoległe na różnych boiskach. Przedostatni jest mecz o 3. miejsce, ostatni finał.",
+    "en": "Main and consolation matches are interleaved. A wave contains parallel matches on different courts. The third-place match is penultimate; the final is last.",
+    "de": "Haupt- und Trostrundenspiele wechseln sich ab. Ein Spielblock umfasst parallele Spiele auf verschiedenen Feldern. Das Spiel um Platz 3 ist vorletztes, das Finale letztes Spiel.",
+    "fr": "Les matchs principaux et de consolante sont alternés. Un créneau regroupe les matchs simultanés sur différents terrains. La petite finale est avant-dernière, la finale est dernière."
+  },
+  "Ta sama kolejka opisuje bazowy układ równoległy; aktualne godziny mogą się różnić wskutek opóźnień. Zmiana liczby kortów jest dostępna poniżej.": {
+    "pl": "Ta sama kolejka opisuje bazowy układ równoległy; aktualne godziny mogą się różnić wskutek opóźnień. Zmiana liczby kortów jest dostępna poniżej.",
+    "en": "Waves describe the base parallel schedule; actual times can differ due to delays. You can change the number of courts below.",
+    "de": "Spielblöcke zeigen den parallelen Grundplan; tatsächliche Zeiten können durch Verzögerungen abweichen. Die Anzahl der Felder ist unten änderbar.",
+    "fr": "Les créneaux décrivent le planning simultané de base ; les horaires peuvent varier selon les retards. Le nombre de terrains est modifiable ci-dessous."
+  },
+  "Set kończy się po osiągnięciu limitu z przewagą 2 punktów. Wynik każdego kliknięcia jest zapisywany na serwerze. Poczekaj na potwierdzenie zapisu; przy błędzie sprawdź wynik przed kolejnym kliknięciem. Po ostatnim punkcie zatwierdź zakończenie meczu.": {
+    "pl": "Set kończy się po osiągnięciu limitu z przewagą 2 punktów. Wynik każdego kliknięcia jest zapisywany na serwerze. Poczekaj na potwierdzenie zapisu; przy błędzie sprawdź wynik przed kolejnym kliknięciem. Po ostatnim punkcie zatwierdź zakończenie meczu.",
+    "en": "A set ends at the target with a two-point lead. Every click is saved on the server. Wait for confirmation; after an error, check the score before clicking again. Confirm the result after the last point.",
+    "de": "Ein Satz endet am Punktziel mit zwei Punkten Vorsprung. Jeder Klick wird auf dem Server gespeichert. Bestätigung abwarten; bei Fehlern vor dem nächsten Klick den Punktestand prüfen. Nach dem letzten Punkt das Ergebnis bestätigen.",
+    "fr": "Le set se termine à la limite avec deux points d’écart. Chaque clic est enregistré sur le serveur. Attendez la confirmation ; après une erreur, vérifiez le score avant de recliquer. Confirmez le résultat après le dernier point."
+  },
+  "Włącz też publiczny link dla graczy. Każdy mecz ma własny 3-cyfrowy kod widoczny poniżej przy meczu. Podaj go sędziemu przy stoliku. Pierwsze mecze wymagają wskazania sędziego ręcznie; później domyślnie sędziuje przegrany wcześniejszego spotkania na danym korcie. Przy drużynach wybierz jedną osobę. Reguła punktowa: limit fazy + przewaga 2 punktów; po wygraniu większości setów sędzia zatwierdza koniec.": {
+    "pl": "Włącz też publiczny link dla graczy. Każdy mecz ma własny 3-cyfrowy kod widoczny poniżej przy meczu. Podaj go sędziemu przy stoliku. Pierwsze mecze wymagają wskazania sędziego ręcznie; później domyślnie sędziuje przegrany wcześniejszego spotkania na danym korcie. Przy drużynach wybierz jedną osobę. Reguła punktowa: limit fazy + przewaga 2 punktów; po wygraniu większości setów sędzia zatwierdza koniec.",
+    "en": "Also enable the public player link. Give the referee this match’s 3-digit code at the desk. Assign referees manually for the first matches; later the default is a previous loser on that court. Choose one team member. Use the phase’s point target with a two-point lead, then confirm the match after winning a majority of sets.",
+    "de": "Auch den öffentlichen Spielerlink aktivieren. Dem Schiedsrichter am Tisch den dreistelligen Spielcode geben. Die ersten Spiele benötigen manuelle Zuweisungen; später ist ein vorheriger Verlierer auf diesem Feld vorgesehen. Ein Teammitglied wählen. Es gilt das Punktziel der Phase mit zwei Punkten Vorsprung; nach der Satzmehrheit wird das Spiel bestätigt.",
+    "fr": "Activez aussi le lien public des joueurs. Donnez à l’arbitre le code à 3 chiffres du match à la table. Affectez les premiers arbitres manuellement ; ensuite, un perdant précédent sur ce terrain est proposé. Choisissez un membre de l’équipe. La limite de la phase exige deux points d’écart ; confirmez le match après la majorité des sets."
+  },
+  "Każda kolumna to kolejny zdobyty punkt. Numer pojawia się tylko w wierszu zdobywcy, a kratka przeciwnika zostaje pusta. Punkty liczymy od 1 w każdym secie. Na telefonie tabelę można przewijać poziomo. Cofnięcia i czasy zawodników pozostają w historii zdarzeń.": {
+    "pl": "Każda kolumna to kolejny zdobyty punkt. Numer pojawia się tylko w wierszu zdobywcy, a kratka przeciwnika zostaje pusta. Punkty liczymy od 1 w każdym secie. Na telefonie tabelę można przewijać poziomo. Cofnięcia i czasy zawodników pozostają w historii zdarzeń.",
+    "en": "Each column is a scored point. Only the scorer’s row shows a number; the opponent’s cell is empty. Numbering restarts at 1 each set. Scroll horizontally on a phone. Undos and timeouts remain in the event history.",
+    "de": "Jede Spalte ist ein erzielter Punkt. Nur die Zeile des Punktgewinners enthält eine Zahl; die Gegnerzelle bleibt leer. Jeder Satz beginnt bei 1. Auf dem Handy horizontal scrollen. Korrekturen und Auszeiten bleiben im Verlauf.",
+    "fr": "Chaque colonne représente un point marqué. Seule la ligne du marqueur affiche un numéro ; la case adverse reste vide. La numérotation repart à 1 à chaque set. Sur téléphone, faites défiler horizontalement. Annulations et temps morts restent dans l’historique."
+  },
+  "Do sugestii czasu trafiają zakończone mecze z pełnym pomiarem start–koniec (1 minuta–6 godzin), tym samym limitem punktów, best of i typem fazy. Pomiary od pierwszego punktu są przybliżone. Sugestia pojawia się od 5 pełnych pomiarów i nie zmienia automatycznie harmonogramu.": {
+    "pl": "Do sugestii czasu trafiają zakończone mecze z pełnym pomiarem start–koniec (1 minuta–6 godzin), tym samym limitem punktów, best of i typem fazy. Pomiary od pierwszego punktu są przybliżone. Sugestia pojawia się od 5 pełnych pomiarów i nie zmienia automatycznie harmonogramu.",
+    "en": "Suggestions use completed matches with full start-to-finish timing (1 minute–6 hours), the same point target, best-of format and phase type. First-point timing is approximate. At least 5 complete measurements are required. Suggestions do not automatically change the schedule.",
+    "de": "Vorschläge nutzen beendete Spiele mit vollständiger Zeitmessung (1 Minute–6 Stunden), gleichem Punktziel, Best-of-Format und Phasentyp. Messungen ab dem ersten Punkt sind ungefähr. Mindestens 5 vollständige Messungen sind nötig. Der Zeitplan wird nicht automatisch geändert.",
+    "fr": "Les suggestions utilisent les matchs terminés avec mesure complète (1 minute–6 heures), même limite de points, format et type de phase. La mesure depuis le premier point est approximative. Il faut au moins 5 mesures complètes. Les suggestions ne modifient pas automatiquement le calendrier."
+  },
+  "Group {0}": {
+    "pl": "Grupa {0}",
+    "en": "Group {0}",
+    "de": "Gruppe {0}",
+    "fr": "Groupe {0}"
+  },
+  "Group round {0}": {
+    "pl": "Runda grupowa {0}",
+    "en": "Group round {0}",
+    "de": "Gruppenrunde {0}",
+    "fr": "Tour de groupe {0}"
+  },
+  "Round {0}": {
+    "pl": "Runda {0}",
+    "en": "Round {0}",
+    "de": "Runde {0}",
+    "fr": "Tour {0}"
+  },
+  "Places {0}–{1}": {
+    "pl": "Miejsca {0}–{1}",
+    "en": "Places {0}–{1}",
+    "de": "Plätze {0}–{1}",
+    "fr": "Places {0}–{1}"
+  },
+  "Winner #{0}": {
+    "pl": "Zwycięzca #{0}",
+    "en": "Winner #{0}",
+    "de": "Sieger #{0}",
+    "fr": "Vainqueur n°{0}"
+  },
+  "Loser #{0}": {
+    "pl": "Przegrany #{0}",
+    "en": "Loser #{0}",
+    "de": "Verlierer #{0}",
+    "fr": "Perdant n°{0}"
+  },
+  "Best #{0} · rank {1}": {
+    "pl": "Miejsce grupowe {0} · seed {1}",
+    "en": "Group place {0} · seed {1}",
+    "de": "Gruppenplatz {0} · Setzplatz {1}",
+    "fr": "Rang de groupe {0} · tête de série {1}"
+  },
+  "Loser of match #{0}": {
+    "pl": "Przegrany meczu #{0}",
+    "en": "Loser of match #{0}",
+    "de": "Verlierer von Spiel #{0}",
+    "fr": "Perdant du match n°{0}"
+  },
+  "Loser of match #{0} (one team member)": {
+    "pl": "Przegrany meczu #{0} (jedna osoba z drużyny)",
+    "en": "Loser of match #{0} (one team member)",
+    "de": "Verlierer von Spiel #{0} (ein Teammitglied)",
+    "fr": "Perdant du match n°{0} (un membre de l’équipe)"
+  },
+  "Preliminary": {
+    "pl": "Runda wstępna",
+    "en": "Preliminary",
+    "de": "Vorrunde",
+    "fr": "Tour préliminaire"
+  },
+  "Do wyznaczenia przy stoliku": {
+    "pl": "Do wyznaczenia przy stoliku",
+    "en": "To be assigned at the desk",
+    "de": "Am Turniertisch zuzuweisen",
+    "fr": "À désigner à la table"
+  },
+  "Do wyznaczenia": {
+    "pl": "Do wyznaczenia",
+    "en": "To be assigned",
+    "de": "Zuzuweisen",
+    "fr": "À désigner"
+  },
+  "Potrzebny sędzia — przekazanie przy stoliku": {
+    "pl": "Potrzebny sędzia — przekazanie przy stoliku",
+    "en": "Referee needed — handover at the desk",
+    "de": "Schiedsrichter benötigt — Übergabe am Turniertisch",
+    "fr": "Arbitre nécessaire — remplacement à la table"
+  },
+  "Do zmiany: sędzia prowadzi inny mecz": {
+    "pl": "Do zmiany: sędzia prowadzi inny mecz",
+    "en": "Replacement needed: referee is officiating another match",
+    "de": "Wechsel nötig: Schiedsrichter leitet ein anderes Spiel",
+    "fr": "Remplacement nécessaire : l’arbitre dirige un autre match"
+  },
+  "TBD": {
+    "pl": "Do ustalenia",
+    "en": "TBD",
+    "de": "Noch offen",
+    "fr": "À déterminer"
+  },
+  "admin": {
+    "pl": "administrator",
+    "en": "administrator",
+    "de": "Administrator",
+    "fr": "administrateur"
+  },
+  "viewer": {
+    "pl": "tylko odczyt",
+    "en": "read-only",
+    "de": "Lesezugriff",
+    "fr": "lecture seule"
+  },
+  "Aktywne": {
+    "pl": "Aktywne",
+    "en": "Active",
+    "de": "Aktiv",
+    "fr": "Actif"
+  },
+  "Wyłączone": {
+    "pl": "Wyłączone",
+    "en": "Disabled",
+    "de": "Deaktiviert",
+    "fr": "Désactivé"
+  },
+  "Wyłącz": {
+    "pl": "Wyłącz",
+    "en": "Disable",
+    "de": "Deaktivieren",
+    "fr": "Désactiver"
+  },
+  "Włącz": {
+    "pl": "Włącz",
+    "en": "Enable",
+    "de": "Aktivieren",
+    "fr": "Activer"
+  },
+  "Brak połączenia": {
+    "pl": "Brak połączenia",
+    "en": "Disconnected",
+    "de": "Keine Verbindung",
+    "fr": "Déconnecté"
+  },
+  "Połączono": {
+    "pl": "Połączono",
+    "en": "Connected",
+    "de": "Verbunden",
+    "fr": "Connecté"
+  },
+  "Koniec czasu": {
+    "pl": "Koniec czasu",
+    "en": "Timeout over",
+    "de": "Auszeit beendet",
+    "fr": "Temps mort terminé"
+  },
+  "Połączono · brak nowych zmian": {
+    "pl": "Połączono · brak nowych zmian",
+    "en": "Connected · no new changes",
+    "de": "Verbunden · keine Änderungen",
+    "fr": "Connecté · aucune modification"
+  },
+  "Połączono · wynik aktualny": {
+    "pl": "Połączono · wynik aktualny",
+    "en": "Connected · score up to date",
+    "de": "Verbunden · Ergebnis aktuell",
+    "fr": "Connecté · score à jour"
+  },
+  "Brak aktualizacji — sprawdź połączenie i dostęp.": {
+    "pl": "Brak aktualizacji — sprawdź połączenie i dostęp.",
+    "en": "No updates — check connection and access.",
+    "de": "Keine Aktualisierung — Verbindung und Zugriff prüfen.",
+    "fr": "Aucune mise à jour — vérifiez la connexion et l’accès."
+  },
+  "Zaktualizowano": {
+    "pl": "Zaktualizowano",
+    "en": "Updated",
+    "de": "Aktualisiert",
+    "fr": "Mis à jour"
+  },
+  "· tylko zmienione mecze": {
+    "pl": "· tylko zmienione mecze",
+    "en": "· changed matches only",
+    "de": "· nur geänderte Spiele",
+    "fr": "· matchs modifiés uniquement"
+  },
+  "Zapisano": {
+    "pl": "Zapisano",
+    "en": "Saved",
+    "de": "Gespeichert",
+    "fr": "Enregistré"
+  },
+  "Zapisywanie…": {
+    "pl": "Zapisywanie…",
+    "en": "Saving…",
+    "de": "Wird gespeichert…",
+    "fr": "Enregistrement…"
+  },
+  "wykorzystany": {
+    "pl": "wykorzystany",
+    "en": "used",
+    "de": "verbraucht",
+    "fr": "utilisé"
+  },
+  "dostępny": {
+    "pl": "dostępny",
+    "en": "available",
+    "de": "verfügbar",
+    "fr": "disponible"
+  },
+  "Do": {
+    "pl": "Do",
+    "en": "To",
+    "de": "Bis",
+    "fr": "À"
+  },
+  "punktów · best of": {
+    "pl": "punktów · best of",
+    "en": "points · best of",
+    "de": "Punkte · Best of",
+    "fr": "points · au meilleur des"
+  },
+  "Sety:": {
+    "pl": "Sety:",
+    "en": "Sets:",
+    "de": "Sätze:",
+    "fr": "Sets :"
+  },
+  "Mecz zakończony — wynik zapisany.": {
+    "pl": "Mecz zakończony — wynik zapisany.",
+    "en": "Match completed — score saved.",
+    "de": "Spiel beendet — Ergebnis gespeichert.",
+    "fr": "Match terminé — résultat enregistré."
+  },
+  "Mecz czeka na uczestników lub wcześniejsze wyniki. Poproś stolik o sprawdzenie.": {
+    "pl": "Mecz czeka na uczestników lub wcześniejsze wyniki. Poproś stolik o sprawdzenie.",
+    "en": "Waiting for players or earlier results. Ask the tournament desk.",
+    "de": "Warten auf Teilnehmer oder vorherige Ergebnisse. Bitte am Turniertisch nachfragen.",
+    "fr": "En attente des joueurs ou de résultats précédents. Consultez la table d’arbitrage."
+  },
+  "Dostęp wygasł. Wejdź ponownie z aktualnym kodem.": {
+    "pl": "Dostęp wygasł. Wejdź ponownie z aktualnym kodem.",
+    "en": "Access expired. Enter again with the current code.",
+    "de": "Zugriff abgelaufen. Mit dem aktuellen Code erneut anmelden.",
+    "fr": "Accès expiré. Connectez-vous avec le code actuel."
+  },
+  "Nie można pobrać wyniku. Sprawdź połączenie.": {
+    "pl": "Nie można pobrać wyniku. Sprawdź połączenie.",
+    "en": "Cannot load score. Check your connection.",
+    "de": "Ergebnis nicht abrufbar. Verbindung prüfen.",
+    "fr": "Impossible de charger le score. Vérifiez la connexion."
+  },
+  "Wynik lub dostępność meczu zmieniły się. Sprawdź wynik przed kolejnym kliknięciem.": {
+    "pl": "Wynik lub dostępność meczu zmieniły się. Sprawdź wynik przed kolejnym kliknięciem.",
+    "en": "Score or match availability changed. Check before clicking again.",
+    "de": "Ergebnis oder Spielverfügbarkeit geändert. Vor dem nächsten Klick prüfen.",
+    "fr": "Le score ou la disponibilité du match a changé. Vérifiez avant de recliquer."
+  },
+  "Nie zapisano. Sprawdź dostęp, kod i połączenie.": {
+    "pl": "Nie zapisano. Sprawdź dostęp, kod i połączenie.",
+    "en": "Not saved. Check access, code and connection.",
+    "de": "Nicht gespeichert. Zugriff, Code und Verbindung prüfen.",
+    "fr": "Non enregistré. Vérifiez l’accès, le code et la connexion."
+  },
+  "Brak potwierdzenia zapisu. Łączenie i sprawdzanie wyniku…": {
+    "pl": "Brak potwierdzenia zapisu. Łączenie i sprawdzanie wyniku…",
+    "en": "Save unconfirmed. Reconnecting and checking score…",
+    "de": "Speicherung unbestätigt. Verbindung und Ergebnis werden geprüft…",
+    "fr": "Enregistrement non confirmé. Reconnexion et vérification du score…"
+  },
+  "Uruchomić 2-minutowy czas dla:": {
+    "pl": "Uruchomić 2-minutowy czas dla:",
+    "en": "Start a 2-minute timeout for:",
+    "de": "2-Minuten-Auszeit starten für:",
+    "fr": "Démarrer un temps mort de 2 minutes pour :"
+  },
+  "? W tym secie można go wykorzystać tylko raz.": {
+    "pl": "? W tym secie można go wykorzystać tylko raz.",
+    "en": "? Only one timeout is allowed per set.",
+    "de": "? Nur eine Auszeit pro Satz ist erlaubt.",
+    "fr": "? Un seul temps mort est autorisé par set."
+  },
+  "Przekazać sędziowanie? Zgłoś się do stolika po zastępstwo. Wynik zostanie zachowany.": {
+    "pl": "Przekazać sędziowanie? Zgłoś się do stolika po zastępstwo. Wynik zostanie zachowany.",
+    "en": "Hand over refereeing? Ask the desk for a replacement. The score will be kept.",
+    "de": "Spielleitung übergeben? Am Turniertisch um Ersatz bitten. Das Ergebnis bleibt erhalten.",
+    "fr": "Passer l’arbitrage ? Demandez un remplaçant à la table. Le score sera conservé."
+  },
+  "Zatwierdzić końcowy wynik? Sprawdź zapisane sety.": {
+    "pl": "Zatwierdzić końcowy wynik? Sprawdź zapisane sety.",
+    "en": "Confirm the final score? Check the recorded sets.",
+    "de": "Endergebnis bestätigen? Gespeicherte Sätze prüfen.",
+    "fr": "Confirmer le résultat final ? Vérifiez les sets enregistrés."
+  },
+  "Nie zapisano. Sprawdź wynik, godziny lub sesję logowania.": {
+    "pl": "Nie zapisano. Sprawdź wynik, godziny lub sesję logowania.",
+    "en": "Not saved. Check score, times or login session.",
+    "de": "Nicht gespeichert. Ergebnis, Zeiten oder Anmeldung prüfen.",
+    "fr": "Non enregistré. Vérifiez le score, les horaires ou la connexion."
+  },
+  "Nie zapisano automatycznie. Sprawdź połączenie i aktualny wynik przed ponowną próbą.": {
+    "pl": "Nie zapisano automatycznie. Sprawdź połączenie i aktualny wynik przed ponowną próbą.",
+    "en": "Save unconfirmed. Check the connection and score before retrying.",
+    "de": "Speicherung unbestätigt. Vor erneutem Versuch Verbindung und Ergebnis prüfen.",
+    "fr": "Enregistrement non confirmé. Vérifiez la connexion et le score avant de réessayer."
+  },
+  "Podgląd — zapisz, aby zastosować na wszystkich ekranach.": {
+    "pl": "Podgląd — zapisz, aby zastosować na wszystkich ekranach.",
+    "en": "Preview — save to apply on all screens.",
+    "de": "Vorschau — speichern, um alle Ansichten zu ändern.",
+    "fr": "Aperçu — enregistrez pour appliquer à tous les écrans."
+  },
+  "Zapisana paleta turnieju.": {
+    "pl": "Zapisana paleta turnieju.",
+    "en": "Saved tournament palette.",
+    "de": "Gespeicherte Turnierpalette.",
+    "fr": "Palette du tournoi enregistrée."
+  },
+  "Uwaga: tekst może być słabo czytelny przy wybranych kolorach.": {
+    "pl": "Uwaga: tekst może być słabo czytelny przy wybranych kolorach.",
+    "en": "Text may be difficult to read with these colours.",
+    "de": "Text kann mit diesen Farben schlecht lesbar sein.",
+    "fr": "Le texte peut être peu lisible avec ces couleurs."
+  },
+  "Brak pomiaru czasu": {
+    "pl": "Brak pomiaru czasu",
+    "en": "No time measurement",
+    "de": "Keine Zeitmessung",
+    "fr": "Aucune mesure de temps"
+  },
+  "Brak pełnego pomiaru": {
+    "pl": "Brak pełnego pomiaru",
+    "en": "No complete measurement",
+    "de": "Keine vollständige Messung",
+    "fr": "Aucune mesure complète"
+  },
+  "· trwa": {
+    "pl": "· trwa",
+    "en": "· ongoing",
+    "de": "· läuft",
+    "fr": "· en cours"
+  },
+  "Start meczu": {
+    "pl": "Start meczu",
+    "en": "Match start",
+    "de": "Spielbeginn",
+    "fr": "Début du match"
+  },
+  "Punkt": {
+    "pl": "Punkt",
+    "en": "Point",
+    "de": "Punkt",
+    "fr": "Point"
+  },
+  "Cofnięcie punktu": {
+    "pl": "Cofnięcie punktu",
+    "en": "Point undone",
+    "de": "Punkt zurückgenommen",
+    "fr": "Point annulé"
+  },
+  "Zatwierdzenie wyniku": {
+    "pl": "Zatwierdzenie wyniku",
+    "en": "Score confirmed",
+    "de": "Ergebnis bestätigt",
+    "fr": "Résultat confirmé"
+  },
+  "Reset panelu": {
+    "pl": "Reset panelu",
+    "en": "Panel reset",
+    "de": "Bereich zurückgesetzt",
+    "fr": "Panneau réinitialisé"
+  },
+  "Czas zawodnika (2 min)": {
+    "pl": "Czas zawodnika (2 min)",
+    "en": "Player timeout (2 min)",
+    "de": "Spielerauszeit (2 Min.)",
+    "fr": "Temps mort (2 min)"
+  },
+  "Zakończenie czasu": {
+    "pl": "Zakończenie czasu",
+    "en": "Timeout ended",
+    "de": "Auszeit beendet",
+    "fr": "Fin du temps mort"
+  },
+  "Punkt przeciwnika": {
+    "pl": "Punkt przeciwnika",
+    "en": "Opponent’s point",
+    "de": "Gegnerischer Punkt",
+    "fr": "Point adverse"
+  },
+  "Punkt przeciwnika — pusta kratka": {
+    "pl": "Punkt przeciwnika — pusta kratka",
+    "en": "Opponent’s point — empty cell",
+    "de": "Gegnerischer Punkt — leere Zelle",
+    "fr": "Point adverse — case vide"
+  },
+  "Brak aktualizacji": {
+    "pl": "Brak aktualizacji",
+    "en": "No updates",
+    "de": "Keine Aktualisierung",
+    "fr": "Aucune mise à jour"
+  },
+  "Start:": {
+    "pl": "Start:",
+    "en": "Start:",
+    "de": "Beginn:",
+    "fr": "Début :"
+  },
+  "· koniec:": {
+    "pl": "· koniec:",
+    "en": "· finish:",
+    "de": "· Ende:",
+    "fr": "· fin :"
+  },
+  "· mecz trwa": {
+    "pl": "· mecz trwa",
+    "en": "· match in progress",
+    "de": "· Spiel läuft",
+    "fr": "· match en cours"
+  },
+  "Brak rzeczywistej godziny startu.": {
+    "pl": "Brak rzeczywistej godziny startu.",
+    "en": "No actual start time.",
+    "de": "Keine tatsächliche Startzeit.",
+    "fr": "Aucune heure de début réelle."
+  },
+  "Pomiar przybliżony: od pierwszego zarejestrowanego punktu.": {
+    "pl": "Pomiar przybliżony: od pierwszego zarejestrowanego punktu.",
+    "en": "Approximate timing: from the first recorded point.",
+    "de": "Ungefähre Messung: ab dem ersten erfassten Punkt.",
+    "fr": "Mesure approximative : depuis le premier point enregistré."
+  },
+  "Starszy pomiar — moment startu niezweryfikowany.": {
+    "pl": "Starszy pomiar — moment startu niezweryfikowany.",
+    "en": "Older measurement — start time unverified.",
+    "de": "Ältere Messung — Startzeit ungeprüft.",
+    "fr": "Ancienne mesure — début non vérifié."
+  },
+  "Podobne mecze (ten sam limit, best of i typ fazy):": {
+    "pl": "Podobne mecze (ten sam limit, best of i typ fazy):",
+    "en": "Comparable matches (same rules and phase):",
+    "de": "Vergleichbare Spiele (gleiche Regeln und Phase):",
+    "fr": "Matchs comparables (mêmes règles et phase) :"
+  },
+  "· mediana": {
+    "pl": "· mediana",
+    "en": "· median",
+    "de": "· Median",
+    "fr": "· médiane"
+  },
+  "min · środkowe 50%:": {
+    "pl": "min · środkowe 50%:",
+    "en": "min · middle 50%:",
+    "de": "Min. · mittlere 50 %:",
+    "fr": "min · 50 % centraux :"
+  },
+  "Sugerowany slot:": {
+    "pl": "Sugerowany slot:",
+    "en": "Suggested time slot:",
+    "de": "Empfohlenes Zeitfenster:",
+    "fr": "Créneau suggéré :"
+  },
+  "Sugestia slotu pojawi się od 5 pełnych pomiarów.": {
+    "pl": "Sugestia slotu pojawi się od 5 pełnych pomiarów.",
+    "en": "A suggestion requires 5 complete measurements.",
+    "de": "Ein Vorschlag benötigt 5 vollständige Messungen.",
+    "fr": "Une suggestion nécessite 5 mesures complètes."
+  },
+  "Brak wystarczających pełnych pomiarów do estymacji. Standardowe 30 minut pozostaje ustawieniem organizatora.": {
+    "pl": "Brak wystarczających pełnych pomiarów do estymacji. Standardowe 30 minut pozostaje ustawieniem organizatora.",
+    "en": "Insufficient complete measurements. The organiser’s default remains 30 minutes.",
+    "de": "Zu wenige vollständige Messungen. Die Vorgabe des Veranstalters bleibt 30 Minuten.",
+    "fr": "Mesures complètes insuffisantes. La valeur par défaut de l’organisateur reste de 30 minutes."
+  },
+  "Brak zapisanej historii punkt po punkcie. Wynik końcowy nie pozwala jej odtworzyć.": {
+    "pl": "Brak zapisanej historii punkt po punkcie. Wynik końcowy nie pozwala jej odtworzyć.",
+    "en": "No recorded point-by-point history. It cannot be reconstructed from the final score.",
+    "de": "Kein Punkteverlauf gespeichert. Aus dem Endergebnis nicht rekonstruierbar.",
+    "fr": "Aucun historique point par point enregistré. Le score final ne permet pas de le reconstituer."
+  },
+  "Set": {
+    "pl": "Set",
+    "en": "Set",
+    "de": "Satz",
+    "fr": "Set"
+  },
+  "Rally": {
+    "pl": "Wymiana",
+    "en": "Rally",
+    "de": "Ballwechsel",
+    "fr": "Échange"
+  },
+  "Turniej": {
+    "pl": "Turniej",
+    "en": "Tournament",
+    "de": "Turnier",
+    "fr": "Tournoi"
+  },
+  "wszystkie mecze": {
+    "pl": "wszystkie mecze",
+    "en": "all matches",
+    "de": "alle Spiele",
+    "fr": "tous les matchs"
+  },
+  "Nieprawidłowy login lub hasło.": {
+    "pl": "Nieprawidłowy login lub hasło.",
+    "en": "Incorrect username or password.",
+    "de": "Benutzername oder Passwort falsch.",
+    "fr": "Identifiant ou mot de passe incorrect."
+  },
+  "Nieprawidłowy kod sędziego. Pobierz kod tego meczu przy stoliku.": {
+    "pl": "Nieprawidłowy kod sędziego. Pobierz kod tego meczu przy stoliku.",
+    "en": "Incorrect referee code. Get the match code at the desk.",
+    "de": "Falscher Schiedsrichtercode. Spielcode am Turniertisch holen.",
+    "fr": "Code arbitre incorrect. Demandez le code du match à la table."
+  },
+  "Login: 3–80 znaków. Hasło: minimum 8 znaków.": {
+    "pl": "Login: 3–80 znaków. Hasło: minimum 8 znaków.",
+    "en": "Username: 3–80 characters. Password: at least 8.",
+    "de": "Benutzername: 3–80 Zeichen. Passwort: mindestens 8.",
+    "fr": "Identifiant : 3–80 caractères. Mot de passe : 8 minimum."
+  },
+  "Konto administratora utworzone. Zaloguj się.": {
+    "pl": "Konto administratora utworzone. Zaloguj się.",
+    "en": "Administrator account created. Sign in.",
+    "de": "Administratorkonto erstellt. Bitte anmelden.",
+    "fr": "Compte administrateur créé. Connectez-vous."
+  },
+  "Hasło zmienione.": {
+    "pl": "Hasło zmienione.",
+    "en": "Password changed.",
+    "de": "Passwort geändert.",
+    "fr": "Mot de passe modifié."
+  },
+  "Sprawdź obecne hasło. Nowe hasło wymaga minimum 8 znaków.": {
+    "pl": "Sprawdź obecne hasło. Nowe hasło wymaga minimum 8 znaków.",
+    "en": "Check the current password. The new password needs at least 8 characters.",
+    "de": "Aktuelles Passwort prüfen. Neues Passwort benötigt mindestens 8 Zeichen.",
+    "fr": "Vérifiez le mot de passe actuel. Le nouveau nécessite au moins 8 caractères."
+  },
+  "Login musi być unikalny (3–80 znaków), hasło: minimum 8 znaków.": {
+    "pl": "Login musi być unikalny (3–80 znaków), hasło: minimum 8 znaków.",
+    "en": "Username must be unique (3–80 characters); password: at least 8.",
+    "de": "Benutzername muss eindeutig sein (3–80 Zeichen); Passwort: mindestens 8.",
+    "fr": "L’identifiant doit être unique (3–80 caractères) ; mot de passe : 8 minimum."
+  },
+  "Utworzono konto tylko do odczytu.": {
+    "pl": "Utworzono konto tylko do odczytu.",
+    "en": "Read-only account created.",
+    "de": "Konto mit Lesezugriff erstellt.",
+    "fr": "Compte en lecture seule créé."
+  },
+  "Styl interfejsu zapisany.": {
+    "pl": "Styl interfejsu zapisany.",
+    "en": "Appearance saved.",
+    "de": "Darstellung gespeichert.",
+    "fr": "Apparence enregistrée."
+  },
+  "Result saved.": {
+    "pl": "Wynik zapisany.",
+    "en": "Result saved.",
+    "de": "Ergebnis gespeichert.",
+    "fr": "Résultat enregistré."
+  },
+  "Settings saved.": {
+    "pl": "Ustawienia zapisane.",
+    "en": "Settings saved.",
+    "de": "Einstellungen gespeichert.",
+    "fr": "Paramètres enregistrés."
+  },
+  "Settings saved and tournament structure generated successfully.": {
+    "pl": "Ustawienia zapisane i struktura wygenerowana.",
+    "en": "Settings saved and structure generated.",
+    "de": "Einstellungen gespeichert und Struktur erzeugt.",
+    "fr": "Paramètres enregistrés et structure générée."
+  },
+  "Tournament structure generated successfully.": {
+    "pl": "Struktura turnieju wygenerowana.",
+    "en": "Tournament structure generated.",
+    "de": "Turnierstruktur erzeugt.",
+    "fr": "Structure du tournoi générée."
+  },
+  "Tournament database imported.": {
+    "pl": "Baza turnieju zaimportowana.",
+    "en": "Tournament database imported.",
+    "de": "Turnierdatenbank importiert.",
+    "fr": "Base du tournoi importée."
+  },
+  "Tournament deleted.": {
+    "pl": "Turniej usunięty.",
+    "en": "Tournament deleted.",
+    "de": "Turnier gelöscht.",
+    "fr": "Tournoi supprimé."
+  },
+  "Tournament logo uploaded.": {
+    "pl": "Logo turnieju wgrane.",
+    "en": "Tournament logo uploaded.",
+    "de": "Turnierlogo hochgeladen.",
+    "fr": "Logo du tournoi importé."
+  },
+  "Tournament logo removed.": {
+    "pl": "Logo turnieju usunięte.",
+    "en": "Tournament logo removed.",
+    "de": "Turnierlogo entfernt.",
+    "fr": "Logo du tournoi supprimé."
+  },
+  "Choose a PNG, JPG or WEBP logo file.": {
+    "pl": "Wybierz logo PNG, JPG lub WEBP.",
+    "en": "Choose a PNG, JPG or WEBP logo.",
+    "de": "PNG-, JPG- oder WEBP-Logo auswählen.",
+    "fr": "Choisissez un logo PNG, JPG ou WEBP."
+  },
+  "Logo must be PNG, JPG, JPEG or WEBP.": {
+    "pl": "Logo musi być PNG, JPG, JPEG lub WEBP.",
+    "en": "Logo must be PNG, JPG, JPEG or WEBP.",
+    "de": "Logo muss PNG, JPG, JPEG oder WEBP sein.",
+    "fr": "Le logo doit être PNG, JPG, JPEG ou WEBP."
+  },
+  "Choose an Excel file.": {
+    "pl": "Wybierz plik Excel.",
+    "en": "Choose an Excel file.",
+    "de": "Excel-Datei auswählen.",
+    "fr": "Choisissez un fichier Excel."
+  },
+  "No file selected.": {
+    "pl": "Nie wybrano pliku.",
+    "en": "No file selected.",
+    "de": "Keine Datei ausgewählt.",
+    "fr": "Aucun fichier sélectionné."
+  },
+  "Ranking imported from Excel.": {
+    "pl": "Rozstawienie zaimportowane z Excela.",
+    "en": "Seeding imported from Excel.",
+    "de": "Setzliste aus Excel importiert.",
+    "fr": "Têtes de série importées depuis Excel."
+  },
+  "Phase rules updated.": {
+    "pl": "Zasady fazy zapisane.",
+    "en": "Phase rules updated.",
+    "de": "Phasenregeln aktualisiert.",
+    "fr": "Règles de la phase mises à jour."
+  },
+  "All edited matches must belong to the same round.": {
+    "pl": "Edytowane mecze muszą należeć do tej samej rundy.",
+    "en": "Edited matches must belong to the same round.",
+    "de": "Bearbeitete Spiele müssen zur gleichen Runde gehören.",
+    "fr": "Les matchs modifiés doivent appartenir au même tour."
+  },
+  "Complete all Group Stage matches before editing knockout pairings.": {
+    "pl": "Zakończ grupy przed edycją par fazy pucharowej.",
+    "en": "Finish all group matches before editing knockout pairings.",
+    "de": "Vor Bearbeitung der K.-o.-Paarungen alle Gruppenspiele abschließen.",
+    "fr": "Terminez les groupes avant de modifier les rencontres éliminatoires."
+  },
+  "Finish all Group Stage matches first. Championship and Placement matches unlock automatically afterwards.": {
+    "pl": "Najpierw zakończ wszystkie mecze grupowe. Potem odblokuje się faza pucharowa i consolation.",
+    "en": "Finish all group matches first. Knockout and consolation matches unlock afterwards.",
+    "de": "Zuerst alle Gruppenspiele abschließen. Danach werden K.-o.- und Trostrundenspiele freigegeben.",
+    "fr": "Terminez d’abord tous les matchs de groupe. Les matchs éliminatoires et de consolante seront ensuite débloqués."
+  },
+  "Each qualified team must be used exactly once in the first knockout round.": {
+    "pl": "Każdy awansujący zespół musi wystąpić dokładnie raz w pierwszej rundzie.",
+    "en": "Use each qualified team exactly once in the first round.",
+    "de": "Jedes qualifizierte Team genau einmal in der ersten Runde einsetzen.",
+    "fr": "Chaque équipe qualifiée doit apparaître exactement une fois au premier tour."
+  },
+  "Use every eligible team exactly once in this round.": {
+    "pl": "Każdy uprawniony zespół musi wystąpić raz w tej rundzie.",
+    "en": "Use each eligible team exactly once in this round.",
+    "de": "Jedes berechtigte Team genau einmal in dieser Runde einsetzen.",
+    "fr": "Chaque équipe admissible doit apparaître exactement une fois dans ce tour."
+  },
+  "Invalid knockout pairing selection.": {
+    "pl": "Nieprawidłowe pary fazy pucharowej.",
+    "en": "Invalid knockout pairings.",
+    "de": "Ungültige K.-o.-Paarungen.",
+    "fr": "Rencontres éliminatoires invalides."
+  },
+  "Invalid pairing selection.": {
+    "pl": "Nieprawidłowy wybór par.",
+    "en": "Invalid pairings.",
+    "de": "Ungültige Paarungen.",
+    "fr": "Rencontres invalides."
+  },
+  "Invalid round pairing request.": {
+    "pl": "Nieprawidłowe żądanie par rundy.",
+    "en": "Invalid round pairing request.",
+    "de": "Ungültige Anfrage für Rundenpaarungen.",
+    "fr": "Demande de rencontres du tour invalide."
+  },
+  "No round selected.": {
+    "pl": "Nie wybrano rundy.",
+    "en": "No round selected.",
+    "de": "Keine Runde ausgewählt.",
+    "fr": "Aucun tour sélectionné."
+  },
+  "This round is not ready yet.": {
+    "pl": "Ta runda nie jest jeszcze gotowa.",
+    "en": "This round is not ready yet.",
+    "de": "Diese Runde ist noch nicht bereit.",
+    "fr": "Ce tour n’est pas encore prêt."
+  },
+  "This match is not ready yet. Its participants are still being determined by earlier results.": {
+    "pl": "Mecz nie jest gotowy. Uczestnicy zależą od wcześniejszych wyników.",
+    "en": "This match is not ready. Participants depend on earlier results.",
+    "de": "Dieses Spiel ist noch nicht bereit. Teilnehmer hängen von vorherigen Ergebnissen ab.",
+    "fr": "Ce match n’est pas prêt. Les participants dépendent des résultats précédents."
+  },
+  "This draw contains an avoidable rematch between teams from the same Group Stage group.": {
+    "pl": "Te pary zawierają możliwy do uniknięcia rewanż grupowy.",
+    "en": "This draw contains an avoidable group rematch.",
+    "de": "Diese Paarung enthält eine vermeidbare Gruppenwiederholung.",
+    "fr": "Ce tableau contient une revanche de groupe évitable."
+  },
+  "This first-round draw contains an avoidable rematch between teams from the same Group Stage group.": {
+    "pl": "Pierwsza runda zawiera możliwy do uniknięcia rewanż grupowy.",
+    "en": "The first round contains an avoidable group rematch.",
+    "de": "Die erste Runde enthält eine vermeidbare Gruppenwiederholung.",
+    "fr": "Le premier tour contient une revanche de groupe évitable."
+  },
+  "Round pairing updated. Downstream brackets were recalculated.": {
+    "pl": "Pary rundy zapisane. Kolejne gałęzie przeliczone.",
+    "en": "Round pairings saved. Later brackets recalculated.",
+    "de": "Rundenpaarungen gespeichert. Folgebäume neu berechnet.",
+    "fr": "Rencontres enregistrées. Tableaux suivants recalculés."
+  },
+  "Manual Championship pairing saved. The full Championship and consolation tree has been recalculated from these pairings.": {
+    "pl": "Ręczne pary zapisane. Przeliczono całą drabinkę główną i consolation.",
+    "en": "Manual pairings saved. Championship and consolation brackets recalculated.",
+    "de": "Manuelle Paarungen gespeichert. Haupt- und Trostrundenbäume neu berechnet.",
+    "fr": "Rencontres manuelles enregistrées. Tableaux principal et de consolante recalculés."
+  },
+  "Manual first-round pairing is disabled because Fixed bracket mode is selected.": {
+    "pl": "Ręczne pary pierwszej rundy są wyłączone w trybie stałej drabinki.",
+    "en": "Manual first-round pairing is disabled in fixed-bracket mode.",
+    "de": "Manuelle Erstrundenpaarungen sind im festen Turnierbaum deaktiviert.",
+    "fr": "Les rencontres manuelles du premier tour sont désactivées en mode tableau fixe."
+  },
+  "Manual pairing is available when the Championship starts with one complete knockout round. This structure uses play-ins/byes and needs a different slot editor.": {
+    "pl": "Ręczne pary wymagają pełnej pierwszej rundy. Ta struktura zawiera mecze wstępne lub wolne losy.",
+    "en": "Manual pairing requires a complete first round. This structure includes play-ins or byes.",
+    "de": "Manuelle Paarungen benötigen eine vollständige erste Runde. Diese Struktur enthält Vorrunden oder Freilose.",
+    "fr": "Les rencontres manuelles nécessitent un premier tour complet. Cette structure comporte des préliminaires ou exemptions."
+  },
+  "Later-round reseeding is disabled in Settings. The bracket now follows its fixed tree.": {
+    "pl": "Reseeding dalszych rund jest wyłączony. Obowiązuje stała drabinka.",
+    "en": "Later-round reseeding is disabled. The fixed bracket applies.",
+    "de": "Neusetzung späterer Runden ist deaktiviert. Der feste Turnierbaum gilt.",
+    "fr": "Le reclassement des tours suivants est désactivé. Le tableau fixe s’applique."
+  },
+  "Kolejność można zmienić przed wpisaniem wyników fazy pucharowej.": {
+    "pl": "Kolejność można zmienić przed wpisaniem wyników fazy pucharowej.",
+    "en": "Match order can be changed before knockout scores are entered.",
+    "de": "Spielreihenfolge kann vor K.-o.-Ergebnissen geändert werden.",
+    "fr": "L’ordre des matchs peut être modifié avant la saisie des résultats éliminatoires."
+  },
+  "Zakończ trwające mecze przed zmianą kolejności lub liczby kortów.": {
+    "pl": "Zakończ trwające mecze przed zmianą kolejności lub liczby kortów.",
+    "en": "Finish ongoing matches before changing the order or court count.",
+    "de": "Laufende Spiele vor Änderung der Reihenfolge oder Feldanzahl beenden.",
+    "fr": "Terminez les matchs en cours avant de changer l’ordre ou le nombre de terrains."
+  },
+  "Mecz nie jest gotowy do rozpoczęcia.": {
+    "pl": "Mecz nie jest gotowy do rozpoczęcia.",
+    "en": "The match is not ready to start.",
+    "de": "Das Spiel kann noch nicht beginnen.",
+    "fr": "Le match n’est pas prêt à commencer."
+  },
+  "Mecz już rozpoczęty.": {
+    "pl": "Mecz już rozpoczęty.",
+    "en": "Match already started.",
+    "de": "Spiel bereits gestartet.",
+    "fr": "Match déjà commencé."
+  },
+  "Mecz nie ma jeszcze zwycięzcy.": {
+    "pl": "Mecz nie ma jeszcze zwycięzcy.",
+    "en": "The match has no winner yet.",
+    "de": "Das Spiel hat noch keinen Sieger.",
+    "fr": "Le match n’a pas encore de vainqueur."
+  },
+  "Mecz jest rozstrzygnięty. Zatwierdź wynik albo cofnij punkt.": {
+    "pl": "Mecz jest rozstrzygnięty. Zatwierdź wynik albo cofnij punkt.",
+    "en": "Match decided. Confirm the score or undo a point.",
+    "de": "Spiel entschieden. Ergebnis bestätigen oder Punkt zurücknehmen.",
+    "fr": "Match décidé. Confirmez le résultat ou annulez un point."
+  },
+  "Mecz ma już wynik lub nie ma jeszcze uczestników. Poproś administratora o sprawdzenie.": {
+    "pl": "Mecz ma już wynik lub nie ma jeszcze uczestników. Poproś administratora o sprawdzenie.",
+    "en": "Match already has a result or lacks players. Ask the administrator.",
+    "de": "Spiel hat ein Ergebnis oder noch keine Teilnehmer. Administrator fragen.",
+    "fr": "Le match a déjà un résultat ou manque de joueurs. Consultez l’administrateur."
+  },
+  "Najpierw zakończ fazę grupową.": {
+    "pl": "Najpierw zakończ fazę grupową.",
+    "en": "Finish the group stage first.",
+    "de": "Zuerst die Gruppenphase beenden.",
+    "fr": "Terminez d’abord la phase de groupes."
+  },
+  "Najpierw usuń oficjalny wynik, jeśli chcesz ponownie sędziować mecz.": {
+    "pl": "Najpierw usuń oficjalny wynik, jeśli chcesz ponownie sędziować mecz.",
+    "en": "Remove the official result before refereeing again.",
+    "de": "Vor erneuter Spielleitung das offizielle Ergebnis entfernen.",
+    "fr": "Supprimez le résultat officiel avant d’arbitrer à nouveau."
+  },
+  "Najpierw zakończ wcześniejsze mecze. Mecz o 3. miejsce jest przed finałem.": {
+    "pl": "Najpierw zakończ wcześniejsze mecze. Mecz o 3. miejsce jest przed finałem.",
+    "en": "Finish earlier matches first. The third-place match precedes the final.",
+    "de": "Zuerst vorherige Spiele beenden. Das Spiel um Platz 3 ist vor dem Finale.",
+    "fr": "Terminez d’abord les matchs précédents. La petite finale précède la finale."
+  },
+  "Kort lub zawodnik bierze już udział w trwającym meczu.": {
+    "pl": "Kort lub zawodnik bierze już udział w trwającym meczu.",
+    "en": "The court or player is already in an ongoing match.",
+    "de": "Spielfeld oder Spieler ist bereits in einem laufenden Spiel.",
+    "fr": "Le terrain ou le joueur participe déjà à un match en cours."
+  },
+  "Kort lub zawodnik bierze udział w innym meczu.": {
+    "pl": "Kort lub zawodnik bierze udział w innym meczu.",
+    "en": "The court or player is involved in another match.",
+    "de": "Spielfeld oder Spieler ist in einem anderen Spiel belegt.",
+    "fr": "Le terrain ou le joueur est engagé dans un autre match."
+  },
+  "Czas jest dostępny tylko w trakcie seta.": {
+    "pl": "Czas jest dostępny tylko w trakcie seta.",
+    "en": "Timeouts are available only during a set.",
+    "de": "Auszeiten sind nur während eines Satzes möglich.",
+    "fr": "Les temps morts ne sont disponibles que pendant un set."
+  },
+  "Trwa czas zawodnika. Zakończ go lub poczekaj na upływ 2 minut.": {
+    "pl": "Trwa czas zawodnika. Zakończ go lub poczekaj na upływ 2 minut.",
+    "en": "A timeout is active. End it or wait 2 minutes.",
+    "de": "Eine Auszeit läuft. Beenden oder 2 Minuten warten.",
+    "fr": "Un temps mort est actif. Terminez-le ou attendez 2 minutes."
+  },
+  "Ten zawodnik lub drużyna wykorzystał już czas w tym secie.": {
+    "pl": "Ten zawodnik lub drużyna wykorzystał już czas w tym secie.",
+    "en": "This player or team has used their timeout in this set.",
+    "de": "Dieser Spieler oder dieses Team hat die Satzauszeit bereits genutzt.",
+    "fr": "Ce joueur ou cette équipe a déjà utilisé son temps mort dans ce set."
+  },
+  "Nie ma czasu do zakończenia.": {
+    "pl": "Nie ma czasu do zakończenia.",
+    "en": "No timeout to end.",
+    "de": "Keine Auszeit zu beenden.",
+    "fr": "Aucun temps mort à terminer."
+  },
+  "Nie ma punktu do cofnięcia.": {
+    "pl": "Nie ma punktu do cofnięcia.",
+    "en": "No point to undo.",
+    "de": "Kein Punkt zum Zurücknehmen.",
+    "fr": "Aucun point à annuler."
+  },
+  "Wynik został już zmieniony. Odśwież panel i sprawdź wynik.": {
+    "pl": "Wynik został już zmieniony. Odśwież panel i sprawdź wynik.",
+    "en": "Score already changed. Check the current score.",
+    "de": "Ergebnis bereits geändert. Aktuellen Stand prüfen.",
+    "fr": "Le score a déjà changé. Vérifiez le score actuel."
+  },
+  "Równoczesny zapis. Sprawdź aktualny wynik przed kolejnym kliknięciem.": {
+    "pl": "Równoczesny zapis. Sprawdź aktualny wynik przed kolejnym kliknięciem.",
+    "en": "Concurrent save. Check the score before clicking again.",
+    "de": "Gleichzeitiges Speichern. Vor dem nächsten Klick Ergebnis prüfen.",
+    "fr": "Enregistrement simultané. Vérifiez le score avant de recliquer."
+  },
+  "Podaj poprawną datę, strefę czasową i czas meczu (1–480 minut).": {
+    "pl": "Podaj poprawną datę, strefę czasową i czas meczu (1–480 minut).",
+    "en": "Enter a valid date, time zone and match duration (1–480 minutes).",
+    "de": "Gültiges Datum, Zeitzone und Spieldauer eingeben (1–480 Minuten).",
+    "fr": "Indiquez une date, un fuseau et une durée valides (1–480 minutes)."
+  },
+  "Podaj prawidłową paletę i kolory w formacie #RRGGBB.": {
+    "pl": "Podaj prawidłową paletę i kolory w formacie #RRGGBB.",
+    "en": "Enter a valid palette and #RRGGBB colours.",
+    "de": "Gültige Palette und Farben in #RRGGBB eingeben.",
+    "fr": "Indiquez une palette valide et des couleurs #RRGGBB."
+  },
+  "Najpierw ustaw godzinę startu turnieju.": {
+    "pl": "Najpierw ustaw godzinę startu turnieju.",
+    "en": "Set the tournament start time first.",
+    "de": "Zuerst die Turnierstartzeit einstellen.",
+    "fr": "Définissez d’abord l’heure de début du tournoi."
+  },
+  "Sprawdź godziny. Koniec wymaga wyniku i nie może poprzedzać startu; rzeczywiste czasy nie mogą być w przyszłości.": {
+    "pl": "Sprawdź godziny. Koniec wymaga wyniku i nie może poprzedzać startu; rzeczywiste czasy nie mogą być w przyszłości.",
+    "en": "Check times. Finish requires a result and cannot precede the start; actual times cannot be in the future.",
+    "de": "Zeiten prüfen. Ende benötigt ein Ergebnis und darf nicht vor dem Beginn liegen; tatsächliche Zeiten dürfen nicht in der Zukunft liegen.",
+    "fr": "Vérifiez les horaires. La fin exige un résultat et ne peut précéder le début ; les horaires réels ne peuvent être futurs."
+  },
+  "Zapisano czas meczu. Harmonogram został przeliczony.": {
+    "pl": "Zapisano czas meczu. Harmonogram został przeliczony.",
+    "en": "Match time saved. Schedule recalculated.",
+    "de": "Spielzeit gespeichert. Zeitplan neu berechnet.",
+    "fr": "Horaire enregistré. Calendrier recalculé."
+  },
+  "Zapisano przydział sędziego.": {
+    "pl": "Zapisano przydział sędziego.",
+    "en": "Referee assignment saved.",
+    "de": "Schiedsrichterzuweisung gespeichert.",
+    "fr": "Affectation de l’arbitre enregistrée."
+  },
+  "Zapisano timetable. Godziny oczekujących meczów przeliczają się automatycznie.": {
+    "pl": "Zapisano timetable. Godziny oczekujących meczów przeliczają się automatycznie.",
+    "en": "Schedule saved. Waiting match times recalculate automatically.",
+    "de": "Zeitplan gespeichert. Zeiten wartender Spiele werden automatisch neu berechnet.",
+    "fr": "Calendrier enregistré. Les horaires des matchs en attente sont recalculés automatiquement."
+  },
+  "Zapisano ustawienia sędziów. Kody są widoczne przy meczach w panelu administratora.": {
+    "pl": "Zapisano ustawienia sędziów. Kody są widoczne przy meczach w panelu administratora.",
+    "en": "Referee settings saved. Codes appear beside matches in the admin panel.",
+    "de": "Schiedsrichtereinstellungen gespeichert. Codes stehen bei den Spielen im Adminbereich.",
+    "fr": "Paramètres arbitraux enregistrés. Les codes figurent auprès des matchs dans le panneau administrateur."
+  },
+  "Wyzerowano panel punktowy i zmieniono kod. Poprzedni dostęp sędziego wygasł.": {
+    "pl": "Wyzerowano panel punktowy i zmieniono kod. Poprzedni dostęp sędziego wygasł.",
+    "en": "Scoring reset and code changed. Previous referee access expired.",
+    "de": "Punkte zurückgesetzt und Code geändert. Vorheriger Schiedsrichterzugriff abgelaufen.",
+    "fr": "Score réinitialisé et code modifié. L’ancien accès arbitre a expiré."
+  },
+  "Metodę porównywania grup wybierz przed wpisaniem pierwszego wyniku. Trwający turniej zachowuje dotychczasowe zasady.": {
+    "pl": "Metodę porównywania grup wybierz przed wpisaniem pierwszego wyniku. Trwający turniej zachowuje dotychczasowe zasady.",
+    "en": "Choose group comparison before the first score. Ongoing tournaments retain their rules.",
+    "de": "Gruppenvergleich vor dem ersten Ergebnis wählen. Laufende Turniere behalten ihre Regeln.",
+    "fr": "Choisissez la comparaison des groupes avant le premier résultat. Les tournois en cours conservent leurs règles."
+  },
+  "Replacement needed: {0} plays match #{1}": {
+    "pl": "Do zmiany: {0} gra mecz #{1}",
+    "en": "Replacement needed: {0} plays match #{1}",
+    "de": "Wechsel nötig: {0} spielt Spiel #{1}",
+    "fr": "Remplacement nécessaire : {0} joue le match n°{1}"
+  },
+  "Delete tournament?": {
+    "pl": "Usunąć turniej?",
+    "en": "Delete tournament?",
+    "de": "Turnier löschen?",
+    "fr": "Supprimer le tournoi ?"
+  },
+  "Zapisano wynik meczu #": {
+    "pl": "Zapisano wynik meczu #",
+    "en": "Score saved for match #",
+    "de": "Ergebnis gespeichert für Spiel #",
+    "fr": "Résultat enregistré pour le match n°"
+  },
+  "Odebrano i zapisano wyniki": {
+    "pl": "Odebrano i zapisano wyniki",
+    "en": "Received and saved results for",
+    "de": "Ergebnisse empfangen und gespeichert für",
+    "fr": "Résultats reçus et enregistrés pour"
+  },
+  "meczów.": {
+    "pl": "meczów.",
+    "en": "matches.",
+    "de": "Spiele.",
+    "fr": "matchs."
+  },
+  "The CSRF token is missing.": {
+    "pl": "Brak tokena bezpieczeństwa. Odśwież stronę.",
+    "en": "Security token missing. Refresh the page.",
+    "de": "Sicherheitstoken fehlt. Seite neu laden.",
+    "fr": "Jeton de sécurité manquant. Actualisez la page."
+  },
+  "The CSRF token has expired.": {
+    "pl": "Token bezpieczeństwa wygasł. Odśwież stronę.",
+    "en": "Security token expired. Refresh the page.",
+    "de": "Sicherheitstoken abgelaufen. Seite neu laden.",
+    "fr": "Jeton de sécurité expiré. Actualisez la page."
+  },
+  "Bad Request": {
+    "pl": "Nieprawidłowe żądanie",
+    "en": "Bad request",
+    "de": "Ungültige Anfrage",
+    "fr": "Requête incorrecte"
+  },
+  "Forbidden": {
+    "pl": "Brak dostępu",
+    "en": "Forbidden",
+    "de": "Zugriff verweigert",
+    "fr": "Accès interdit"
+  },
+  "Not Found": {
+    "pl": "Nie znaleziono",
+    "en": "Not found",
+    "de": "Nicht gefunden",
+    "fr": "Introuvable"
+  },
+  "Too Many Requests": {
+    "pl": "Zbyt wiele prób",
+    "en": "Too many requests",
+    "de": "Zu viele Anfragen",
+    "fr": "Trop de requêtes"
+  },
+  "Back": {
+    "pl": "Wróć",
+    "en": "Back",
+    "de": "Zurück",
+    "fr": "Retour"
+  },
+  "help.setup": {
+    "pl": "Utwórz turniej, wybierz system, liczbę kortów i zasady punktacji. Zaimportuj zawodników lub wpisz ich ręcznie, potwierdź rozstawienie i przydział do grup. Następnie wygeneruj strukturę.",
+    "en": "Create a tournament and choose the format, courts and scoring rules. Import or enter players, confirm seeds and group assignments, then generate the structure.",
+    "de": "Turnier erstellen und System, Spielfelder und Punktregeln wählen. Spieler importieren oder eingeben, Setzliste und Gruppen bestätigen, danach die Struktur erzeugen.",
+    "fr": "Créez le tournoi, choisissez le format, les terrains et les règles. Importez ou saisissez les joueurs, confirmez les têtes de série et les groupes, puis générez la structure."
+  },
+  "help.groups": {
+    "pl": "W grupach kolejno decydują punkty, wygrane, różnica setów, różnica punktów i pierwotny seed. Dodatkowe awanse porównują wyniki między grupami. Przy nierównych grupach można wybrać pomijanie wyników z najniższymi miejscami większych grup. Ustaw tę metodę przed pierwszym wynikiem.",
+    "en": "Group standings use points, wins, set difference, point difference and original seed, in that order. Wildcards compare performance across groups. Unequal groups can exclude results against the lowest places of larger groups. Select this method before the first result.",
+    "de": "In Gruppen zählen Punkte, Siege, Satzdifferenz, Punktdifferenz und ursprünglicher Setzplatz in dieser Reihenfolge. Wildcards vergleichen Gruppenleistungen. Bei ungleichen Gruppen können Ergebnisse gegen die letzten Plätze größerer Gruppen entfallen. Vor dem ersten Ergebnis einstellen.",
+    "fr": "Les groupes sont classés par points, victoires, différence de sets, différence de points puis tête de série initiale. Les qualifications supplémentaires comparent les groupes. Les groupes inégaux peuvent exclure les résultats contre les derniers des grands groupes. Choisissez la méthode avant le premier résultat."
+  },
+  "help.seeding": {
+    "pl": "Rozstawienie po grupach stawia zwycięzców grup przed drugimi miejscami, następnie kolejne pozycje. W obrębie pozycji liczą się wyniki na mecz. Pary mocny–słabszy unikają rewanżów grupowych, gdy to możliwe. Najwyższe seedy otrzymują nieuniknione wolne losy.",
+    "en": "Post-group seeding ranks group winners above runners-up, then lower positions. Within each tier it compares performance per match. Strong-vs-weak pairings avoid group rematches where possible. Top seeds receive unavoidable byes.",
+    "de": "Die Setzliste nach den Gruppen ordnet Gruppensieger vor Zweitplatzierten und danach weitere Plätze. Innerhalb eines Rangs zählt die Leistung pro Spiel. Stark-gegen-schwach-Paarungen vermeiden Gruppenwiederholungen, wenn möglich. Höchste Setzplätze erhalten notwendige Freilose.",
+    "fr": "Le classement après les groupes place les vainqueurs devant les deuxièmes, puis les rangs suivants. Chaque rang est comparé selon la performance par match. Les rencontres fort–faible évitent les revanches si possible. Les meilleures têtes de série reçoivent les exemptions nécessaires."
+  },
+  "help.brackets": {
+    "pl": "Tryb parowania określa, czy zmiany są możliwe tylko w pierwszej rundzie, w każdej rundzie czy obowiązuje stała drabinka. Rozpoczęte i rozegrane gałęzie są chronione. Consolation rozgrywa dalsze miejsca; gałęzie zwycięzców i przegranych są wyświetlane osobno.",
+    "en": "Pairing mode allows edits in the first round, every round, or uses a fixed bracket. Started and played paths are protected. Consolation decides lower places; winner and loser paths are displayed separately.",
+    "de": "Der Paarungsmodus erlaubt Änderungen nur in der ersten Runde, in jeder Runde oder nutzt einen festen Turnierbaum. Begonnene und gespielte Wege sind geschützt. Die Trostrunde entscheidet weitere Plätze; Sieger- und Verliererwege werden getrennt angezeigt.",
+    "fr": "Le mode de rencontres permet les changements au premier tour, à chaque tour ou impose un tableau fixe. Les parcours commencés et joués sont protégés. La consolante décide les places suivantes ; parcours des gagnants et perdants sont affichés séparément."
+  },
+  "help.schedule": {
+    "pl": "Ustaw start turnieju i szacowany czas meczu. Start i koniec rzeczywistego meczu wpływają na godziny oczekujących spotkań, z uwzględnieniem kortów, zawodników i zależności. Możesz poprawiać godziny ręcznie. Mecz o 3. miejsce i finał zamykają turniej.",
+    "en": "Set the tournament start and estimated match duration. Actual start and finish times update waiting matches, considering courts, players and dependencies. Times can be corrected manually. The third-place match and final close the tournament.",
+    "de": "Turnierstart und geschätzte Spieldauer einstellen. Tatsächliche Start- und Endzeiten aktualisieren wartende Spiele unter Berücksichtigung von Feldern, Spielern und Abhängigkeiten. Manuelle Korrekturen sind möglich. Spiel um Platz 3 und Finale schließen das Turnier ab.",
+    "fr": "Définissez le début du tournoi et la durée estimée des matchs. Les horaires réels actualisent les matchs en attente selon les terrains, joueurs et dépendances. Les horaires sont corrigeables manuellement. La petite finale et la finale clôturent le tournoi."
+  },
+  "help.referees": {
+    "pl": "Włącz publiczny link i panele sędziów. Każdy mecz ma osobny kod 3-cyfrowy przekazywany przy stoliku. Sędzia dodaje punkty, może cofnąć pomyłkę i zatwierdza wynik końcowy. Każda strona ma jeden 2-minutowy czas w secie. Gra ma pierwszeństwo nad sędziowaniem; można zgłosić zastępstwo.",
+    "en": "Enable the public link and referee panels. Each match has a separate 3-digit code supplied at the desk. Referees add points, undo mistakes and confirm the final score. Each side gets one 2-minute timeout per set. Playing takes priority over refereeing; a replacement can be requested.",
+    "de": "Öffentlichen Link und Schiedsrichterbereiche aktivieren. Jedes Spiel hat einen eigenen dreistelligen Code vom Turniertisch. Schiedsrichter erfassen Punkte, korrigieren Fehler und bestätigen das Endergebnis. Jede Seite hat eine zweiminütige Auszeit pro Satz. Spielen hat Vorrang; Ersatz kann angefordert werden.",
+    "fr": "Activez le lien public et les panneaux d’arbitrage. Chaque match a un code à 3 chiffres fourni à la table. L’arbitre ajoute les points, annule les erreurs et confirme le résultat final. Chaque côté dispose d’un temps mort de 2 minutes par set. Jouer est prioritaire ; un remplacement peut être demandé."
+  },
+  "help.public": {
+    "pl": "Link zawodnika udostępnia harmonogram, wyniki, grupy i drabinki bez logowania. Tryb TV ma większe czcionki i pełny ekran. Wyniki aktualizują się automatycznie, a zakończony mecz zostaje na TV przez 2 minuty. Publiczny widok nie pozwala zmieniać danych turnieju.",
+    "en": "The player link shows schedules, results, groups and brackets without login. TV mode offers larger text and full screen. Results update automatically, and a completed match stays on TV for 2 minutes. Public viewers cannot edit tournament data.",
+    "de": "Der Spielerlink zeigt Zeitplan, Ergebnisse, Gruppen und Turnierbäume ohne Anmeldung. TV-Modus bietet größere Schrift und Vollbild. Ergebnisse werden automatisch aktualisiert; beendete Spiele bleiben 2 Minuten im TV sichtbar. Öffentliche Zuschauer können keine Turnierdaten ändern.",
+    "fr": "Le lien des joueurs affiche calendrier, résultats, groupes et tableaux sans connexion. Le mode TV propose de grands caractères et le plein écran. Les résultats s’actualisent automatiquement ; un match terminé reste affiché 2 minutes. Le public ne peut pas modifier les données du tournoi."
+  },
+  "help.stats": {
+    "pl": "Historia punktów pokazuje każdą wymianę w osobnej kolumnie. Zdarzenia i korekty są zapisywane. Pomiar od pierwszego punktu jest przybliżony. Sugestie czasu wymagają co najmniej pięciu pełnych pomiarów porównywalnych meczów i nie zmieniają same harmonogramu.",
+    "en": "The point history shows each rally in a separate column. Events and corrections are recorded. Timing from the first point is approximate. Time suggestions require at least five complete measurements of comparable matches and do not change the schedule automatically.",
+    "de": "Der Punkteverlauf zeigt jeden Ballwechsel in einer eigenen Spalte. Ereignisse und Korrekturen werden erfasst. Zeitmessung ab dem ersten Punkt ist ungefähr. Zeitvorschläge benötigen mindestens fünf vollständige vergleichbare Messungen und ändern den Zeitplan nicht automatisch.",
+    "fr": "L’historique montre chaque échange dans une colonne distincte. Événements et corrections sont enregistrés. La mesure depuis le premier point est approximative. Les suggestions de durée exigent au moins cinq mesures complètes comparables et ne changent pas automatiquement le calendrier."
+  },
+  "help.backup": {
+    "pl": "Regularnie pobieraj kopię JSON, która zawiera ustawienia, zawodników, mecze i wyniki. PDF i Excel służą do udostępniania i druku. Import JSON odtwarza turniej; publiczny link i kody sędziów są tworzone ponownie.",
+    "en": "Download regular JSON backups containing settings, players, matches and results. PDF and Excel are for sharing and printing. JSON import restores the tournament; public links and referee codes are regenerated.",
+    "de": "Regelmäßig JSON-Sicherungen mit Einstellungen, Spielern, Spielen und Ergebnissen herunterladen. PDF und Excel dienen zum Teilen und Drucken. JSON-Import stellt das Turnier wieder her; öffentliche Links und Schiedsrichtercodes werden neu erzeugt.",
+    "fr": "Téléchargez régulièrement une sauvegarde JSON contenant paramètres, joueurs, matchs et résultats. PDF et Excel servent au partage et à l’impression. L’import JSON restaure le tournoi ; liens publics et codes arbitres sont régénérés."
+  },
+  "help.language": {
+    "pl": "Flagi na stronie głównej wybierają język domyślny nowych turniejów. Flagi w panelu turnieju zapisują język tylko tego turnieju. Panel admina, zawodnika, sędziego i TV korzystają z tego samego ustawienia. Nazwy zawodników i drużyn nie są tłumaczone.",
+    "en": "Homepage flags choose the default language for new tournaments. Flags in a tournament save its own language. Admin, player, referee and TV screens share that setting. Player and team names are not translated.",
+    "de": "Flaggen auf der Startseite wählen die Standardsprache neuer Turniere. Flaggen im Turnier speichern dessen eigene Sprache. Admin-, Spieler-, Schiedsrichter- und TV-Ansichten teilen diese Einstellung. Spieler- und Teamnamen werden nicht übersetzt.",
+    "fr": "Les drapeaux de l’accueil choisissent la langue par défaut des nouveaux tournois. Ceux d’un tournoi enregistrent sa langue propre. Les vues administrateur, joueurs, arbitres et TV partagent ce réglage. Les noms des joueurs et équipes ne sont pas traduits."
+  },
+  "The request could not be completed. Check the data or contact the organiser.": {
+    "pl": "Nie można wykonać żądania. Sprawdź dane lub skontaktuj się z organizatorem.",
+    "en": "The request could not be completed. Check the data or contact the organiser.",
+    "de": "Anfrage konnte nicht ausgeführt werden. Daten prüfen oder Veranstalter kontaktieren.",
+    "fr": "La demande n’a pas pu être traitée. Vérifiez les données ou contactez l’organisateur."
+  },
+  "Choose language": {
+    "pl": "Wybierz język",
+    "en": "Choose language",
+    "de": "Sprache wählen",
+    "fr": "Choisir la langue"
+  },
+  "(wyłącznie odczyt)": {
+    "pl": "(wyłącznie odczyt)",
+    "en": "(read-only)",
+    "de": "(nur Lesezugriff)",
+    "fr": "(lecture seule)"
+  },
+  "· BO": {
+    "pl": "· BO",
+    "en": "· BO",
+    "de": "· BO",
+    "fr": "· BO"
+  },
+  "Klikaj „Start teraz” przy rozpoczęciu meczu. Zapisanie pierwszego rozstrzygającego wyniku zapisuje rzeczywisty koniec i przelicza pozostałe mecze; korekta wyniku zachowuje ten czas. Jeśli wpisujesz wynik później lub uzupełniasz stary turniej, popraw czas końca ręcznie. Ręczny planowany start jest najwcześniejszą godziną — zależności mogą ją przesunąć. Trwający mecz po przekroczeniu": {
+    "pl": "Klikaj „Start teraz” przy rozpoczęciu meczu. Wynik zapisuje koniec i przelicza oczekujące mecze; korekta zachowuje czas. Jeśli wynik wpisujesz później, popraw koniec ręcznie. Planowany start jest najwcześniejszą godziną. Po przekroczeniu",
+    "en": "Click “Start now” when play begins. Saving a result records the finish and updates waiting matches; corrections keep that time. If you enter results later, correct the finish manually. Planned start is the earliest time. After exceeding",
+    "de": "Beim Spielbeginn „Jetzt starten“ drücken. Das Ergebnis speichert das Ende und aktualisiert wartende Spiele; Korrekturen behalten die Zeit. Bei späterer Eingabe das Ende manuell korrigieren. Geplanter Beginn ist die früheste Zeit. Nach Überschreiten von",
+    "fr": "Cliquez sur « Démarrer maintenant » au début du match. Le résultat enregistre la fin et actualise les matchs en attente ; une correction conserve l’heure. Pour une saisie tardive, corrigez la fin manuellement. Le début prévu est l’heure la plus tôt. Après"
+  },
+  "minut nadal zajmuje kort aż do zapisania wyniku.": {
+    "pl": "minut trwający mecz zajmuje kort aż do zapisania wyniku.",
+    "en": "minutes, an ongoing match keeps its court until the result is saved.",
+    "de": "Minuten bleibt das Feld bis zum Speichern des Ergebnisses belegt.",
+    "fr": "minutes, un match en cours occupe le terrain jusqu’à l’enregistrement du résultat."
+  },
+  "Porównanie dodatkowych awansujących:": {
+    "pl": "Porównanie dodatkowych awansujących:",
+    "en": "Wildcard comparison:",
+    "de": "Wildcard-Vergleich:",
+    "fr": "Comparaison des qualifiés supplémentaires :"
+  },
+  "pomijamy mecze z najniższymi miejscami w większych grupach do wielkości najmniejszej porównywanej grupy. Poniższe tabele obejmują wszystkie wyniki. PPM i bilanse porównywanych zawodników w rozstawieniu po grupach uwzględniają to pominięcie.": {
+    "pl": "pomijamy wyniki z najniższymi miejscami większych grup, wyrównując liczbę porównywanych zespołów. Tabele obejmują wszystkie mecze; porównanie rozstawienia uwzględnia pominięcie.",
+    "en": "results against the lowest places of larger groups are excluded to equalise the comparison. Tables include all matches; seeding comparisons apply the exclusion.",
+    "de": "Ergebnisse gegen die letzten Plätze größerer Gruppen werden für gleiche Vergleichsgrößen ausgeschlossen. Tabellen enthalten alle Spiele; die Setzliste berücksichtigt den Ausschluss.",
+    "fr": "les résultats contre les derniers des grands groupes sont exclus pour équilibrer la comparaison. Les tableaux incluent tous les matchs ; les têtes de série tiennent compte de l’exclusion."
+  },
+  "& generate structure": {
+    "pl": "i wygeneruj strukturę",
+    "en": "and generate structure",
+    "de": "und Struktur erzeugen",
+    "fr": "et générer la structure"
+  },
+  "Swiss System": {
+    "pl": "System szwajcarski",
+    "en": "Swiss system",
+    "de": "Schweizer System",
+    "fr": "Système suisse"
+  },
+  "Championship & Placement": {
+    "pl": "Drabinka główna i consolation",
+    "en": "Championship and placement",
+    "de": "Hauptfeld und Platzierung",
+    "fr": "Tableau principal et classement"
+  },
+  "Knockout / Placement": {
+    "pl": "Faza pucharowa / consolation",
+    "en": "Knockout / placement",
+    "de": "K.-o.-Phase / Platzierung",
+    "fr": "Élimination / classement"
+  },
+  "Winners Bracket": {
+    "pl": "Drabinka zwycięzców",
+    "en": "Winners bracket",
+    "de": "Siegerbaum",
+    "fr": "Tableau des gagnants"
+  },
+  "Losers Bracket": {
+    "pl": "Drabinka przegranych",
+    "en": "Losers bracket",
+    "de": "Verliererbaum",
+    "fr": "Tableau des perdants"
+  },
+  "League": {
+    "pl": "Liga",
+    "en": "League",
+    "de": "Liga",
+    "fr": "Championnat"
+  },
+  "Placement": {
+    "pl": "Consolation",
+    "en": "Placement",
+    "de": "Platzierung",
+    "fr": "Classement"
+  },
+  "Semifinal": {
+    "pl": "Półfinał",
+    "en": "Semi-final",
+    "de": "Halbfinale",
+    "fr": "Demi-finale"
+  },
+  "BYE": {
+    "pl": "Wolny los",
+    "en": "Bye",
+    "de": "Freilos",
+    "fr": "Exemption"
+  },
+  "Winner previous match": {
+    "pl": "Zwycięzca wcześniejszego meczu",
+    "en": "Winner of previous match",
+    "de": "Sieger des vorherigen Spiels",
+    "fr": "Vainqueur du match précédent"
+  },
+  "Loser previous match": {
+    "pl": "Przegrany wcześniejszego meczu",
+    "en": "Loser of previous match",
+    "de": "Verlierer des vorherigen Spiels",
+    "fr": "Perdant du match précédent"
+  },
+  "Group {0} · place {1}": {
+    "pl": "Grupa {0} · miejsce {1}",
+    "en": "Group {0} · place {1}",
+    "de": "Gruppe {0} · Platz {1}",
+    "fr": "Groupe {0} · rang {1}"
+  },
+  "Swiss round {0}": {
+    "pl": "Runda szwajcarska {0}",
+    "en": "Swiss round {0}",
+    "de": "Schweizer Runde {0}",
+    "fr": "Tour suisse {0}"
+  },
+  "Set {0}: enter both scores as whole numbers.": {
+    "pl": "Set {0}: wpisz oba wyniki jako liczby całkowite.",
+    "en": "Set {0}: enter both scores as whole numbers.",
+    "de": "Satz {0}: beide Ergebnisse als ganze Zahlen eingeben.",
+    "fr": "Set {0} : saisissez les deux scores en nombres entiers."
+  },
+  "Zapisano.": {
+    "pl": "Zapisano.",
+    "en": "Saved.",
+    "de": "Gespeichert.",
+    "fr": "Enregistré."
+  },
+  "Gracze": {
+    "pl": "Gracze",
+    "en": "Players",
+    "de": "Spieler",
+    "fr": "Joueurs"
+  },
+  "Bracket": {
+    "pl": "Drabinka",
+    "en": "Bracket",
+    "de": "Turnierbaum",
+    "fr": "Tableau"
+  },
+  "Round": {
+    "pl": "Runda",
+    "en": "Round",
+    "de": "Runde",
+    "fr": "Tour"
+  },
+  "Player": {
+    "pl": "Zawodnik",
+    "en": "Player",
+    "de": "Spieler",
+    "fr": "Joueur"
+  },
+  "Player 1": {
+    "pl": "Zawodnik 1",
+    "en": "Player 1",
+    "de": "Spieler 1",
+    "fr": "Joueur 1"
+  },
+  "Player 2": {
+    "pl": "Zawodnik 2",
+    "en": "Player 2",
+    "de": "Spieler 2",
+    "fr": "Joueur 2"
+  },
+  "Phase": {
+    "pl": "Faza",
+    "en": "Phase",
+    "de": "Phase",
+    "fr": "Phase"
+  },
+  "Order": {
+    "pl": "Numer",
+    "en": "Order",
+    "de": "Nummer",
+    "fr": "Numéro"
+  },
+  "Score": {
+    "pl": "Wynik",
+    "en": "Score",
+    "de": "Ergebnis",
+    "fr": "Score"
+  },
+  "Winner": {
+    "pl": "Zwycięzca",
+    "en": "Winner",
+    "de": "Sieger",
+    "fr": "Vainqueur"
+  },
+  "Wins": {
+    "pl": "Wygrane",
+    "en": "Wins",
+    "de": "Siege",
+    "fr": "Victoires"
+  },
+  "Losses": {
+    "pl": "Przegrane",
+    "en": "Losses",
+    "de": "Niederlagen",
+    "fr": "Défaites"
+  },
+  "Points": {
+    "pl": "Punkty",
+    "en": "Points",
+    "de": "Punkte",
+    "fr": "Points"
+  },
+  "Sets +": {
+    "pl": "Sety +",
+    "en": "Sets +",
+    "de": "Sätze +",
+    "fr": "Sets +"
+  },
+  "Sets -": {
+    "pl": "Sety -",
+    "en": "Sets -",
+    "de": "Sätze -",
+    "fr": "Sets -"
+  },
+  "Set Diff": {
+    "pl": "Bilans setów",
+    "en": "Set difference",
+    "de": "Satzdifferenz",
+    "fr": "Différence de sets"
+  },
+  "Points +": {
+    "pl": "Punkty +",
+    "en": "Points +",
+    "de": "Punkte +",
+    "fr": "Points +"
+  },
+  "Points -": {
+    "pl": "Punkty -",
+    "en": "Points -",
+    "de": "Punkte -",
+    "fr": "Points -"
+  },
+  "PD": {
+    "pl": "Bilans pkt",
+    "en": "Point diff.",
+    "de": "Pkt-Diff.",
+    "fr": "Diff. pts"
+  },
+  "FINAL": {
+    "pl": "KOŃCOWA",
+    "en": "FINAL",
+    "de": "ENDSTAND",
+    "fr": "FINAL"
+  },
+  "CURRENT / PROVISIONAL": {
+    "pl": "BIEŻĄCA / TYMCZASOWA",
+    "en": "CURRENT / PROVISIONAL",
+    "de": "AKTUELL / VORLÄUFIG",
+    "fr": "ACTUEL / PROVISOIRE"
+  },
+  "Page": {
+    "pl": "Strona",
+    "en": "Page",
+    "de": "Seite",
+    "fr": "Page"
+  },
+  "No standings available yet.": {
+    "pl": "Brak klasyfikacji.",
+    "en": "No standings yet.",
+    "de": "Noch keine Platzierungen.",
+    "fr": "Aucun classement."
+  },
+  "No group tables available.": {
+    "pl": "Brak tabel grupowych.",
+    "en": "No group standings.",
+    "de": "Keine Gruppentabellen.",
+    "fr": "Aucun classement de groupe."
+  },
+  "No knockout bracket has been generated yet.": {
+    "pl": "Nie wygenerowano jeszcze drabinki pucharowej.",
+    "en": "No knockout bracket generated yet.",
+    "de": "Noch kein K.-o.-Baum erzeugt.",
+    "fr": "Aucun tableau éliminatoire généré."
+  },
+  "Groups & Results": {
+    "pl": "Grupy i wyniki",
+    "en": "Groups and results",
+    "de": "Gruppen und Ergebnisse",
+    "fr": "Groupes et résultats"
+  },
+  "Group Stage - Tables & Match Results": {
+    "pl": "Grupy — tabele i wyniki meczów",
+    "en": "Groups — standings and match results",
+    "de": "Gruppen — Tabellen und Spielergebnisse",
+    "fr": "Groupes — classements et résultats"
+  },
+  "Start": {
+    "pl": "Start",
+    "en": "Start",
+    "de": "Beginn",
+    "fr": "Début"
+  },
+  "Schedule": {
+    "pl": "Harmonogram",
+    "en": "Schedule",
+    "de": "Zeitplan",
+    "fr": "Calendrier"
+  },
+  " (set ": {
+    "pl": " (set ",
+    "en": " (set ",
+    "de": " (Satz ",
+    "fr": " (set "
+  },
+  "Set ": {
+    "pl": "Set ",
+    "en": "Set ",
+    "de": "Satz ",
+    "fr": "Set "
+  },
+  " zdobywa punkt ": {
+    "pl": " zdobywa punkt ",
+    "en": " scores point ",
+    "de": " erzielt Punkt ",
+    "fr": " marque le point "
+  },
+  "Save error": {
+    "pl": "Błąd zapisu",
+    "en": "Save error",
+    "de": "Fehler beim Speichern",
+    "fr": "Erreur d’enregistrement"
+  },
+  "Group assignment save error": {
+    "pl": "Błąd zapisu przydziału grup",
+    "en": "Group assignment save error",
+    "de": "Fehler beim Speichern der Gruppenzuteilung",
+    "fr": "Erreur d’enregistrement des groupes"
+  },
+  "Assign every team to a group first.": {
+    "pl": "Najpierw przydziel każdą drużynę do grupy.",
+    "en": "Assign every team to a group first.",
+    "de": "Zuerst jedes Team einer Gruppe zuweisen.",
+    "fr": "Affectez d’abord chaque équipe à un groupe."
+  },
+  "Nie udało się potwierdzić zapisu. Sprawdź połączenie.": {
+    "pl": "Nie udało się potwierdzić zapisu. Sprawdź połączenie.",
+    "en": "Save could not be confirmed. Check your connection.",
+    "de": "Speichern konnte nicht bestätigt werden. Verbindung prüfen.",
+    "fr": "Enregistrement non confirmé. Vérifiez la connexion."
+  },
+  "Przebieg punktów — set ": {
+    "pl": "Przebieg punktów — set ",
+    "en": "Point timeline — set ",
+    "de": "Punkteverlauf — Satz ",
+    "fr": "Évolution des points — set "
+  },
+  "Trwa zapisywanie poprzedniego meczu. Poczekaj chwilę.": {
+    "pl": "Trwa zapisywanie poprzedniego meczu. Poczekaj chwilę.",
+    "en": "Previous match is being saved. Please wait.",
+    "de": "Das vorherige Spiel wird gespeichert. Bitte warten.",
+    "fr": "Le match précédent est en cours d’enregistrement. Patientez."
+  },
+  "Wyzerować punkty live i zmienić kod tego meczu? Poprzedni dostęp sędziego wygaśnie.": {
+    "pl": "Wyzerować punkty live i zmienić kod tego meczu? Poprzedni dostęp sędziego wygaśnie.",
+    "en": "Reset live points and change this match’s code? Previous referee access will expire.",
+    "de": "Live-Punkte zurücksetzen und Spielcode ändern? Der bisherige Schiedsrichterzugriff erlischt.",
+    "fr": "Réinitialiser les points et changer le code du match ? L’accès arbitre précédent expirera."
+  },
+  "Zapisano przeplataną kolejność meczów; mecz o 3. miejsce i finał zamykają harmonogram.": {
+    "pl": "Zapisano przeplataną kolejność meczów; mecz o 3. miejsce i finał zamykają harmonogram.",
+    "en": "Interleaved order saved; the third-place match and final close the schedule.",
+    "de": "Verschachtelte Reihenfolge gespeichert; Spiel um Platz 3 und Finale schließen den Plan ab.",
+    "fr": "Ordre alterné enregistré ; la petite finale et la finale clôturent le calendrier."
+  },
+  "Court allocation updated. Published match numbers were preserved.": {
+    "pl": "Przydział kortów zaktualizowany. Numery opublikowanych meczów zachowane.",
+    "en": "Court allocation updated. Published match numbers preserved.",
+    "de": "Feldzuweisung aktualisiert. Veröffentlichte Spielnummern bleiben erhalten.",
+    "fr": "Affectation des terrains mise à jour. Numéros des matchs publiés conservés."
+  },
+  "Tournament Draws - Championship + exact placement": {
+    "pl": "Drabinki — główna i wszystkie miejsca",
+    "en": "Brackets — main draw and all places",
+    "de": "Turnierbäume — Hauptfeld und alle Plätze",
+    "fr": "Tableaux — principal et toutes les places"
+  },
+  "Future slots show Winner / Loser of match #.": {
+    "pl": "Przyszłe pary wskazują zwycięzcę / przegranego meczu nr.",
+    "en": "Future slots show the winner / loser of match #.",
+    "de": "Zukünftige Plätze zeigen Sieger / Verlierer von Spiel Nr.",
+    "fr": "Les places futures indiquent le vainqueur / perdant du match n°."
+  },
+  "Match Schedule": {
+    "pl": "Harmonogram meczów",
+    "en": "Match schedule",
+    "de": "Spielplan",
+    "fr": "Calendrier des matchs"
+  },
+  "No.": {
+    "pl": "Nr",
+    "en": "No.",
+    "de": "Nr.",
+    "fr": "N°"
+  },
+  "Team 1": {
+    "pl": "Drużyna 1",
+    "en": "Team 1",
+    "de": "Team 1",
+    "fr": "Équipe 1"
+  },
+  "Team 2": {
+    "pl": "Drużyna 2",
+    "en": "Team 2",
+    "de": "Team 2",
+    "fr": "Équipe 2"
+  },
+  "Knockout pairings are locked because Match #{0} already has a user-entered result. Clear that result before changing the draw.": {
+    "pl": "Pary są zablokowane: mecz #{0} ma wynik. Usuń go przed zmianą drabinki.",
+    "en": "Pairings locked: match #{0} has a saved result. Clear it before changing the draw.",
+    "de": "Paarungen gesperrt: Spiel #{0} hat ein Ergebnis. Vor Änderung entfernen.",
+    "fr": "Rencontres verrouillées : le match n°{0} a un résultat. Effacez-le avant de modifier le tableau."
+  },
+  "This draw is locked because Match #{0} already has a saved result. Clear downstream results before reseeding this round.": {
+    "pl": "Drabinka zablokowana: mecz #{0} ma wynik. Usuń wyniki dalszych rund przed zmianą par.",
+    "en": "Draw locked: match #{0} has a saved result. Clear later results before reseeding.",
+    "de": "Turnierbaum gesperrt: Spiel #{0} hat ein Ergebnis. Spätere Ergebnisse vor Neusetzung entfernen.",
+    "fr": "Tableau verrouillé : le match n°{0} a un résultat. Effacez les résultats suivants avant le reclassement."
+  }
+}

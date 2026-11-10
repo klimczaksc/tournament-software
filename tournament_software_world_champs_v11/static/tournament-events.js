@@ -1,5 +1,6 @@
 /* Reconcile changed entities only. HTTP cursors are portable across reconnects/workers. */
 (() => {
+ const T=window.uiText||((text)=>text);
  const source=document.getElementById('tournament-events');if(!source)return;
  let cursor='',pending=null;
  const monitor=source.dataset.public==='1'&&document.documentElement.classList.contains('monitor-mode');
@@ -10,7 +11,7 @@
  document.addEventListener('change',e=>{if(e.target.form)dirty.add(e.target.form);});
  const isResultForm=form=>/\/match\/\d+\/result$/.test(new URL(form.action).pathname);
  const received=document.createElement('div');received.className='tournament-result-notice';received.setAttribute('role','status');received.hidden=true;document.body.append(received);let receivedTimer;
- function announce(results){if(!results.length||source.dataset.public==='1')return;clearTimeout(receivedTimer);received.textContent=results.length===1?results[0]:'Odebrano i zapisano wyniki '+results.length+' meczów.';received.hidden=false;receivedTimer=setTimeout(()=>{received.hidden=true;},6500);}
+ function announce(results){if(!results.length||source.dataset.public==='1')return;clearTimeout(receivedTimer);received.textContent=results.length===1?results[0]:T('Odebrano i zapisano wyniki ')+results.length+T(' meczów.');received.hidden=false;receivedTimer=setTimeout(()=>{received.hidden=true;},6500);}
  const find=key=>[...document.querySelectorAll('[data-event-key]')].find(el=>el.dataset.eventKey===key);
  function morph(old,fresh,invalidate=false){
   if(old.nodeType!==fresh.nodeType||old.nodeName!==fresh.nodeName){old.replaceWith(fresh.cloneNode(true));return;}
@@ -45,10 +46,10 @@
    const target=document.querySelector('[data-event-list="'+name+'"]');if(!target)return;
    target.querySelectorAll(':scope > p').forEach(p=>p.remove());
    keys.forEach((key,i)=>{const card=find(key);if(card&&target.children[i]!==card)target.insertBefore(card,target.children[i]||null);});
-   if(!keys.length&&name!=='more'){const p=document.createElement('p');p.textContent=name==='next'?'Brak nadchodzących meczów.':'Nie ma jeszcze wyników.';target.append(p);}
+   if(!keys.length&&name!=='more'){const p=document.createElement('p');p.textContent=name==='next'?T('Brak nadchodzących meczów.'):T('Nie ma jeszcze wyników.');target.append(p);}
   });
-  const more=document.getElementById('more-upcoming');if(more){more.hidden=layout.upcoming.length<=5;more.querySelector('summary').textContent='Pokaż pozostałe mecze ('+Math.max(0,layout.upcoming.length-5)+')';}
-  const results=document.querySelector('#results > summary');if(results)results.textContent='Wyniki meczów ('+layout.completed.length+')';
+  const more=document.getElementById('more-upcoming');if(more){more.hidden=layout.upcoming.length<=5;more.querySelector('summary').textContent=T('Pokaż pozostałe mecze (')+Math.max(0,layout.upcoming.length-5)+')';}
+  const results=document.querySelector('#results > summary');if(results)results.textContent=T('Wyniki meczów (')+layout.completed.length+')';
  }
  function apply(patch){
   const visible=[...document.querySelectorAll('[data-event-key^="match:"]')].find(el=>{const r=el.getBoundingClientRect();return r.bottom>0&&r.top<innerHeight;});
@@ -67,7 +68,7 @@
      if(monitor&&screenKeys.includes(key)&&fresh.dataset.eventComplete==='1'&&old.dataset.eventComplete!=='1')old.style.minHeight=old.getBoundingClientRect().height+'px';
      const officialChanged=old.dataset.resultVersion!==fresh.dataset.resultVersion;
      if(officialChanged)old.querySelectorAll('form').forEach(form=>{if(isResultForm(form))dirty.delete(form);});
-     if(officialChanged&&fresh.dataset.eventComplete==='1'&&fresh.dataset.resultScore&&submitted?.closest('[data-event-key]')!==old)completed.push('Zapisano wynik meczu #'+fresh.dataset.matchNumber+': '+fresh.dataset.resultScore);
+     if(officialChanged&&fresh.dataset.eventComplete==='1'&&fresh.dataset.resultScore&&submitted?.closest('[data-event-key]')!==old)completed.push(T('Zapisano wynik meczu #')+fresh.dataset.matchNumber+': '+fresh.dataset.resultScore);
      const changedPlayers=old.dataset.player1!==fresh.dataset.player1||old.dataset.player2!==fresh.dataset.player2;
      const opened=[...old.querySelectorAll('details')].map(d=>d.open);
      const drafts=[...old.querySelectorAll('form')].filter(f=>dirty.has(f)&&f!==submitted&&!changedPlayers&&!(officialChanged&&isResultForm(f))).map(f=>({action:f.getAttribute('action'),fields:[...f.elements].filter(el=>el.name&&el.type!=='hidden'&&el.tagName!=='BUTTON').map(el=>({name:el.name,value:el.value,checked:el.checked,focused:el===document.activeElement}))}));
@@ -77,6 +78,7 @@
     }
     else if(key.startsWith('match:')){document.querySelector(source.dataset.public==='1'?'[data-event-list="more"]':'#matches .section-body')?.append(fresh);}
    }
+   const languageNode=find('language');if(languageNode)window.TournamentI18n?.setLanguage(languageNode.dataset.language);
    lists(patch.layout);
    if(typeof applyFilter==='function')applyFilter();
    if(Object.keys(patch.entities||{}).some(key=>key.startsWith('bracket:'))&&typeof drawBracketConnectors==='function')drawBracketConnectors();
@@ -85,23 +87,23 @@
   announce(completed);
   document.dispatchEvent(new CustomEvent('tournament:updated',{detail:{changed:Object.keys(patch.entities||{}),cursor:patch.cursor}}));
  }
- function status(text,failed=false){const el=document.getElementById('refresh-status');if(!el)return;if(el.dataset.compact==='1'){el.textContent=failed?'Brak połączenia':'';el.dataset.state=failed?'offline':'online';el.title=failed?text:'Aktualne wyniki';el.setAttribute('aria-label',el.title);}else el.textContent=text;}
+ function status(text,failed=false){const el=document.getElementById('refresh-status');if(!el)return;if(el.dataset.compact==='1'){el.textContent=failed?T('Brak połączenia'):'';el.dataset.state=failed?'offline':'online';el.title=failed?text:T('Aktualne wyniki');el.setAttribute('aria-label',el.title);}else el.textContent=text;}
  async function refresh(options={}){
   if(pending){await pending;if(options.submitted)return refresh(options);return;}
   submitted=options.submitted||null;if(submitted)dirty.delete(submitted);
   pending=(async()=>{
    try{
     const response=await fetch(source.dataset.url+'?cursor='+encodeURIComponent(cursor),{cache:'no-store'});
-    if(response.status===304){status('Połączono · brak nowych zmian');return;}
-    if(!response.ok)throw new Error('Brak aktualizacji — sprawdź połączenie i dostęp.');
+    if(response.status===304){status(T('Połączono · brak nowych zmian'));return;}
+    if(!response.ok)throw new Error(T('Brak aktualizacji — sprawdź połączenie i dostęp.'));
     const patch=await response.json();apply(patch);cursor=patch.cursor;
-    status('Zaktualizowano '+new Date().toLocaleTimeString('pl-PL')+' · tylko zmienione mecze');
+    status(T('Zaktualizowano ')+new Date().toLocaleTimeString(window.uiLocale||'pl-PL')+T(' · tylko zmienione mecze'));
    }catch(e){status(e.message,true);throw e;}
    finally{submitted=null;pending=null;}
   })();
   return pending;
  }
- function clocks(){document.querySelectorAll('[data-timeout-until]').forEach(el=>{const clock=el.querySelector('[data-timeout-clock]');if(!clock)return;const seconds=Math.max(0,Math.ceil((Date.parse(el.dataset.timeoutUntil)-Date.now())/1000));clock.textContent=seconds?Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'):'Koniec czasu';});}
+ function clocks(){document.querySelectorAll('[data-timeout-until]').forEach(el=>{const clock=el.querySelector('[data-timeout-clock]');if(!clock)return;const seconds=Math.max(0,Math.ceil((Date.parse(el.dataset.timeoutUntil)-Date.now())/1000));clock.textContent=seconds?Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'):T('Koniec czasu');});}
  clocks();setInterval(clocks,250);
  setInterval(()=>{if(monitor&&lastLayout&&[...held.values()].some(until=>until<=Date.now())){const y=window.scrollY,x=window.scrollX;lists(lastLayout);if(typeof applyFilter==='function')applyFilter();window.scrollTo({left:x,top:y,behavior:'instant'});}},1000);
  window.TournamentEvents={refresh,morph};

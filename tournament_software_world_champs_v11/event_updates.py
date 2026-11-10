@@ -6,6 +6,7 @@ import json
 import time
 from flask import request, g, jsonify, abort, get_flashed_messages
 from sqlalchemy import event
+from i18n import language,translate
 
 
 class Entities(HTMLParser):
@@ -43,7 +44,7 @@ def configure_event_updates(app, db, Tournament, settings_for, tournament_view):
     event.listen(db.session, 'after_commit', lambda _: built.clear())
 
     def snapshot(t, public):
-        scope=(t.id,'public' if public else 'admin')
+        scope=(t.id,'public' if public else 'admin',language())
         cached=built.get(scope)
         if cached and time.monotonic()-cached[0]<1:return scope,cached[1]
         # Reuse the authoritative templates, extracting only explicitly keyed fragments.
@@ -95,7 +96,7 @@ def configure_event_updates(app, db, Tournament, settings_for, tournament_view):
             messages=get_flashed_messages()
             success=('Result saved.','Zapisano czas meczu.','Zapisano przydział sędziego.','Wyzerowano panel punktowy','Zapisano timetable.','Court allocation updated.','Zapisano przeplataną','Zapisano ustawienia sędziów.','Styl interfejsu zapisany.')
             ok=any(any(phrase in m for phrase in success) for m in messages)
-            response.set_data(json.dumps(dict(ok=ok,messages=messages),ensure_ascii=False))
+            response.set_data(json.dumps(dict(ok=ok,messages=[translate(message) for message in messages]),ensure_ascii=False))
             response.status_code=200 if ok else 422
             response.mimetype='application/json'
             response.headers.pop('Location',None)
