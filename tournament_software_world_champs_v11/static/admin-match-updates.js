@@ -26,7 +26,7 @@
   document.addEventListener('submit', async e => {
     if(e.defaultPrevented)return;
     const form = e.target;
-    if (!form.matches('#matches form, #timetable form, #referees form') || !/\/(?:match\/\d+\/(?:result|timing|referee-assignment|referee-reset)|tournament\/\d+\/(?:schedule|timetable|referees))$/.test(new URL(form.action).pathname)) return;
+    if (!form.matches('#matches form, #timetable form, #referees form, #appearance-form') || !/\/(?:match\/\d+\/(?:result|timing|referee-assignment|referee-reset)|tournament\/\d+\/(?:schedule|timetable|referees|appearance))$/.test(new URL(form.action).pathname)) return;
     e.preventDefault();
     if (saving) { inform('Trwa zapisywanie poprzedniego meczu. Poczekaj chwilę.'); return; }
     saving = true;
@@ -43,6 +43,7 @@
       if (!response.ok || !result.ok) throw new Error((result.messages || []).join(' ') || 'Nie zapisano. Sprawdź wynik, godziny lub sesję logowania.');
       dirtyForms.delete(form);
       await window.TournamentEvents.refresh({submitted:form});
+      if(form.id==='appearance-form')window.TournamentPalette?.saved();
       inform((result.messages || ['Zapisano.']).join(' '));
     } catch (error) {
       // A connection loss may happen after the server saved the result. Do not auto-retry.

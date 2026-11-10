@@ -12,6 +12,10 @@
       document.documentElement.dataset.theme=(saved==='light'||saved==='dark')?saved:(modern?'light':'dark');
     })();
   </script>
+  {% set current_palette = palette_config(settings) if settings is defined else session.get('appearance_palette',palette_config({'interface_style':interface_style})) %}
+  <script id="palette-initial" type="application/json">{{ current_palette|tojson }}</script>
+  <script id="palette-catalog" type="application/json">{{ palette_catalog|tojson }}</script>
+  <script src="{{ url_for('static',filename='palettes.js') }}"></script>
   <style>
     :root{--body:#020617;--panel:#0f172a;--panel2:#162033;--surface:#0b1220;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;--heading-muted:#cbd5e1;--accent:#16a34a;--accentText:#fff;--danger:#ef4444;--link:#93c5fd;--flashBg:#d1fae5;--flashText:#064e3b;--connector:#64748b;--shadow:0 10px 25px rgba(0,0,0,.22)}
     html[data-theme="light"]{--body:#f4f7fb;--panel:#ffffff;--panel2:#f8fafc;--surface:#f8fafc;--line:#cbd5e1;--text:#172033;--muted:#64748b;--heading-muted:#475569;--accent:#15803d;--accentText:#fff;--danger:#dc2626;--link:#1d4ed8;--flashBg:#dcfce7;--flashText:#166534;--connector:#94a3b8;--shadow:0 8px 22px rgba(15,23,42,.07)}
@@ -76,8 +80,9 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
 .appearance-control p{margin:4px 0 0;font-size:12px;color:var(--muted)}
 @media(max-width:1100px){html[data-style="modern"] .wrap:has(.side-menu){padding-left:242px;padding-right:14px}}
 @media(max-width:650px){html[data-style="modern"] .wrap,html[data-style="modern"] .wrap:has(.side-menu){padding:16px 12px 40px}html[data-style="modern"] .side-menu{width:100%;padding:12px}html[data-style="modern"] .side-menu a,html[data-style="modern"] .side-menu button{display:inline-block;width:auto;font-size:12px;padding:8px}html[data-style="modern"] h1{font-size:25px}html[data-style="modern"] .card{padding:16px}html[data-style="modern"] input,html[data-style="modern"] select{font-size:16px}.appearance-control form{width:100%}.appearance-control label{flex:1;flex-wrap:wrap}.appearance-control select{flex:1;min-width:140px}html[data-style="modern"] .score-grid input{padding:7px 4px}}
-</style></head>
+</style><style>html[data-palette] :focus-visible{outline-color:var(--accent)}.btn-danger{color:var(--dangerText,var(--accentText))}</style></head>
 <body>
+<div id="tournament-palette" data-event-key="palette" data-config="{{ current_palette|tojson|forceescape }}" hidden></div>
 <div class="wrap">
 {% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ 'Administrator' if is_admin else 'Odczyt' }}</span>{% if is_admin %}<a class="pill" href="/accounts">Konta</a>{% endif %}<a class="pill" href="/password">Zmień hasło</a><form method="post" action="/logout"><button>Wyloguj</button></form></div></div>{% endif %}
   {% with messages = [] if request.endpoint in ('public_event_updates','tournament_event_updates') else get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
@@ -89,7 +94,7 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
   const themeBtn=document.getElementById('theme-toggle');
   function currentTheme(){return document.documentElement.dataset.theme==='light'?'light':'dark'}
   function refreshThemeButton(){if(themeBtn)themeBtn.textContent=currentTheme()==='light'?'Dark mode':'Light mode'}
-  if(themeBtn){themeBtn.addEventListener('click',()=>{const next=currentTheme()==='light'?'dark':'light';document.documentElement.dataset.theme=next;localStorage.setItem(document.documentElement.dataset.style==='modern'?'tournament-theme-modern':'tournament-theme',next);refreshThemeButton();});refreshThemeButton();}
+  if(themeBtn){themeBtn.addEventListener('click',()=>{const next=currentTheme()==='light'?'dark':'light';document.documentElement.dataset.theme=next;if(window.TournamentPalette)window.TournamentPalette.setMode(next);localStorage.setItem(document.documentElement.dataset.style==='modern'?'tournament-theme-modern':'tournament-theme',next);refreshThemeButton();});refreshThemeButton();}
 </script>
 </body>
 </html>

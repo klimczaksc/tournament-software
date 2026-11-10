@@ -91,9 +91,9 @@ def configure_event_updates(app, db, Tournament, settings_for, tournament_view):
 
     @app.after_request
     def action_response(response):
-        if request.headers.get('X-Tournament-Action')=='1' and request.endpoint in {'update_match_result','save_match_timing','referee_assignment','referee_reset','save_timetable','reschedule','configure_referee_panel'} and response.status_code in (301,302,303):
+        if request.headers.get('X-Tournament-Action')=='1' and request.endpoint in {'update_match_result','save_match_timing','referee_assignment','referee_reset','save_timetable','reschedule','configure_referee_panel','appearance'} and response.status_code in (301,302,303):
             messages=get_flashed_messages()
-            success=('Result saved.','Zapisano czas meczu.','Zapisano przydział sędziego.','Wyzerowano panel punktowy','Zapisano timetable.','Court allocation updated.','Zapisano przeplataną','Zapisano ustawienia sędziów.')
+            success=('Result saved.','Zapisano czas meczu.','Zapisano przydział sędziego.','Wyzerowano panel punktowy','Zapisano timetable.','Court allocation updated.','Zapisano przeplataną','Zapisano ustawienia sędziów.','Styl interfejsu zapisany.')
             ok=any(any(phrase in m for phrase in success) for m in messages)
             response.set_data(json.dumps(dict(ok=ok,messages=messages),ensure_ascii=False))
             response.status_code=200 if ok else 422

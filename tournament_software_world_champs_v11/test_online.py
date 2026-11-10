@@ -796,3 +796,45 @@ def test_referee_confirmation_updates_open_admin_card_and_next_match_without_nav
     clock_values=re.findall(r'<div class="match-time"><strong>([^<]+)</strong>',public)
     assert clock_values and all(re.fullmatch(r'\d{2}:\d{2}',value) for value in clock_values)
     assert not re.search(r'Court \d+ · \d{2}\.\d{2} \d{2}:\d{2}',public)
+
+
+def test_palettes_custom_colours_validation_and_live_sharing_are_tournament_scoped():
+    import json,html
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict
+    from palettes import PALETTES
+    admin=app.test_client()
+    with app.app_context():uid=User.query.filter_by(role='admin').first().id
+    with admin.session_transaction() as s:s.update(uid=uid,version=1)
+    token=csrf(admin,'/')
+    with app.app_context():
+        t=create_tournament('Palette Cup',4,'single_elimination',True,2);generate_structure(t);tid=t.id
+        cfg=settings_for(t);cfg.update(public_enabled=True,public_token='palette-live',public_slug='palette-live');save_settings_dict(t,cfg);db.session.commit()
+        other=create_tournament('Separate palette',4,'single_elimination',True,1).id
+        original=[(m.id,m.order_index,m.score_json,m.winner_id) for m in t.matches]
+    guest=app.test_client();old=guest.get('/updates/palette-live').json
+    custom={mode:dict(PALETTES['forest'][mode]) for mode in ('light','dark')};custom['light']['accent']='#663399';custom['dark']['body']='#111222'
+    payload={'interface_style':'modern','palette_id':'custom','palette_mode':'light','custom_palette_json':json.dumps(custom),'csrf_token':token}
+    r=admin.post(f'/tournament/{tid}/appearance',data=payload,headers={'X-Tournament-Action':'1'})
+    assert r.status_code==200 and r.json['ok']
+    assert r.headers['X-Frame-Options']=='DENY'
+    with app.app_context():
+        t=db.session.get(Tournament,tid);cfg=settings_for(t)
+        assert cfg['custom_palette']==custom and cfg['palette_id']=='custom'
+        assert [(m.id,m.order_index,m.score_json,m.winner_id) for m in t.matches]==original
+        assert settings_for(db.session.get(Tournament,other)).get('palette_id','default')=='default'
+    delta=guest.get('/updates/palette-live?cursor='+old['cursor']).json
+    assert 'palette' in delta['entities'] and not any(key.startswith('match:') for key in delta['entities'])
+    shared=json.loads(html.unescape(re.search('data-config="([^"]+)"',delta['entities']['palette'])[1]))
+    assert shared['custom']['light']['accent']=='#663399' and shared['style']=='modern'
+    public=guest.get('/players/palette-live?display=1').text
+    assert 'palettes.js' in public and '#663399' in public and 'appearance-form' not in public
+    assert 'palette-choice' in admin.get(f'/tournament/{tid}').text
+    # Reject CSS injection, unknown palettes, malformed structures and invalid modes.
+    for mutation in ({'palette_id':'unknown'},{'palette_mode':'wrong'},{'custom_palette_json':'[]'},{'custom_palette_json':'invalid'}):
+        assert admin.post(f'/tournament/{tid}/appearance',data={**payload,**mutation}).status_code==400
+    bad={mode:dict(values) for mode,values in custom.items()};bad['light']['body']='red;display:none'
+    assert admin.post(f'/tournament/{tid}/appearance',data={**payload,'custom_palette_json':json.dumps(bad)}).status_code==400
+    with app.app_context():assert settings_for(db.session.get(Tournament,tid))['custom_palette']==custom
+    # Returning to a preset keeps the custom colours for later reuse.
+    assert admin.post(f'/tournament/{tid}/appearance',data={'interface_style':'classic','palette_id':'stone','palette_mode':'dark','csrf_token':token}).status_code==302
+    with app.app_context():assert settings_for(db.session.get(Tournament,tid))['custom_palette']==custom

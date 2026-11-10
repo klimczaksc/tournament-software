@@ -148,3 +148,18 @@ Przebieg punktów ma osobną poziomą tabelę na każdy set. Dwa wiersze odpowia
 a kolumny kolejnym zdobytym punktom. W komórce zdobywcy widnieje jego aktualny numer
 punktu, a komórka przeciwnika jest pusta. Przykład: A „1, 2, pusto, 3”, B „pusto, pusto, 1, pusto”.
 Tabele mają stałą kolumnę z nazwami i przewijanie poziome; cofnięcie usuwa odpowiednią kolumnę.
+
+### Palety kolorów
+
+„Wygląd · styl i paleta kolorów” daje Domyślną, Zieleń, Papier, Kamień, Grafit,
+Czerń oraz własną paletę. Osiem pól obejmuje tło strony, karty, pola/nagłówki,
+tekst, tekst pomocniczy, obramowania, akcent i ostrzeżenia. Dostępny jest picker
+oraz HEX; tryby jasny i ciemny mają niezależne zestawy kolorów. Zmiana pola tworzy
+własną paletę na bazie aktualnego motywu. Podgląd jest lokalny do chwili zapisu;
+„Anuluj podgląd” przywraca ostatnie ustawienie serwera.
+
+Zapis jest chroniony uprawnieniami administratora i CSRF, a kolory mają ścisłą
+walidację #RRGGBB. Paleta zapisuje się w ustawieniach turnieju i jego kopii JSON.
+Otwarty panel zawodnika/telewizora otrzymuje zmianę jako zdarzenie `palette`,
+bez przeładowania dokumentu. Kolor tekstu przycisków i linków dobierany jest
+automatycznie; przy słabym kontraście tekstu w ręcznej palecie podgląd pokazuje uwagę.

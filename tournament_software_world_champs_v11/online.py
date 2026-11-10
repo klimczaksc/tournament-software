@@ -10,6 +10,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
+from palettes import PALETTES, FIELDS, palette_config, parse_palette
 
 
 def configure_online(app, db, Tournament, settings_for, save_settings, tournament_view):
@@ -49,7 +50,7 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
     @app.context_processor
     def identity():
         user = getattr(g, 'user', None)
-        return dict(current_user=user, is_admin=bool(user and user.role == 'admin'), public_view=getattr(g, 'public_view', False))
+        return dict(palette_catalog=PALETTES,palette_fields=FIELDS,palette_config=palette_config,current_user=user, is_admin=bool(user and user.role == 'admin'), public_view=getattr(g, 'public_view', False))
 
     @app.after_request
     def headers(response):
@@ -158,9 +159,13 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
             abort(400)
         data = settings_for(t)
         data['interface_style'] = style
+        if 'palette_id' in request.form:
+            try:data.update(parse_palette(request.form,data))
+            except (ValueError,TypeError):abort(400,'Podaj prawidłową paletę i kolory w formacie #RRGGBB.')
         save_settings(t, data)
         db.session.commit()
         session['interface_style'] = style
+        session['appearance_palette'] = palette_config(data)
         flash('Styl interfejsu zapisany.')
         return redirect(url_for('tournament_view', tournament_id=t.id))
 

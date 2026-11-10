@@ -1,0 +1,12 @@
+<details class="section mb" id="appearance" open><summary>Wygląd · styl i paleta kolorów</summary><div class="section-body card">
+<form id="appearance-form" method="post" action="{{ url_for('appearance',tournament_id=tournament.id) }}">
+<div class="row mb"><label>Styl interfejsu <select id="interface-style" name="interface_style"><option value="classic" {% if settings.get('interface_style') != 'modern' %}selected{% endif %}>Klasyczny</option><option value="modern" {% if settings.get('interface_style') == 'modern' %}selected{% endif %}>Nowoczesny</option></select></label>
+<label>Paleta <select id="palette-choice" name="palette_id">{% for key,value in palette_catalog.items() %}<option value="{{ key }}" {% if current_palette.id == key %}selected{% endif %}>{{ value.name }}</option>{% endfor %}<option value="custom" {% if current_palette.id == 'custom' %}selected{% endif %}>Własna paleta</option></select></label>
+<label>Tryb <select id="palette-mode" name="palette_mode"><option value="light">Jasny</option><option value="dark">Ciemny</option></select></label></div>
+<p class="small muted">Podgląd działa od razu. Zapis dotyczy tego turnieju: administratora, sędziego, zawodników i telewizora. Możesz dobrać osobne kolory dla trybu jasnego i ciemnego.</p>
+<div class="palette-inputs">{% for key,label in palette_fields.items() %}<label>{{ label }}<span class="row"><input type="color" data-color="{{ key }}" aria-label="{{ label }} — wybierz kolor"><input type="text" data-hex="{{ key }}" aria-label="{{ label }} — kod HEX" pattern="#[0-9a-fA-F]{6}" maxlength="7" spellcheck="false"></span></label>{% endfor %}</div>
+<input type="hidden" name="custom_palette_json" id="custom-palette-json">
+<div id="palette-preview-note" class="small muted mt" role="status"></div>
+<div class="actions mt"><button>Zapisz styl i paletę</button><button type="button" id="palette-cancel" class="btn-secondary">Anuluj podgląd</button></div>
+</form></div></details>
+<style>.palette-inputs{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:16px}.palette-inputs label{font-size:13px;font-weight:600}.palette-inputs input[type=color]{width:48px;height:42px;min-height:42px;padding:3px;cursor:pointer}.palette-inputs input[type=text]{width:105px;font-family:monospace}.palette-inputs .row{gap:6px;flex-wrap:nowrap}@media(max-width:1000px){.palette-inputs{grid-template-columns:repeat(2,minmax(140px,1fr))}}@media(max-width:450px){.palette-inputs{grid-template-columns:1fr}}#palette-preview-note{min-height:20px}</style>
