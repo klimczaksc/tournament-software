@@ -2871,7 +2871,7 @@ def delete_tournament(tournament_id):
 
 
 from referees import configure_referees
-referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets)
+referee_services = configure_referees(app, db, Tournament, Match, settings_for, save_settings_dict, meta_for, set_meta, group_stage_complete, save_match_sets, lambda t, matches: build_timetable(t, matches, settings_for(t), meta_for, closing_match_kind))
 
 app.extensions['referee_services']=referee_services
 

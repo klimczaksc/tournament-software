@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const code=fs.readFileSync(__dirname+'/static/referee-score.js','utf8');
 const tick=()=>new Promise(r=>setImmediate(r));
 async function setup(t){
- const dom=new JSDOM(`<div id="referee-app" data-state-url="/state" data-action-url="/action"><span id="ref-connection"></span><div id="ref-rules"></div><div id="ref-sets"></div><button class="point-tile" data-side="0"><span class="ref-name"></span><span id="ref-p0"></span></button><button class="point-tile" data-side="1"><span class="ref-name"></span><span id="ref-p1"></span></button><section id="ref-timeouts"><button data-timeout-side="0"></button><button data-timeout-side="1"></button><div id="ref-timeout-active"><span id="ref-timeout-clock"></span><span id="ref-timeout-owner"></span><button id="ref-timeout-end"></button></div></section><button id="ref-undo"></button><button id="ref-finish"></button></div>`,{url:'https://tournament.test/referee/1',runScripts:'outside-only',pretendToBeVisual:true});
+ const dom=new JSDOM(`<div id="referee-app" data-state-url="/state" data-action-url="/action"><span id="ref-connection"></span><div id="ref-rules"></div><div id="ref-sets"></div><button class="point-tile" data-side="0"><span class="ref-name"></span><span id="ref-p0"></span></button><button class="point-tile" data-side="1"><span class="ref-name"></span><span id="ref-p1"></span></button><section id="ref-timeouts"><button data-timeout-side="0"></button><button data-timeout-side="1"></button><div id="ref-timeout-active"><span id="ref-timeout-clock"></span><span id="ref-timeout-owner"></span><button id="ref-timeout-end"></button></div></section><button id="ref-undo"></button><button id="ref-finish"></button><a id="ref-return" hidden href="/t/test"></a><button id="ref-handover"></button><p id="ref-handover-note" hidden></p></div>`,{url:'https://tournament.test/referee/1',runScripts:'outside-only',pretendToBeVisual:true});
  t.after(()=>dom.window.close());const w=dom.window;
  let server={revision:0,current:[0,0],sets:[],players:['A','B'],best_of:3,points_to:15,started:true,finalized:false,awaiting_confirmation:false,winner_id:null};
  const writes=[];let mode='ok',poll;
@@ -39,7 +39,7 @@ test('A stale revision refreshes server state and does not claim a successful po
 test('The final confirmation stops further point entry',async t=>{
  const {w,writes,server,poll}=await setup(t);server.awaiting_confirmation=true;server.sets=[[15,0],[15,0]];await poll();
  assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.equal(w.document.getElementById('ref-finish').hidden,false);
- w.document.getElementById('ref-finish').click();await tick();assert.equal(writes[0].action,'finish');assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.match(w.document.getElementById('ref-connection').textContent,/zakończony/);
+ w.document.getElementById('ref-finish').click();await tick();assert.equal(writes[0].action,'finish');assert.equal(w.document.querySelector('[data-side="0"]').disabled,true);assert.match(w.document.getElementById('ref-connection').textContent,/zakończony/);assert.equal(w.document.getElementById('ref-return').hidden,false);
 });
 
 test('Timeout shows 2:00, blocks scoring, and keeps used quota after expiry',async t=>{

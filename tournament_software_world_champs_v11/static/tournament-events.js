@@ -2,6 +2,9 @@
 (() => {
  const source=document.getElementById('tournament-events');if(!source)return;
  let cursor='',pending=null;
+ const monitor=source.dataset.public==='1'&&document.documentElement.classList.contains('monitor-mode');
+ const held=new Map();let lastLayout=null;
+ let screenKeys=[...document.querySelectorAll('[data-event-list="next"] > [data-event-key]')].map(el=>el.dataset.eventKey);
  const dirty=new WeakSet();let submitted=null;
  document.addEventListener('input',e=>{if(e.target.form)dirty.add(e.target.form);});
  document.addEventListener('change',e=>{if(e.target.form)dirty.add(e.target.form);});
@@ -27,7 +30,17 @@
  }
  function lists(layout){
   if(!layout||source.dataset.public!=='1')return;
-  const batches={next:layout.upcoming.slice(0,5),more:layout.upcoming.slice(5),completed:layout.completed};
+  lastLayout=layout;
+  let upcoming=[...layout.upcoming];
+  if(monitor){
+   const now=Date.now();
+   screenKeys.forEach(key=>{if(layout.completed.includes(key)&&!held.has(key))held.set(key,now+120000);});
+   for(const [key,until] of held)if(until<=now||!layout.completed.includes(key)){held.delete(key);screenKeys=screenKeys.filter(item=>item!==key);const card=find(key);if(card)card.style.minHeight='';}
+   const retained=screenKeys.map((key,index)=>({key,index})).filter(item=>held.has(item.key));
+   retained.forEach(({key,index})=>upcoming.splice(Math.min(index,upcoming.length),0,key));
+  }
+  const batches={next:upcoming.slice(0,5),more:upcoming.slice(5),completed:layout.completed.filter(key=>!held.has(key))};
+  screenKeys=batches.next;
   Object.entries(batches).forEach(([name,keys])=>{
    const target=document.querySelector('[data-event-list="'+name+'"]');if(!target)return;
    target.querySelectorAll(':scope > p').forEach(p=>p.remove());
@@ -51,6 +64,7 @@
     const template=document.createElement('template');template.innerHTML=html;const fresh=template.content.firstElementChild;if(!fresh)continue;
     const old=find(key);
     if(old){
+     if(monitor&&screenKeys.includes(key)&&fresh.dataset.eventComplete==='1'&&old.dataset.eventComplete!=='1')old.style.minHeight=old.getBoundingClientRect().height+'px';
      const officialChanged=old.dataset.resultVersion!==fresh.dataset.resultVersion;
      if(officialChanged)old.querySelectorAll('form').forEach(form=>{if(isResultForm(form))dirty.delete(form);});
      if(officialChanged&&fresh.dataset.eventComplete==='1'&&fresh.dataset.resultScore&&submitted?.closest('[data-event-key]')!==old)completed.push('Zapisano wynik meczu #'+fresh.dataset.matchNumber+': '+fresh.dataset.resultScore);
@@ -66,7 +80,7 @@
    lists(patch.layout);
    if(typeof applyFilter==='function')applyFilter();
    if(Object.keys(patch.entities||{}).some(key=>key.startsWith('bracket:'))&&typeof drawBracketConnectors==='function')drawBracketConnectors();
-   const el=anchor&&find(anchor);window.scrollTo({left:x,top:el?y+el.getBoundingClientRect().top-top:y,behavior:'instant'});
+   const el=anchor&&find(anchor);window.scrollTo({left:x,top:!monitor&&el?y+el.getBoundingClientRect().top-top:y,behavior:'instant'});
   }finally{root.style.scrollBehavior=behavior;root.style.overflowAnchor=anchoring;}
   announce(completed);
   document.dispatchEvent(new CustomEvent('tournament:updated',{detail:{changed:Object.keys(patch.entities||{}),cursor:patch.cursor}}));
@@ -89,6 +103,7 @@
  }
  function clocks(){document.querySelectorAll('[data-timeout-until]').forEach(el=>{const clock=el.querySelector('[data-timeout-clock]');if(!clock)return;const seconds=Math.max(0,Math.ceil((Date.parse(el.dataset.timeoutUntil)-Date.now())/1000));clock.textContent=seconds?Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0'):'Koniec czasu';});}
  clocks();setInterval(clocks,250);
+ setInterval(()=>{if(monitor&&lastLayout&&[...held.values()].some(until=>until<=Date.now())){const y=window.scrollY,x=window.scrollX;lists(lastLayout);if(typeof applyFilter==='function')applyFilter();window.scrollTo({left:x,top:y,behavior:'instant'});}},1000);
  window.TournamentEvents={refresh,morph};
  refresh().catch(()=>{});setInterval(()=>{if(!document.hidden)refresh().catch(()=>{});},2000);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh().catch(()=>{});});

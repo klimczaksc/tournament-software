@@ -13,7 +13,7 @@ from timetable import local_now
 from match_statistics import utc_now, as_utc
 
 
-def configure_referees(app, db, Tournament, Match, settings_for, save_settings, meta_for, set_meta, groups_complete, save_result):
+def configure_referees(app, db, Tournament, Match, settings_for, save_settings, meta_for, set_meta, groups_complete, save_result, timetable_for):
     class RefereeScore(db.Model):
         match_id = db.Column(db.Integer, db.ForeignKey('match.id'), primary_key=True)
         # Desk codes are independent of account passwords and excluded from public responses/backups.
@@ -55,10 +55,33 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
         if not settings_for(t).get('referee_enabled'):
             return {}
         result = {}
-        for m in matches:
+        timing = timetable_for(t, matches)
+        reserved = []
+        def overlap(a, b):
+            if a.id in timing and b.id in timing:
+                return timing[a.id]['start'] < timing[b.id]['end'] and timing[b.id]['start'] < timing[a.id]['end']
+            return bool(meta_for(a).get('actual_start') and meta_for(b).get('actual_start'))
+        def conflict(pid, match):
+            if not pid or match.winner_id:return None
+            if pid in (match.player1_id,match.player2_id):return match
+            return next((other for other in matches if other.id!=match.id and not other.winner_id and pid in (other.player1_id,other.player2_id) and (overlap(match,other) or meta_for(other).get('actual_start'))),None)
+        for m in sorted(matches,key=lambda item:(not bool(meta_for(item).get('actual_start') and not item.winner_id),item.order_index)):
             md = meta_for(m)
+            if md.get('referee_handover') and not m.winner_id:
+                result[m.id] = 'Potrzebny sędzia — przekazanie przy stoliku'
+                continue
             if md.get('referee_name'):
-                result[m.id] = md['referee_name']
+                pid=md.get('referee_player_id')
+                if not pid:
+                    pid=next((p.id for p in t.players if p.name.casefold()==md['referee_name'].casefold()),None)
+                other=conflict(pid,m)
+                if other:
+                    result[m.id] = f"Do zmiany: {md['referee_name']} gra mecz #{other.order_index}"
+                elif pid and not m.winner_id and any(used==pid and overlap(m,match) for used,match in reserved):
+                    result[m.id] = 'Do zmiany: sędzia prowadzi inny mecz'
+                else:
+                    result[m.id] = md['referee_name']
+                    if pid and not m.winner_id:reserved.append((pid,m))
                 continue
             previous = [x for x in matches if x.order_index < m.order_index and x.id != m.id]
             chosen = None
@@ -72,16 +95,19 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
                         continue
                     if candidate.court_number != m.court_number:
                         continue
-                    if candidate.loser_id and candidate.loser_id in (m.player1_id, m.player2_id):
+                    if candidate.loser_id and (conflict(candidate.loser_id,m) or any(pid==candidate.loser_id and overlap(m,other) for pid,other in reserved)):
                         continue
                     chosen = candidate
                     break
             if not chosen:
                 result[m.id] = 'Do wyznaczenia przy stoliku'
-            elif chosen.loser_id and chosen.loser_id in (m.player1_id, m.player2_id):
-                result[m.id] = f'Do zmiany: przegrany #{chosen.order_index} gra w tym meczu'
+            elif chosen.loser_id and conflict(chosen.loser_id,m):
+                result[m.id] = f'Do zmiany: {chosen.loser.name} gra mecz #{conflict(chosen.loser_id,m).order_index}'
+            elif chosen.loser_id and not m.winner_id and any(pid==chosen.loser_id and overlap(m,other) for pid,other in reserved):
+                result[m.id] = 'Do zmiany: sędzia prowadzi inny mecz'
             elif chosen.loser:
                 result[m.id] = chosen.loser.name
+                if not m.winner_id:reserved.append((chosen.loser_id,m))
             else:
                 result[m.id] = f'Przegrany meczu #{chosen.order_index} (jedna osoba z drużyny)'
         return result
@@ -135,7 +161,7 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
         playable = bool(m.player1_id and m.player2_id and not m.winner_id and not json.loads(m.score_json or '[]'))
         if m.tournament.system == 'group_knockout' and not m.bracket.startswith('group_') and not groups_complete(m.tournament_id):
             playable = False
-        return {'timeout':timeout_info(d), 'playable': playable, 'revision': row.revision, 'sets': d['sets'], 'current': d['current'], 'started': d['started'], 'finalized': d['finalized'], 'awaiting_confirmation': bool(d.get('finished_at')), 'winner_id': m.winner_id, 'players': [m.player1.name if m.player1 else 'TBD', m.player2.name if m.player2 else 'TBD'], 'best_of': m.phase.best_of if m.phase else 3, 'points_to': m.phase.points_to if m.phase else 21}
+        return {'timeout':timeout_info(d), 'playable': playable, 'revision': row.revision, 'sets': d['sets'], 'current': d['current'], 'started': d['started'], 'finalized': d['finalized'], 'awaiting_confirmation': bool(d.get('finished_at')), 'winner_id': m.winner_id, 'handover':bool(meta_for(m).get('referee_handover')), 'players': [m.player1.name if m.player1 else 'TBD', m.player2.name if m.player2 else 'TBD'], 'best_of': m.phase.best_of if m.phase else 3, 'points_to': m.phase.points_to if m.phase else 21}
 
     @app.route('/tournament/<int:tournament_id>/referees', methods=['POST'])
     def configure_referee_panel(tournament_id):
@@ -161,9 +187,14 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
         if len(name) > 100:
             abort(400)
         source = request.form.get('source_match', '')
-        for key in ('referee_name', 'referee_source_key', 'referee_source_order'):
+        for key in ('referee_name', 'referee_player_id', 'referee_source_key', 'referee_source_order', 'referee_handover'):
             md.pop(key, None)
-        if name:
+        pid=request.form.get('referee_player_id','')
+        if pid:
+            player=next((p for p in m.tournament.players if str(p.id)==pid),None)
+            if not player:abort(400)
+            md['referee_player_id']=player.id;md['referee_name']=player.name
+        elif name:
             md['referee_name'] = name
         elif source:
             source_match = db.session.get(Match, int(source)) if source.isdigit() and len(source) <= 10 else None
@@ -269,7 +300,7 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
             data['revision']=row.revision
             data.setdefault('timeouts',[])
             timeout=timeout_info(data)
-            if timeout['active'] and action!='timeout_end':
+            if timeout['active'] and action not in ('timeout_end','handover'):
                 abort(409,'Trwa czas zawodnika. Zakończ go lub poczekaj na upływ 2 minut.')
             if action in ('timeout','timeout_end'):
                 if not data.get('started') or data.get('finished_at'):
@@ -288,6 +319,10 @@ def configure_referees(app, db, Tournament, Match, settings_for, save_settings, 
                     item['closed_at']=min(now,as_utc(item['until'])).isoformat()
                 app.extensions['match_statistics']['record'](m,'timeout_start' if action=='timeout' else 'timeout_end',data,item['side'],{'set':item['set'],'timeout_id':item['id'],'until':item['until']})
                 row.data_json=json.dumps(data);db.session.commit()
+                return jsonify(state_payload(m,row))
+            if action == 'handover':
+                md=meta_for(m);md['referee_handover']=True;set_meta(m,md)
+                db.session.commit()
                 return jsonify(state_payload(m,row))
             if action == 'finish':
                 if not data.get('finished_at'):

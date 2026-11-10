@@ -11,6 +11,10 @@
   function render(){
     if(!state)return;
     const active=activeTimeout();
+    const back=document.getElementById('ref-return'),handover=document.getElementById('ref-handover'),note=document.getElementById('ref-handover-note');
+    if(back)back.hidden=!(state.finalized||state.winner_id||state.handover);
+    if(handover){handover.hidden=!!state.winner_id||state.finalized||state.handover;handover.disabled=busy||blocked;}
+    if(note)note.hidden=!state.handover;
     if(timeoutPanel)timeoutPanel.hidden=state.awaiting_confirmation||state.finalized||!!state.winner_id;
     timeoutButtons.forEach(button=>{const side=Number(button.dataset.timeoutSide),used=!!state.timeout?.used[side];button.disabled=busy||blocked||!state.started||state.playable===false||state.awaiting_confirmation||!!state.winner_id||!!active||used;button.textContent='Czas — '+state.players[side]+' · '+(used?'wykorzystany':'dostępny')+' (set '+(state.timeout?.set||state.sets.length+1)+')';});
     if(timeoutDisplay){timeoutDisplay.hidden=!active;if(active){const remaining=Math.max(0,Math.ceil((Date.parse(active.until)-Date.now()-serverOffset)/1000));document.getElementById('ref-timeout-clock').textContent=Math.floor(remaining/60)+':'+String(remaining%60).padStart(2,'0');document.getElementById('ref-timeout-owner').textContent='Czas: '+state.players[active.side];}}
@@ -47,6 +51,7 @@
   }
   timeoutButtons.forEach(button=>button.addEventListener('click',()=>{const side=Number(button.dataset.timeoutSide);if(confirm('Uruchomić 2-minutowy czas dla: '+state.players[side]+'? W tym secie można go wykorzystać tylko raz.'))action('timeout',side);}));
   if(timeoutEnd)timeoutEnd.addEventListener('click',()=>action('timeout_end'));
+  const handover=document.getElementById('ref-handover');if(handover)handover.addEventListener('click',()=>{if(confirm('Przekazać sędziowanie? Zgłoś się do stolika po zastępstwo. Wynik zostanie zachowany.'))action('handover');});
   if(start)start.addEventListener('click',()=>action('start'));
   tiles.forEach(tile=>tile.addEventListener('click',()=>action('point',Number(tile.dataset.side))));
   undo.addEventListener('click',()=>action('undo'));

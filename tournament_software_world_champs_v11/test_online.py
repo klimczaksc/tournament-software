@@ -838,3 +838,46 @@ def test_palettes_custom_colours_validation_and_live_sharing_are_tournament_scop
     # Returning to a preset keeps the custom colours for later reuse.
     assert admin.post(f'/tournament/{tid}/appearance',data={'interface_style':'classic','palette_id':'stone','palette_mode':'dark','csrf_token':token}).status_code==302
     with app.app_context():assert settings_for(db.session.get(Tournament,tid))['custom_palette']==custom
+
+
+def test_referee_handover_keeps_live_points_code_and_match_start():
+    from app import meta_for
+    admin,atok,tid,mid,code=referee_fixture()
+    guest=app.test_client();token=csrf(guest,f'/referee/{mid}')
+    guest.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'198.51.100.91'})
+    state=guest.get(f'/referee/{mid}/state').json
+    point=guest.post(f'/referee/{mid}/action',json={'action':'point','side':0,'revision':state['revision']},headers={'X-CSRFToken':token})
+    assert point.status_code==200
+    with app.app_context(): before=meta_for(db.session.get(Match,mid))['actual_start']
+    result=guest.post(f'/referee/{mid}/action',json={'action':'handover','revision':point.json['revision']},headers={'X-CSRFToken':token})
+    assert result.status_code==200 and result.json['handover'] and result.json['current']==[1,0]
+    assert 'Potrzebny sędzia' in admin.get(f'/tournament/{tid}').text
+    with app.app_context():
+        assert meta_for(db.session.get(Match,mid))['actual_start']==before
+        assert db.session.get(app.extensions['referee_score'],mid).desk_code==code
+    replacement=app.test_client();replacement_token=csrf(replacement,f'/referee/{mid}')
+    assert replacement.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':replacement_token},environ_overrides={'REMOTE_ADDR':'198.51.100.92'}).status_code==302
+    assert replacement.get(f'/referee/{mid}/state').json['current']==[1,0]
+    admin.post(f'/match/{mid}/referee-assignment',data={'referee_name':'Zastępca','csrf_token':atok})
+    assert not replacement.get(f'/referee/{mid}/state').json['handover']
+    assert '/t/ref-' in replacement.get(f'/referee/{mid}').text
+
+
+def test_referee_assignments_give_playing_priority_for_overlapping_matches():
+    from app import referee_services,meta_for,set_meta,settings_for
+    from timetable import local_now
+    admin,atok,tid,mid,code=referee_fixture(8,'round_robin')
+    admin.post(f'/match/{mid}/result',data={'set_1_p1':3,'set_1_p2':0,'set_2_p1':3,'set_2_p2':0,'csrf_token':atok})
+    with app.app_context():
+        t=db.session.get(Tournament,tid);first=db.session.get(Match,mid);pid=first.loser_id
+        target=next(x for x in t.matches if x.order_index>first.order_index and pid not in (x.player1_id,x.player2_id))
+        playing=next(x for x in t.matches if x.id!=mid and x.id!=target.id and pid in (x.player1_id,x.player2_id) and not x.winner_id)
+        for m in (target,playing):
+            md=meta_for(m);md['actual_start']=local_now(settings_for(t)).isoformat();set_meta(m,md)
+        playing.court_number=2;target.court_number=1
+        md=meta_for(target);md['referee_source_order']=first.order_index;set_meta(target,md);db.session.commit()
+        assigned=referee_services['assignments'](t,list(t.matches))[target.id]
+        assert 'Do zmiany:' in assigned and f'#{playing.order_index}' in assigned
+        # A registered manual assignment receives the same collision check.
+        md=meta_for(target);md['referee_name']=first.loser.name;md['referee_player_id']=pid;set_meta(target,md);db.session.commit()
+        assert 'Do zmiany:' in referee_services['assignments'](t,list(t.matches))[target.id]
