@@ -768,3 +768,31 @@ def test_two_minute_timeouts_each_side_once_per_set_and_persist_on_reload(monkey
     assert [e['action'] for e in data['audit']].count('timeout_start')==3
     assert [e['action'] for e in data['audit']].count('timeout_end')==1
     assert data['audit'][-1]['side']==0 and data['audit'][-1]['set']==2
+
+
+def test_referee_confirmation_updates_open_admin_card_and_next_match_without_navigation():
+    from app import meta_for
+    admin,atok,tid,mid,code=referee_fixture()
+    initial=admin.get(f'/tournament/{tid}/updates').json
+    referee=app.test_client();token=csrf(referee,f'/referee/{mid}')
+    assert referee.post(f'/referee/{mid}/access',data={'code':code,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'203.0.113.92'}).status_code==302
+    state=referee.get(f'/referee/{mid}/state').json
+    for action in ['start']+['point']*6+['finish']:
+        r=referee.post(f'/referee/{mid}/action',json={'action':action,'side':0,'revision':state['revision']},headers={'X-CSRFToken':token})
+        assert r.status_code==200,r.text
+        state=r.json
+    patch=admin.get(f'/tournament/{tid}/updates?cursor='+initial['cursor'])
+    assert patch.status_code==200 and patch.is_json and not patch.json['reset']
+    card=patch.json['entities']['match:'+str(mid)]
+    assert 'data-event-complete="1"' in card and 'Zakończony' in card
+    assert 'name="set_1_p1" value="3"' in card and 'name="set_1_p2" value="0"' in card
+    assert 'Zapisany wynik końcowy' in card and 'Wynik live:' not in card
+    with app.app_context():
+        m=db.session.get(Match,mid);key=meta_for(m)['key'];winner=m.winner.name
+        following=next(x for x in m.tournament.matches if any(source.get('kind')=='winner' and source.get('match_key')==key for source in meta_for(x).get('sources',[])))
+        assert 'match:'+str(following.id) in patch.json['entities']
+        assert winner in patch.json['entities']['match:'+str(following.id)]
+    public=app.test_client().get('/players/ref-'+str(tid)).text
+    clock_values=re.findall(r'<div class="match-time"><strong>([^<]+)</strong>',public)
+    assert clock_values and all(re.fullmatch(r'\d{2}:\d{2}',value) for value in clock_values)
+    assert not re.search(r'Court \d+ · \d{2}\.\d{2} \d{2}:\d{2}',public)

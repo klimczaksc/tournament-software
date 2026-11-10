@@ -11,3 +11,18 @@ test('Changed score patches preserve both card identity and untouched nodes',asy
 test('Unsaved forms and expanded details survive a score update and insertion',async t=>{const {w,set}=await setup(t);const one=w.document.querySelector('[data-event-key="match:1"]'),details=one.querySelector('details'),input=one.querySelector('input');details.open=true;input.value='11:15';input.dispatchEvent(new w.Event('input',{bubbles:true}));set({cursor:'n',entities:{'match:1':card(1,'2:0','<p>Nowy status</p>')},removed:[]});await w.TournamentEvents.refresh();const fresh=one.querySelector('input');assert.equal(fresh.value,'11:15');assert.equal(one.querySelector('details').open,true);});
 test('Completed matches move between lists without recreating their card',async t=>{const {w,set}=await setup(t,true);const one=w.document.querySelector('[data-event-key="match:1"]');set({cursor:'n',entities:{},removed:[],layout:{upcoming:['match:2'],completed:['match:1']}});await w.TournamentEvents.refresh();assert.equal(w.document.querySelector('[data-event-list="completed"]').firstElementChild,one);assert.equal(w.document.getElementById('more-upcoming').hidden,true);});
 test('An unchanged cursor causes no DOM mutation',async t=>{const {w}=await setup(t);const old=w.document.querySelector('#matches').innerHTML;await w.TournamentEvents.refresh();assert.equal(w.document.querySelector('#matches').innerHTML,old);});
+
+test('Confirmed remote result replaces only that result draft and announces the saved match',async t=>{
+ const {w,set}=await setup(t);
+ const one=w.document.querySelector('[data-event-key="match:1"]'),two=w.document.querySelector('[data-event-key="match:2"]');
+ one.dataset.resultVersion=':[]';
+ const result=w.document.createElement('form');result.action='/match/1/result';result.innerHTML='<input name="set_1_p1" value=""><input name="set_1_p2" value="">';one.prepend(result);
+ result.elements[0].value='9';result.elements[0].dispatchEvent(new w.Event('input',{bubbles:true}));
+ const time=one.querySelector('[name="manual_start"]');time.value='12:00';time.dispatchEvent(new w.Event('input',{bubbles:true}));
+ const other=two.querySelector('input');other.value='11:45';other.dispatchEvent(new w.Event('input',{bubbles:true}));
+ const fresh=`<article data-event-key="match:1" data-result-version="1:[[15,5],[15,5]]" data-event-complete="1" data-match-number="7" data-result-score="15-5, 15-5" data-player1="1" data-player2="2"><form action="/match/1/result"><input name="set_1_p1" value="15"><input name="set_1_p2" value="5"></form><strong>Zakończony</strong><details><summary>Godziny</summary><form action="/timing"><input name="manual_start" value="10:00"></form></details></article>`;
+ set({cursor:'accepted',entities:{'match:1':fresh},removed:[]});await w.TournamentEvents.refresh();
+ assert.equal(one.querySelector('[name="set_1_p1"]').value,'15');assert.equal(one.querySelector('[name="set_1_p2"]').value,'5');
+ assert.equal(one.querySelector('[name="manual_start"]').value,'12:00');assert.equal(two.querySelector('input').value,'11:45');
+ assert.match(w.document.querySelector('.tournament-result-notice').textContent,/#7/);assert.equal(w.document.querySelector('.tournament-result-notice').hidden,false);
+});

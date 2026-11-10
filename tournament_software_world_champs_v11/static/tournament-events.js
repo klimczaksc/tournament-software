@@ -5,6 +5,9 @@
  const dirty=new WeakSet();let submitted=null;
  document.addEventListener('input',e=>{if(e.target.form)dirty.add(e.target.form);});
  document.addEventListener('change',e=>{if(e.target.form)dirty.add(e.target.form);});
+ const isResultForm=form=>/\/match\/\d+\/result$/.test(new URL(form.action).pathname);
+ const received=document.createElement('div');received.className='tournament-result-notice';received.setAttribute('role','status');received.hidden=true;document.body.append(received);let receivedTimer;
+ function announce(results){if(!results.length||source.dataset.public==='1')return;clearTimeout(receivedTimer);received.textContent=results.length===1?results[0]:'Odebrano i zapisano wyniki '+results.length+' meczów.';received.hidden=false;receivedTimer=setTimeout(()=>{received.hidden=true;},6500);}
  const find=key=>[...document.querySelectorAll('[data-event-key]')].find(el=>el.dataset.eventKey===key);
  function morph(old,fresh,invalidate=false){
   if(old.nodeType!==fresh.nodeType||old.nodeName!==fresh.nodeName){old.replaceWith(fresh.cloneNode(true));return;}
@@ -40,6 +43,7 @@
   const y=window.scrollY,x=window.scrollX,root=document.documentElement;
   const behavior=root.style.scrollBehavior,anchoring=root.style.overflowAnchor;
   root.style.scrollBehavior='auto';root.style.overflowAnchor='none';
+  const completed=[];
   try{
    if(patch.reset)document.querySelectorAll('[data-event-key]').forEach(el=>{if(/^(match:|bracket:|group:)/.test(el.dataset.eventKey)&&!(el.dataset.eventKey in patch.entities))el.remove();});
    for(const key of patch.removed||[])find(key)?.remove();
@@ -47,9 +51,12 @@
     const template=document.createElement('template');template.innerHTML=html;const fresh=template.content.firstElementChild;if(!fresh)continue;
     const old=find(key);
     if(old){
+     const officialChanged=old.dataset.resultVersion!==fresh.dataset.resultVersion;
+     if(officialChanged)old.querySelectorAll('form').forEach(form=>{if(isResultForm(form))dirty.delete(form);});
+     if(officialChanged&&fresh.dataset.eventComplete==='1'&&fresh.dataset.resultScore&&submitted?.closest('[data-event-key]')!==old)completed.push('Zapisano wynik meczu #'+fresh.dataset.matchNumber+': '+fresh.dataset.resultScore);
      const changedPlayers=old.dataset.player1!==fresh.dataset.player1||old.dataset.player2!==fresh.dataset.player2;
      const opened=[...old.querySelectorAll('details')].map(d=>d.open);
-     const drafts=[...old.querySelectorAll('form')].filter(f=>dirty.has(f)&&f!==submitted&&!changedPlayers).map(f=>({action:f.getAttribute('action'),fields:[...f.elements].filter(el=>el.name&&el.type!=='hidden'&&el.tagName!=='BUTTON').map(el=>({name:el.name,value:el.value,checked:el.checked,focused:el===document.activeElement}))}));
+     const drafts=[...old.querySelectorAll('form')].filter(f=>dirty.has(f)&&f!==submitted&&!changedPlayers&&!(officialChanged&&isResultForm(f))).map(f=>({action:f.getAttribute('action'),fields:[...f.elements].filter(el=>el.name&&el.type!=='hidden'&&el.tagName!=='BUTTON').map(el=>({name:el.name,value:el.value,checked:el.checked,focused:el===document.activeElement}))}));
      morph(old,fresh,changedPlayers);
      old.querySelectorAll('details').forEach((d,i)=>{if(i<opened.length)d.open=opened[i];});
      drafts.forEach(draft=>{const target=[...old.querySelectorAll('form')].find(f=>f.getAttribute('action')===draft.action&&draft.fields.every(field=>f.elements.namedItem(field.name)));if(!target)return;draft.fields.forEach(field=>{const el=target.elements.namedItem(field.name);if(el.disabled)return;el.value=field.value;if(el.type==='checkbox'||el.type==='radio')el.checked=field.checked;if(field.focused)el.focus({preventScroll:true});});dirty.add(target);});
@@ -61,6 +68,7 @@
    if(Object.keys(patch.entities||{}).some(key=>key.startsWith('bracket:'))&&typeof drawBracketConnectors==='function')drawBracketConnectors();
    const el=anchor&&find(anchor);window.scrollTo({left:x,top:el?y+el.getBoundingClientRect().top-top:y,behavior:'instant'});
   }finally{root.style.scrollBehavior=behavior;root.style.overflowAnchor=anchoring;}
+  announce(completed);
   document.dispatchEvent(new CustomEvent('tournament:updated',{detail:{changed:Object.keys(patch.entities||{}),cursor:patch.cursor}}));
  }
  function status(text){const el=document.getElementById('refresh-status');if(el)el.textContent=text;}
