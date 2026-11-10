@@ -3628,5 +3628,65 @@
     "en": "Pairings will be assigned from post-group seeding after every group match is complete. The displayed seeds are pending slots, not fixed team assignments.",
     "de": "Paarungen werden nach Abschluss aller Gruppenspiele anhand der neuen Setzliste vergeben. Die angezeigten Setzplätze sind Platzhalter, keine festen Teamzuweisungen.",
     "fr": "Les rencontres seront déterminées selon les têtes de série après tous les matchs de groupe. Les rangs affichés sont des places provisoires, pas des équipes déjà affectées."
+  },
+  "Login lub e-mail": {
+    "pl": "Login lub e-mail",
+    "en": "Username or email",
+    "de": "Benutzername oder E-Mail",
+    "fr": "Identifiant ou e-mail"
+  },
+  "Login musi mieć od 3 do 80 znaków. Możesz użyć adresu e-mail.": {
+    "pl": "Login musi mieć od 3 do 80 znaków. Możesz użyć adresu e-mail.",
+    "en": "Username must be 3–80 characters. You can use an email address.",
+    "de": "Der Benutzername muss 3–80 Zeichen lang sein. Eine E-Mail-Adresse ist möglich.",
+    "fr": "L’identifiant doit comporter 3 à 80 caractères. Vous pouvez utiliser une adresse e-mail."
+  },
+  "Hasło musi mieć od 8 do 256 znaków.": {
+    "pl": "Hasło musi mieć od 8 do 256 znaków.",
+    "en": "Password must be 8–256 characters.",
+    "de": "Das Passwort muss 8–256 Zeichen lang sein.",
+    "fr": "Le mot de passe doit comporter 8 à 256 caractères."
+  },
+  "Hasła nie są identyczne. Wpisz ponownie to samo hasło w obu polach.": {
+    "pl": "Hasła nie są identyczne. Wpisz ponownie to samo hasło w obu polach.",
+    "en": "Passwords do not match. Enter the same password in both fields again.",
+    "de": "Die Passwörter stimmen nicht überein. Geben Sie in beiden Feldern erneut dasselbe Passwort ein.",
+    "fr": "Les mots de passe ne correspondent pas. Saisissez à nouveau le même mot de passe dans les deux champs."
+  },
+  "Konta od najnowszych": {
+    "pl": "Konta od najnowszych",
+    "en": "Accounts, newest first",
+    "de": "Konten, neueste zuerst",
+    "fr": "Comptes, du plus récent au plus ancien"
+  },
+  "Turnieje": {
+    "pl": "Turnieje",
+    "en": "Tournaments",
+    "de": "Turniere",
+    "fr": "Tournois"
+  },
+  "To konto nie ma jeszcze turniejów.": {
+    "pl": "To konto nie ma jeszcze turniejów.",
+    "en": "This account has no tournaments yet.",
+    "de": "Dieses Konto hat noch keine Turniere.",
+    "fr": "Ce compte n’a pas encore de tournois."
+  },
+  "Dostęp tylko do odczytu turniejów administratora.": {
+    "pl": "Dostęp tylko do odczytu turniejów administratora.",
+    "en": "Read-only access to the administrator’s tournaments.",
+    "de": "Lesezugriff auf die Turniere des Administrators.",
+    "fr": "Accès en lecture seule aux tournois de l’administrateur."
+  },
+  "Turnieje administratora bez przypisanego organizatora": {
+    "pl": "Turnieje administratora bez przypisanego organizatora",
+    "en": "Administrator tournaments without an assigned organiser",
+    "de": "Administrator-Turniere ohne zugewiesenen Veranstalter",
+    "fr": "Tournois de l’administrateur sans organisateur attribué"
+  },
+  "Brak turniejów.": {
+    "pl": "Brak turniejów.",
+    "en": "No tournaments.",
+    "de": "Keine Turniere.",
+    "fr": "Aucun tournoi."
   }
 }

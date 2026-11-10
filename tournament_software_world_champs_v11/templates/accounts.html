@@ -1,2 +1,58 @@
-{% extends 'base.html' %}{% block content %}<h1><span data-ui-key="Konta">{{ _('Konta') }}</span></h1><div class="card"><h2><span data-ui-key="Dodaj konto tylko do odczytu">{{ _('Dodaj konto tylko do odczytu') }}</span></h2><form method="post" class="row"><input name="username" placeholder="{{ _('Login') }}" minlength="3" maxlength="80" required autocomplete="off" data-ui-attrs="{&quot;placeholder&quot;: &quot;Login&quot;}"><input type="password" name="password" placeholder="{{ _('Hasło (min. 8 znaków)') }}" minlength="8" required autocomplete="new-password" data-ui-attrs="{&quot;placeholder&quot;: &quot;Hasło (min. 8 znaków)&quot;}"><button><span data-ui-key="Dodaj">{{ _('Dodaj') }}</span></button></form></div>
-{% for user in users %}<div class="card mt"><div class="row between"><strong>{{ user.username }} · {{ (user.role)|tr }} · {{ _('Aktywne') if user.active else _('Wyłączone') }}</strong>{% if user.role != 'admin' %}<form method="post"><input type="hidden" name="action" value="toggle"><input type="hidden" name="user_id" value="{{ user.id }}"><button>{{ _('Wyłącz') if user.active else _('Włącz') }}</button></form>{% endif %}</div>{% if user.role != 'admin' %}<form method="post" class="row mt"><input type="hidden" name="action" value="reset"><input type="hidden" name="user_id" value="{{ user.id }}"><input type="password" name="password" placeholder="{{ _('Nowe hasło') }}" minlength="8" required autocomplete="new-password" data-ui-attrs="{&quot;placeholder&quot;: &quot;Nowe hasło&quot;}"><button><span data-ui-key="Zresetuj hasło">{{ _('Zresetuj hasło') }}</span></button></form>{% endif %}</div>{% endfor %}{% endblock %}
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ _('Konta') }}</h1>
+<div class="card">
+  <h2>{{ _('Dodaj konto tylko do odczytu') }}</h2>
+  <form method="post" class="row">
+    <input name="username" placeholder="{{ _('Login') }}" minlength="3" maxlength="80" required autocomplete="off" data-ui-attrs='{"placeholder":"Login"}'>
+    <input type="password" name="password" placeholder="{{ _('Hasło (min. 8 znaków)') }}" minlength="8" required autocomplete="new-password" data-ui-attrs='{"placeholder":"Hasło (min. 8 znaków)"}'>
+    <button>{{ _('Dodaj') }}</button>
+  </form>
+</div>
+<h2>{{ _('Konta od najnowszych') }}</h2>
+{% for user in users %}
+<section class="card mt account-card" data-account-id="{{ user.id }}">
+  <div class="row between">
+    <strong class="account-name">{{ user.username }} · {{ user.role|tr }} · {{ _('Aktywne') if user.active else _('Wyłączone') }}</strong>
+    {% if user.role != 'admin' %}
+    <form method="post">
+      <input type="hidden" name="action" value="toggle"><input type="hidden" name="user_id" value="{{ user.id }}">
+      <button>{{ _('Wyłącz') if user.active else _('Włącz') }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% set tournaments=owned_tournaments[user.id] %}
+  {% if user.role=='organizer' or tournaments %}
+  <details class="account-tournaments mt" open>
+    <summary>{{ _('Turnieje') }}: {{ tournaments|length }}</summary>
+    {% if tournaments %}
+    <ul>{% for tournament in tournaments %}<li><a href="{{ url_for('tournament_view',tournament_id=tournament.id) }}">{{ tournament.name }}</a> <span class="muted">#{{ tournament.id }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="muted">{{ _('To konto nie ma jeszcze turniejów.') }}</p>{% endif %}
+  </details>
+  {% elif user.role=='viewer' %}
+  <p class="muted">{{ _('Dostęp tylko do odczytu turniejów administratora.') }}</p>
+  {% endif %}
+  {% if user.role != 'admin' %}
+  <form method="post" class="row mt account-reset">
+    <input type="hidden" name="action" value="reset"><input type="hidden" name="user_id" value="{{ user.id }}">
+    <input type="password" name="password" placeholder="{{ _('Nowe hasło') }}" minlength="8" required autocomplete="new-password" data-ui-attrs='{"placeholder":"Nowe hasło"}'>
+    <button>{{ _('Zresetuj hasło') }}</button>
+  </form>
+  {% endif %}
+</section>
+{% endfor %}
+<section class="card mt">
+  <details class="account-tournaments">
+    <summary>{{ _('Turnieje administratora bez przypisanego organizatora') }}: {{ legacy_tournaments|length }}</summary>
+    {% if legacy_tournaments %}<ul>{% for tournament in legacy_tournaments %}<li><a href="{{ url_for('tournament_view',tournament_id=tournament.id) }}">{{ tournament.name }}</a> <span class="muted">#{{ tournament.id }}</span></li>{% endfor %}</ul>
+    {% else %}<p class="muted">{{ _('Brak turniejów.') }}</p>{% endif %}
+  </details>
+</section>
+<style>
+.account-name,.account-tournaments a{overflow-wrap:anywhere;min-width:0}
+.account-tournaments summary{cursor:pointer;font-weight:700}
+.account-tournaments li{margin:10px 0}
+.account-reset input{max-width:100%;box-sizing:border-box}
+@media(max-width:650px){.account-reset input{flex:1;min-width:0;width:100%}.account-reset button{white-space:normal}}
+</style>
+{% endblock %}

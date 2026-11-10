@@ -96,26 +96,35 @@ def configure_online(app, db, Tournament, Match, Phase, settings_for, save_setti
         return render_template('auth.html', mode='setup', token=token)
 
     @app.route('/register',methods=['GET','POST'])
-    @limiter.limit('5/hour',methods=['POST'])
+    @limiter.limit('20/minute',methods=['POST'])
+    @limiter.limit('5/hour',methods=['POST'],deduct_when=lambda response:response.status_code==302 and response.headers.get('Location')==url_for('index'))
     def register():
         if g.user:return redirect(url_for('index'))
+        name=''
+        errors={}
         if request.method=='POST':
             name=request.form.get('username','').strip().lower()
             password=request.form.get('password','')
-            if not re.fullmatch(r'[\w.-]{3,80}',name) or not 8<=len(password)<=256 or password!=request.form.get('password_confirm'):
-                flash('Sprawdź login (3–80 znaków) i dwa identyczne hasła (minimum 8 znaków).')
-            elif User.query.filter_by(username=name).first():
-                flash('Ten login jest już zajęty.')
-            else:
+            # Use the same login formats as sign-in and admin-created accounts,
+            # including email addresses and names containing spaces.
+            if not 3<=len(name)<=80 or any(unicodedata.category(char).startswith('C') for char in name):
+                errors['username']='Login musi mieć od 3 do 80 znaków. Możesz użyć adresu e-mail.'
+            if not 8<=len(password)<=256:
+                errors['password']='Hasło musi mieć od 8 do 256 znaków.'
+            if password!=request.form.get('password_confirm'):
+                errors['password_confirm']='Hasła nie są identyczne. Wpisz ponownie to samo hasło w obu polach.'
+            if 'username' not in errors and User.query.filter_by(username=name).first():
+                errors['username']='Ten login jest już zajęty.'
+            if not errors:
                 user=User(username=name,password_hash=generate_password_hash(password),role='organizer')
                 try:
                     db.session.add(user);db.session.commit()
                 except IntegrityError:
-                    db.session.rollback();flash('Ten login jest już zajęty.')
+                    db.session.rollback();errors['username']='Ten login jest już zajęty.'
                 else:
                     session.clear();session.update(uid=user.id,version=user.version);session.permanent=True
                     return redirect(url_for('index'))
-        return render_template('register.html')
+        return render_template('register.html',username=name,errors=errors,first_error=next(iter(errors),None))
 
     @app.route('/login', methods=['GET', 'POST'])
     @limiter.limit('10/minute;60/hour', methods=['POST'])
@@ -179,7 +188,14 @@ def configure_online(app, db, Tournament, Match, Phase, settings_for, save_setti
                 user.version += 1
                 db.session.commit()
             return redirect(url_for('accounts'))
-        return render_template('accounts.html', users=User.query.order_by(User.username).all())
+        users=User.query.order_by(User.id.desc()).all()
+        owned={user.id:[] for user in users}
+        legacy=[]
+        Owner=app.extensions['tournament_owner']
+        for tournament,owner_id in db.session.query(Tournament,Owner.user_id).outerjoin(Owner,Tournament.id==Owner.tournament_id).order_by(Tournament.id.desc()).all():
+            if owner_id is None:legacy.append(tournament)
+            elif owner_id in owned:owned[owner_id].append(tournament)
+        return render_template('accounts.html',users=users,owned_tournaments=owned,legacy_tournaments=legacy)
 
     @app.route('/tournament/<int:tournament_id>/appearance', methods=['POST'])
     def appearance(tournament_id):

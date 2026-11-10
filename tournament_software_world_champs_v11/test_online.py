@@ -1140,3 +1140,68 @@ def test_reseeding_pending_labels_do_not_change_group_sources_or_settings():
         assert before=={m.id:meta_for(m) for m in t.matches} and t.settings_json==settings_before
         cfg=settings_for(t);cfg['pairing_mode']='fixed_bracket';save_settings_dict(t,cfg);db.session.commit()
         assert source_label(entry[0],0).startswith('Group ')
+
+
+def test_registration_accepts_email_and_spaced_logins_and_reports_each_field():
+    # Email/name logins must round-trip through registration and normal sign-in.
+    for index,name in enumerate(('Coach+Net@Example.com','Jan Kowalski')):
+        client=app.test_client();token=csrf(client,'/register');password='Eight123'
+        ip=f'198.51.100.{171+index}'
+        data=dict(username='  '+name+'  ',password=password,password_confirm=password,csrf_token=token)
+        result=client.post('/register',data=data,environ_overrides={'REMOTE_ADDR':ip})
+        assert result.status_code==302
+        with app.app_context():
+            user=User.query.filter_by(username=name.lower()).one()
+            assert user.role=='organizer' and user.password_hash!=password
+        assert client.post('/logout',data={'csrf_token':csrf(client,'/')}).status_code==302
+        assert client.post('/login',data=dict(username=name,password=password,csrf_token=csrf(client)),environ_overrides={'REMOTE_ADDR':ip}).status_code==302
+    client=app.test_client();token=csrf(client,'/register');ip='198.51.100.173'
+    # Mistakes do not consume the hourly successful-account quota.
+    for attempt in range(6):
+        response=client.post('/register',data=dict(username='retained@example.com',password='Eight123',password_confirm='Other123',csrf_token=token),environ_overrides={'REMOTE_ADDR':ip})
+        assert response.status_code==200
+        assert 'Hasła nie są identyczne.' in response.text
+        assert 'value="retained@example.com"' in response.text
+        assert 'aria-describedby="error-password_confirm"' in response.text
+        assert 'value="Eight123"' not in response.text and 'value="Other123"' not in response.text
+    assert client.post('/register',data=dict(username='retained@example.com',password='Eight123',password_confirm='Eight123',csrf_token=token),environ_overrides={'REMOTE_ADDR':ip}).status_code==302
+    other=app.test_client();token=csrf(other,'/register');ip='198.51.100.174'
+    duplicate=other.post('/register',data=dict(username='RETAINED@example.com',password='Eight123',password_confirm='Eight123',csrf_token=token),environ_overrides={'REMOTE_ADDR':ip})
+    assert 'Ten login jest już zajęty.' in duplicate.text and 'error-username' in duplicate.text
+    for name,pwd,expected in [('ab','Eight123','error-username'),('Good Login','short','error-password'),('bad\x00name','Eight123','error-username')]:
+        result=other.post('/register',data=dict(username=name,password=pwd,password_confirm=pwd,csrf_token=token),environ_overrides={'REMOTE_ADDR':ip})
+        assert result.status_code==200 and expected in result.text
+    with app.app_context():assert User.query.filter_by(username='retained@example.com').count()==1
+
+
+def test_admin_accounts_lists_each_organizers_own_tournaments_and_empty_accounts():
+    from app import create_tournament
+    Owner=app.extensions['tournament_owner']
+    with app.app_context():
+        alice=User(username='account-overview-alice',password_hash=generate_password_hash('Eight123'),role='organizer')
+        bob=User(username='account-overview-bob',password_hash=generate_password_hash('Eight123'),role='organizer',active=False)
+        empty=User(username='account-overview-empty',password_hash=generate_password_hash('Eight123'),role='organizer')
+        db.session.add_all([alice,bob,empty]);db.session.commit()
+        ta=create_tournament('Overview Alice <Cup>',4,'single_elimination',False,1)
+        tb=create_tournament('Overview Bob Cup',4,'single_elimination',False,1)
+        legacy=create_tournament('Overview Legacy Cup',4,'single_elimination',False,1)
+        db.session.add_all([Owner(tournament_id=ta.id,user_id=alice.id),Owner(tournament_id=tb.id,user_id=bob.id)]);db.session.commit()
+        aid,bid,eid=alice.id,bob.id,empty.id
+        taid,tbid,lid=ta.id,tb.id,legacy.id
+        admin_user=User.query.filter_by(role='admin').first();admin_id,version=admin_user.id,admin_user.version
+    admin=app.test_client()
+    with admin.session_transaction() as sess:sess.update(uid=admin_id,version=version)
+    page=admin.get('/accounts');assert page.status_code==200
+    cards={int(uid):body for uid,body in re.findall(r'data-account-id="(\d+)"[^>]*>(.*?)</section>',page.text,re.S)}
+    assert 'Turnieje: 1' in cards[aid] and 'Turnieje: 1' in cards[bid]
+    assert f'href="/tournament/{taid}"' in cards[aid] and 'Overview Alice &lt;Cup&gt;' in cards[aid]
+    assert 'Overview Bob Cup' not in cards[aid] and 'Overview Alice' not in cards[bid]
+    assert f'href="/tournament/{tbid}"' in cards[bid] and 'Wyłączone' in cards[bid]
+    assert 'Turnieje: 0' in cards[eid] and 'To konto nie ma jeszcze turniejów.' in cards[eid]
+    assert page.text.index(f'data-account-id="{eid}"')<page.text.index(f'data-account-id="{aid}"')
+    assert 'Turnieje administratora bez przypisanego organizatora' in page.text and f'href="/tournament/{lid}"' in page.text
+    assert admin.get(f'/tournament/{taid}').status_code==200 and admin.get(f'/tournament/{tbid}').status_code==200
+    other=app.test_client()
+    with other.session_transaction() as sess:sess.update(uid=aid,version=1)
+    assert other.get('/accounts').status_code==403 and other.post('/accounts',data={'csrf_token':csrf(other,'/')}).status_code==403
+    assert other.get(f'/tournament/{tbid}').status_code==404
