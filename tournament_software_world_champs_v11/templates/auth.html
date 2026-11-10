@@ -4,4 +4,5 @@
 {% if mode == 'setup' %}<input type="hidden" name="token" value="{{ token }}">{% endif %}
 {% if mode != 'password' %}<label><span data-ui-key="Login">{{ _('Login') }}</span><input name="username" autocomplete="username" required minlength="3" maxlength="80" style="width:100%"></label>{% else %}<label><span data-ui-key="Obecne hasło">{{ _('Obecne hasło') }}</span><input type="password" name="current_password" autocomplete="current-password" required style="width:100%"></label>{% endif %}
 <label>{{ _('Nowe hasło (min. 8 znaków)') if mode != 'login' else _('Hasło') }}<input type="password" name="password" autocomplete="{{ 'current-password' if mode == 'login' else 'new-password' }}" required {% if mode != 'login' %}minlength="8"{% endif %} style="width:100%"></label><button>{{ _('Zaloguj się') if mode == 'login' else _('Zapisz') }}</button></form></div>
+{% if mode == 'login' %}<p style="text-align:center"><a class="pill" href="{{ url_for('register') }}">{{ _('Utwórz konto organizatora') }}</a></p>{% endif %}
 {% endblock %}

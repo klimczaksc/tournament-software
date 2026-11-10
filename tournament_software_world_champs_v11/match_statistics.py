@@ -102,7 +102,7 @@ def configure_statistics(app,db,Tournament,Match,settings_for,meta_for,RefereeSc
         return payload
     def accessible(mid):
         m=db.session.get(Match,mid)
-        if not m or (not getattr(g,'user',None) and not settings_for(m.tournament).get('public_enabled')):abort(404)
+        if not m or not (settings_for(m.tournament).get('public_enabled') or app.extensions['can_read_tournament'](getattr(g,'user',None),m.tournament)):abort(404)
         return m
     @app.route('/match/<int:match_id>/statistics')
     def match_statistics(match_id):

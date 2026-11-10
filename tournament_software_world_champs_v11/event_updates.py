@@ -88,7 +88,7 @@ def configure_event_updates(app, db, Tournament, settings_for, tournament_view):
     @app.route('/tournament/<int:tournament_id>/updates')
     def tournament_event_updates(tournament_id):
         t=Tournament.query.get_or_404(tournament_id)
-        return response(t,not (g.user and g.user.role=='admin'))
+        return response(t,not app.extensions['can_manage_tournament'](g.user,t))
 
     @app.after_request
     def action_response(response):

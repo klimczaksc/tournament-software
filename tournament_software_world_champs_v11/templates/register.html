@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}
+<div class="card" style="max-width:460px;margin:5vh auto"><h1>{{ _('Utwórz konto organizatora') }}</h1><p>{{ _('Prowadź własne turnieje. Każde konto organizatora ma osobne turnieje i wyniki.') }}</p>
+<form method="post" class="grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label>{{ _('Login') }}<input name="username" autocomplete="username" minlength="3" maxlength="80" required style="width:100%"></label>
+<label>{{ _('Hasło (min. 8 znaków)') }}<input type="password" name="password" autocomplete="new-password" minlength="8" maxlength="256" required style="width:100%"></label>
+<label>{{ _('Powtórz hasło') }}<input type="password" name="password_confirm" autocomplete="new-password" minlength="8" maxlength="256" required style="width:100%"></label>
+<button>{{ _('Utwórz konto') }}</button></form><p><a href="{{ url_for('login') }}">{{ _('Mam już konto — zaloguj się') }}</a></p></div>
+{% endblock %}

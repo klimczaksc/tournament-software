@@ -41,7 +41,7 @@ def test_full_access_lifecycle():
     assert viewer.get(path+'/export/db').status_code==403
     # Exercise EVERY existing write endpoint as guest and as viewer.
     for rule in app.url_map.iter_rules():
-        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout','referee_access','referee_action','set_language'}: continue
+        if 'POST' not in rule.methods or rule.endpoint in {'login','setup','password','logout','referee_access','referee_action','set_language','register'}: continue
         target=rule.rule.replace('<int:tournament_id>',str(tid)).replace('<int:match_id>','1').replace('<int:phase_id>','1')
         assert guest.post(target).status_code==401, target
         assert viewer.post(target, data={'csrf_token':csrf(viewer,'/')}).status_code==403, target
@@ -1043,3 +1043,100 @@ def test_live_language_changes_are_localised_and_do_not_reuse_other_language_cur
     data=guest.get('/ui/catalog.js')
     assert data.status_code==200 and data.mimetype=='application/javascript'
     assert 'window.UITranslations=' in data.text
+
+
+def register_organizer_for_test(name,ip):
+    client=app.test_client();token=csrf(client,'/register')
+    response=client.post('/register',data={'username':name,'password':'Access123!','password_confirm':'Access123!','role':'admin','csrf_token':token},environ_overrides={'REMOTE_ADDR':ip})
+    assert response.status_code==302
+    with client.session_transaction() as sess:uid=sess['uid']
+    with app.app_context():assert db.session.get(User,uid).role=='organizer'
+    return client,csrf(client,'/'),uid
+
+
+def test_organizer_registration_isolation_exports_imports_and_all_resource_routes():
+    import json
+    from app import settings_for,meta_for
+    alice,atok,aid=register_organizer_for_test('organizer-alice','198.51.100.151')
+    bob,btok,bid=register_organizer_for_test('organizer-bob','198.51.100.152')
+    def create(client,token,name):
+        response=client.post('/create',data={'name':name,'player_count':8,'court_count':2,'system':'single_elimination','consolation':'on','csrf_token':token})
+        assert response.status_code==302
+        tid=int(response.headers['Location'].rsplit('/',1)[1])
+        assert client.post(f'/tournament/{tid}/generate',data={'csrf_token':token}).status_code==302
+        return tid
+    ta=create(alice,atok,'Alice private cup');tb=create(bob,btok,'Bob private cup')
+    Owner=app.extensions['tournament_owner']
+    with app.app_context():
+        assert db.session.get(Owner,ta).user_id==aid and db.session.get(Owner,tb).user_id==bid
+        t=db.session.get(Tournament,ta);ma=next(m for m in t.matches if m.player1_id and m.player2_id);mid=ma.id;phase_id=ma.phase_id
+        before={m.id:(m.score_json,m.winner_id,m.player1_id,m.player2_id,meta_for(m)) for m in t.matches}
+    assert 'Alice private cup' in alice.get('/').text and 'Bob private cup' not in alice.get('/').text
+    assert 'Alice private cup' not in bob.get('/').text
+    assert alice.get('/accounts').status_code==403
+    assert '/accounts' not in alice.get(f'/tournament/{ta}').text
+    # Exercise every scoped route, including read exports, phases and live deltas.
+    for rule in app.url_map.iter_rules():
+        if not any(arg in rule.arguments for arg in ('tournament_id','match_id','phase_id')):continue
+        if rule.endpoint in {'referee_page','referee_access','referee_state','referee_action'}:continue
+        target=rule.rule.replace('<int:tournament_id>',str(ta)).replace('<int:match_id>',str(mid)).replace('<int:phase_id>',str(phase_id))
+        if 'GET' in rule.methods:assert bob.get(target).status_code in (403,404),target
+        if 'POST' in rule.methods:assert bob.post(target,data={'csrf_token':btok}).status_code in (403,404),target
+    assert alice.get(f'/tournament/{ta}/export/db').status_code==200
+    assert alice.get(f'/tournament/{ta}/updates').status_code==200
+    assert alice.post('/language',data={'language':'en','tournament_id':ta,'csrf_token':atok}).status_code==302
+    assert bob.post('/language',data={'language':'fr','tournament_id':ta,'csrf_token':btok}).status_code==403
+    assert alice.post(f'/tournament/{ta}/appearance',data={'interface_style':'modern','csrf_token':atok}).status_code==302
+    assert alice.post(f'/tournament/{ta}/referees',data={'enabled':'on','csrf_token':atok}).status_code==302
+    # Import gets a fresh, server-owned workspace; ownership in a backup is ignored.
+    backup=alice.get(f'/tournament/{ta}/export/db').json
+    if backup is None:backup=json.loads(alice.get(f'/tournament/{ta}/export/db').text)
+    backup['tournament']['owner_user_id']=aid
+    import io
+    result=bob.post('/import/db',data={'file':(io.BytesIO(json.dumps(backup).encode()),'backup.json'),'csrf_token':btok},content_type='multipart/form-data')
+    assert result.status_code==302
+    imported=int(result.headers['Location'].rsplit('/',1)[1])
+    with app.app_context():
+        assert db.session.get(Owner,imported).user_id==bid
+        assert before=={m.id:(m.score_json,m.winner_id,m.player1_id,m.player2_id,meta_for(m)) for m in db.session.get(Tournament,ta).matches}
+    assert alice.get(f'/tournament/{imported}').status_code==404
+    # Existing admin remains in control; viewers cannot see organiser-private data.
+    admin=app.test_client()
+    with app.app_context(): administrator=User.query.filter_by(role='admin').first();admin_id=administrator.id;admin_version=administrator.version
+    with admin.session_transaction() as sess:sess.update(uid=admin_id,version=admin_version)
+    assert admin.get(f'/tournament/{ta}').status_code==200
+    viewer=app.test_client()
+    # Use the existing reader identity directly, independent of prior reset tests.
+    with app.app_context():reader=User.query.filter_by(username='reader').first();reader.active=True;db.session.commit();reader_id=reader.id;reader_version=reader.version
+    with viewer.session_transaction() as sess:sess.update(uid=reader_id,version=reader_version)
+    assert viewer.get(f'/tournament/{ta}').status_code==404
+    assert 'Alice private cup' not in viewer.get('/').text
+    # Deleting one's own tournament cleans ownership without affecting others.
+    assert bob.post(f'/tournament/{tb}/delete',data={'csrf_token':btok}).status_code==302
+    with app.app_context():assert db.session.get(Owner,tb) is None and db.session.get(Tournament,ta) is not None
+
+
+def test_registration_validation_and_legacy_admin_tournaments_are_preserved():
+    with app.app_context():
+        existing={t.id:t.settings_json for t in Tournament.query.all()}
+    client=app.test_client();token=csrf(client,'/register')
+    assert client.post('/register',data={'username':'new','password':'Access123!','password_confirm':'Access123!'}).status_code==400
+    for password,confirm in (('short','short'),('Access123!','different')):
+        assert client.post('/register',data={'username':'bad-account','password':password,'password_confirm':confirm,'csrf_token':token},environ_overrides={'REMOTE_ADDR':'198.51.100.161'}).status_code==200
+    with app.app_context():assert User.query.filter_by(username='bad-account').first() is None
+    with app.app_context():assert existing=={t.id:t.settings_json for t in Tournament.query.all()}
+
+
+def test_reseeding_pending_labels_do_not_change_group_sources_or_settings():
+    from app import create_tournament,generate_structure,settings_for,save_settings_dict,meta_for,source_label
+    with app.app_context():
+        t=create_tournament('Pending seed labels',16,'group_knockout',True,3)
+        cfg=settings_for(t);cfg.update(group_count=4,qualifiers_per_group=2,pairing_mode='first_round_only');save_settings_dict(t,cfg);db.session.commit();generate_structure(t)
+        entry=[m for m in t.matches if meta_for(m).get('section')=='Championship' and all(src.get('kind')=='group_pos' for src in meta_for(m).get('sources',[]))]
+        assert len(entry)==4
+        before={m.id:meta_for(m) for m in t.matches};settings_before=t.settings_json
+        labels=[source_label(m,side) for m in entry for side in (0,1)]
+        assert all(label.startswith('Post-group seed #') for label in labels)
+        assert before=={m.id:meta_for(m) for m in t.matches} and t.settings_json==settings_before
+        cfg=settings_for(t);cfg['pairing_mode']='fixed_bracket';save_settings_dict(t,cfg);db.session.commit()
+        assert source_label(entry[0],0).startswith('Group ')

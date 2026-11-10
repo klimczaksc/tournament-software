@@ -10,6 +10,7 @@ LANGUAGES={'pl':'Polski','en':'English','de':'Deutsch','fr':'Français'}
 LOCALES={'pl':'pl-PL','en':'en-GB','de':'de-DE','fr':'fr-FR'}
 CATALOG=json.loads((Path(__file__).parent/'translations/ui.json').read_text())
 PATTERNS=[
+ (r'^Post-group seed #(\d+)$','Post-group seed #{0}'),
  (r'^Knockout pairings are locked because Match #(\d+) already has a user-entered result[.] Clear that result before changing the draw[.]$','Knockout pairings are locked because Match #{0} already has a user-entered result. Clear that result before changing the draw.'),
  (r'^This draw is locked because Match #(\d+) already has a saved result[.] Clear downstream results before reseeding this round[.]$','This draw is locked because Match #{0} already has a saved result. Clear downstream results before reseeding this round.'),
  (r'^Do zmiany: (.*) gra mecz #(\d+)$','Replacement needed: {0} plays match #{1}'),
@@ -94,10 +95,10 @@ def configure_i18n(app,db,Tournament,Match,Phase,settings_for,save_settings):
         if code not in LANGUAGES:abort(400)
         tid=request.form.get('tournament_id')
         if tid:
-            if not getattr(g,'user',None) or g.user.role!='admin':abort(403)
             if len(tid)>12 or not tid.isdigit():abort(400)
             t=db.session.get(Tournament,int(tid))
             if not t:abort(404)
+            if not app.extensions['can_manage_tournament'](getattr(g,'user',None),t):abort(403)
             st=settings_for(t);st['language']=code;save_settings(t,st);db.session.commit()
             return redirect(url_for('tournament_view',tournament_id=t.id))
         destination=request.form.get('next','/')

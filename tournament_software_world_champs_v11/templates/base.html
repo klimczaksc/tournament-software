@@ -91,7 +91,7 @@ html[data-style="modern"] .seed-item,html[data-style="modern"] .group-assignment
 {% include 'language_flags.html' %}
 <div id="tournament-palette" data-event-key="palette" data-config="{{ current_palette|tojson|forceescape }}" hidden></div>
 <div class="wrap">
-{% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ _('Administrator') if is_admin else _('Odczyt') }}</span>{% if is_admin %}<a class="pill" href="/accounts"><span data-ui-key="Konta">{{ _('Konta') }}</span></a>{% endif %}<a class="pill" href="/password"><span data-ui-key="Zmień hasło">{{ _('Zmień hasło') }}</span></a><form method="post" action="/logout"><button><span data-ui-key="Wyloguj">{{ _('Wyloguj') }}</span></button></form></div></div>{% endif %}
+{% if current_user and not public_view %}<div class="row between mb"><a href="/">Tournament Software</a><div class="row"><span>{{ current_user.username }} · {{ _('Administrator') if is_superadmin else _('Organizator') if is_admin else _('Odczyt') }}</span>{% if is_superadmin %}<a class="pill" href="/accounts"><span data-ui-key="Konta">{{ _('Konta') }}</span></a>{% endif %}<a class="pill" href="/password"><span data-ui-key="Zmień hasło">{{ _('Zmień hasło') }}</span></a><form method="post" action="/logout"><button><span data-ui-key="Wyloguj">{{ _('Wyloguj') }}</span></button></form></div></div>{% endif %}
   {% with messages = [] if request.endpoint in ('public_event_updates','tournament_event_updates') else get_flashed_messages() %}{% if messages %}{% for m in messages %}<div class="flash">{{ m|tr }}</div>{% endfor %}{% endif %}{% endwith %}
   {% block content %}{% endblock %}
 </div>

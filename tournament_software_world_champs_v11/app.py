@@ -192,6 +192,8 @@ def create_default_phases(t: Tournament):
 
 
 def create_tournament(name, player_count, system, consolation, court_count):
+    if not 2<=player_count<=256 or not 1<=court_count<=64 or system not in dict(POPULAR_SYSTEMS):
+        raise ValueError('Invalid tournament size, courts or system.')
     t = Tournament(name=name, player_count=player_count, system=system, consolation=consolation, court_count=court_count)
     save_settings_dict(t, {'qualifiers_per_group': 2, 'best_next_place_qualifiers': 0, 'group_count': 2, 'group_assignment_mode': 'auto', 'manual_groups': {}})
     for i in range(1, player_count + 1):
@@ -1750,6 +1752,10 @@ def export_database_json(t):
 def import_database_json(payload):
     raw = json.loads(payload)
     td = raw['tournament']
+    if not 2<=int(td['player_count'])<=256 or not 1<=int(td['court_count'])<=64 or len(raw.get('players',[]))>256 or len(raw.get('matches',[]))>40000:
+        raise ValueError('Invalid tournament size.')
+    imported_config=json.loads(td.get('settings_json','{}'))
+    if not 1<=int(imported_config.get('group_count',2))<=16 or not 1<=int(imported_config.get('qualifiers_per_group',2))<=256 or not 0<=int(imported_config.get('best_next_place_qualifiers',0))<=256:raise ValueError('Invalid group settings.')
     t = Tournament(name=td['name'], player_count=td['player_count'], system=td['system'], consolation=td['consolation'], court_count=td['court_count'], settings_json=td.get('settings_json', '{}'))
     imported_settings = settings_for(t)
     imported_settings.pop('public_token', None)
@@ -1878,6 +1884,19 @@ def bracket_sections(t):
         ordered.append({'stage':'Tournament Draws','sections':sections})
     return ordered
 
+def pending_reseed_label(match, slot_index):
+    t=match.tournament
+    cfg=settings_for(t)
+    if t.system!='group_knockout' or cfg.get('pairing_mode','first_round_only')=='fixed_bracket' or group_stage_complete(t.id):return None
+    if match.bracket!='main' or meta_for(match).get('section')!='Championship':return None
+    entry=championship_entry_matches(t)
+    total=sum(min(int(cfg.get('qualifiers_per_group',2)),len(rows)) for _,rows in compute_group_tables(t))+int(cfg.get('best_next_place_qualifiers',0))
+    if len(entry)*2==total and match.id in {m.id for m in entry}:
+        position=next(i for i,m in enumerate(entry,1) if m.id==match.id)
+        return f'Post-group seed #{position if slot_index==0 else total+1-position}'
+    return 'Qualifier — reseeded after groups'
+
+
 def source_label(match, slot_index):
     meta = meta_for(match)
     sources = meta.get('sources') or []
@@ -1885,6 +1904,9 @@ def source_label(match, slot_index):
         return 'TBD'
     src = sources[slot_index] or {}
     kind = src.get('kind')
+    if kind in ('group_pos','best_group_pos'):
+        pending=pending_reseed_label(match,slot_index)
+        if pending:return pending
     if kind == 'group_pos':
         g = str(src.get('group','group_?')).replace('group_','Group ')
         return f"{g} #{src.get('pos','?')}"
@@ -2332,6 +2354,7 @@ def import_players_from_excel(tournament_id, file_storage):
     t = Tournament.query.get_or_404(tournament_id)
     Player.query.filter_by(tournament_id=t.id).delete()
     t.player_count = len(rows)
+    if len(rows)>256:raise ValueError('Too many players.')
     current = settings_for(t)
     current['manual_groups'] = {}
     save_settings_dict(t, current)
@@ -2348,7 +2371,7 @@ def help_page():
 
 @app.route('/')
 def index():
-    tournaments = Tournament.query.order_by(Tournament.id.desc()).all()
+    tournaments = app.extensions['visible_tournaments'](g.user)
     return render_template('index.html', tournaments=tournaments, systems=POPULAR_SYSTEMS)
 
 
@@ -2359,7 +2382,8 @@ def create():
     system = request.form.get('system', 'single_elimination')
     consolation = request.form.get('consolation') == 'on'
     court_count = int(request.form.get('court_count', 1))
-    t = create_tournament(name, player_count, system, consolation, court_count)
+    try:t = create_tournament(name, player_count, system, consolation, court_count)
+    except ValueError:abort(400)
     cfg=settings_for(t);cfg['language']=getattr(g,'language','pl');save_settings_dict(t,cfg);db.session.commit()
     return redirect(url_for('tournament_view', tournament_id=t.id))
 
@@ -2373,7 +2397,7 @@ def tournament_view(tournament_id):
     completed = [m for m in matches if m.winner_id]
     referees = referee_services['assignments'](t, matches)
     live_scores = referee_services['scores'](t, matches)
-    referee_codes = referee_services['codes'](t) if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else {}
+    referee_codes = referee_services['codes'](t) if app.extensions['can_manage_tournament'](g.user,t) and not getattr(g, 'public_view', False) else {}
     ranking = final_ranking(t) if matches else []
     group_tables = compute_group_tables(t)
     sections = bracket_sections(t)
@@ -2388,7 +2412,7 @@ def tournament_view(tournament_id):
     manual_pairing_ready = settings.get('pairing_mode', 'first_round_only') != 'fixed_bracket' and bool(knockout_qualifiers) and len(knockout_entry_matches) * 2 == len(knockout_qualifiers)
     round_pairings = editable_round_groups(t)
     tournament_seeds = tournament_seed_rows(t, [q['player'].id for q in knockout_qualifiers]) if knockout_qualifiers else []
-    return render_template('tournament.html' if g.user and g.user.role == 'admin' and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, referees=referees, live_scores=live_scores, referee_codes=referee_codes, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=((url_for('public_tournament_logo', token=settings.get('public_token','')) if getattr(g,'public_view',False) or not g.user else url_for('tournament_logo', tournament_id=t.id)) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
+    return render_template('tournament.html' if app.extensions['can_manage_tournament'](g.user,t) and not getattr(g, 'public_view', False) else 'readonly.html', tournament=t, systems=POPULAR_SYSTEMS, matches=matches, referees=referees, live_scores=live_scores, referee_codes=referee_codes, timing=timing, upcoming=upcoming, completed=completed, format_time=format_time, display_mode=request.args.get('display') == '1', ranking=ranking, group_tables=group_tables, bracket_sections=sections, score_to_text=score_to_text, score_sets=score_sets, meta_for=meta_for, source_match_keys=source_match_keys, source_label=source_label, settings=settings, placement_map=placement_map(t), group_names=group_names, championship_field=championship_field, placement_field=placement_field, groups_complete=groups_complete, knockout_qualifiers=knockout_qualifiers, knockout_entry_matches=knockout_entry_matches, manual_pairing_ready=manual_pairing_ready, round_pairings=round_pairings, tournament_seeds=tournament_seeds, logo_url=((url_for('public_tournament_logo', token=settings.get('public_token','')) if getattr(g,'public_view',False) or not g.user else url_for('tournament_logo', tournament_id=t.id)) if logo_path_for(t) else None), draw_round_title=_draw_round_title, comparison_locked=any(score_sets(m.score_json) for m in matches))
 
 
 @app.route('/tournament/<int:tournament_id>/settings', methods=['POST'])
@@ -2404,7 +2428,9 @@ def update_settings(tournament_id):
     current['wildcard_comparison'] = comparison
     current['qualifiers_per_group'] = max(1, int(request.form.get('qualifiers_per_group', current.get('qualifiers_per_group', 2))))
     current['best_next_place_qualifiers'] = max(0, int(request.form.get('best_next_place_qualifiers', current.get('best_next_place_qualifiers', 0))))
-    current['group_count'] = max(1, int(request.form.get('group_count', current.get('group_count', 2))))
+    group_count=int(request.form.get('group_count',current.get('group_count',2)))
+    if not 1<=group_count<=16:abort(400)
+    current['group_count']=group_count
     mode = request.form.get('group_assignment_mode', current.get('group_assignment_mode', 'auto'))
     current['group_assignment_mode'] = mode if mode in ('auto', 'manual') else 'auto'
     pairing_mode = request.form.get('pairing_mode', current.get('pairing_mode', 'first_round_only'))
@@ -2416,6 +2442,7 @@ def update_settings(tournament_id):
     old_system = t.system
     t.system = request.form.get('system', t.system)
     requested_count = int(request.form.get('player_count', t.player_count))
+    if not 2<=requested_count<=256 or not 1<=int(request.form.get('court_count',t.court_count))<=64 or not 1<=current['qualifiers_per_group']<=256 or not 0<=current['best_next_place_qualifiers']<=256 or t.system not in dict(POPULAR_SYSTEMS):abort(400)
     t.court_count = max(1, int(request.form.get('court_count', t.court_count)))
     t.consolation = request.form.get('consolation') == 'on'
     sync_player_count(t, requested_count)
@@ -2456,7 +2483,8 @@ def update_group_assignments(tournament_id):
     t = Tournament.query.get_or_404(tournament_id)
     payload = request.get_json(force=True)
     current = settings_for(t)
-    group_count = max(1, int(payload.get('group_count', current.get('group_count', 2))))
+    group_count=int(payload.get('group_count',current.get('group_count',2)))
+    if not 1<=group_count<=16:abort(400)
     mode = payload.get('group_assignment_mode', current.get('group_assignment_mode', 'manual'))
     assignments = payload.get('manual_groups') or {}
     valid_ids = {str(p.id) for p in t.players}
@@ -2890,7 +2918,8 @@ def reschedule(tournament_id):
     if reorder and any(score_sets(m.score_json) or meta_for(m).get('user_result_entered') for m in t.matches if meta_for(m).get('key')):
         flash('Kolejność można zmienić przed wpisaniem wyników fazy pucharowej.')
         return redirect(url_for('tournament_view', tournament_id=t.id) + '#matches')
-    court_count = max(1,int(request.form.get('court_count', t.court_count)))
+    court_count = int(request.form.get('court_count', t.court_count))
+    if not 1<=court_count<=64:abort(400)
     if (reorder or court_count != t.court_count) and any(not m.winner_id and meta_for(m).get('actual_start') for m in t.matches):
         abort(400, 'Zakończ trwające mecze przed zmianą kolejności lub liczby kortów.')
     t.court_count = court_count
@@ -2979,7 +3008,7 @@ from i18n import configure_i18n, translate
 configure_i18n(app,db,Tournament,Match,Phase,settings_for,save_settings_dict)
 
 from online import configure_online
-configure_online(app, db, Tournament, settings_for, save_settings_dict, tournament_view)
+configure_online(app, db, Tournament, Match, Phase, settings_for, save_settings_dict, tournament_view)
 with app.app_context():
     statistics_services['backfill']()
     repaired = repair_unplayed_brackets()

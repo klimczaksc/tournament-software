@@ -3550,5 +3550,83 @@
     "en": "Draw locked: match #{0} has a saved result. Clear later results before reseeding.",
     "de": "Turnierbaum gesperrt: Spiel #{0} hat ein Ergebnis. Spätere Ergebnisse vor Neusetzung entfernen.",
     "fr": "Tableau verrouillé : le match n°{0} a un résultat. Effacez les résultats suivants avant le reclassement."
+  },
+  "Utwórz konto organizatora": {
+    "pl": "Utwórz konto organizatora",
+    "en": "Create an organiser account",
+    "de": "Veranstalterkonto erstellen",
+    "fr": "Créer un compte organisateur"
+  },
+  "Prowadź własne turnieje. Każde konto organizatora ma osobne turnieje i wyniki.": {
+    "pl": "Prowadź własne turnieje. Każde konto organizatora ma osobne turnieje i wyniki.",
+    "en": "Run your own tournaments. Each organiser account has separate tournaments and results.",
+    "de": "Verwalte eigene Turniere. Jedes Veranstalterkonto hat getrennte Turniere und Ergebnisse.",
+    "fr": "Gérez vos propres tournois. Chaque compte organisateur dispose de tournois et résultats séparés."
+  },
+  "Powtórz hasło": {
+    "pl": "Powtórz hasło",
+    "en": "Confirm password",
+    "de": "Passwort bestätigen",
+    "fr": "Confirmer le mot de passe"
+  },
+  "Utwórz konto": {
+    "pl": "Utwórz konto",
+    "en": "Create account",
+    "de": "Konto erstellen",
+    "fr": "Créer un compte"
+  },
+  "Mam już konto — zaloguj się": {
+    "pl": "Mam już konto — zaloguj się",
+    "en": "Already have an account? Sign in",
+    "de": "Bereits ein Konto? Anmelden",
+    "fr": "Déjà un compte ? Se connecter"
+  },
+  "Sprawdź login (3–80 znaków) i dwa identyczne hasła (minimum 8 znaków).": {
+    "pl": "Sprawdź login (3–80 znaków) i dwa identyczne hasła (minimum 8 znaków).",
+    "en": "Check your username (3–80 characters) and matching passwords (at least 8 characters).",
+    "de": "Benutzernamen (3–80 Zeichen) und übereinstimmende Passwörter (mindestens 8 Zeichen) prüfen.",
+    "fr": "Vérifiez l’identifiant (3–80 caractères) et deux mots de passe identiques (8 caractères minimum)."
+  },
+  "Ten login jest już zajęty.": {
+    "pl": "Ten login jest już zajęty.",
+    "en": "This username is already taken.",
+    "de": "Dieser Benutzername ist bereits vergeben.",
+    "fr": "Cet identifiant est déjà utilisé."
+  },
+  "Organizator": {
+    "pl": "Organizator",
+    "en": "Organiser",
+    "de": "Veranstalter",
+    "fr": "Organisateur"
+  },
+  "organizer": {
+    "pl": "organizator",
+    "en": "organiser",
+    "de": "Veranstalter",
+    "fr": "organisateur"
+  },
+  "Pliki i eksporty": {
+    "pl": "Pliki i eksporty",
+    "en": "Files and exports",
+    "de": "Dateien und Exporte",
+    "fr": "Fichiers et exports"
+  },
+  "Qualifier — reseeded after groups": {
+    "pl": "Awansujący — reseeding po grupach",
+    "en": "Qualifier — reseeded after groups",
+    "de": "Qualifikant — Neusetzung nach den Gruppen",
+    "fr": "Qualifié — reclassement après les groupes"
+  },
+  "Post-group seed #{0}": {
+    "pl": "Seed po grupach #{0}",
+    "en": "Post-group seed #{0}",
+    "de": "Setzplatz nach den Gruppen #{0}",
+    "fr": "Tête de série après les groupes n°{0}"
+  },
+  "Pary zostaną ustalone po zakończeniu wszystkich grup na podstawie rozstawienia po grupach. Widoczne seedy są miejscami oczekującymi, a nie gotowym przydziałem drużyn.": {
+    "pl": "Pary zostaną ustalone po zakończeniu wszystkich grup na podstawie rozstawienia po grupach. Widoczne seedy są miejscami oczekującymi, a nie gotowym przydziałem drużyn.",
+    "en": "Pairings will be assigned from post-group seeding after every group match is complete. The displayed seeds are pending slots, not fixed team assignments.",
+    "de": "Paarungen werden nach Abschluss aller Gruppenspiele anhand der neuen Setzliste vergeben. Die angezeigten Setzplätze sind Platzhalter, keine festen Teamzuweisungen.",
+    "fr": "Les rencontres seront déterminées selon les têtes de série après tous les matchs de groupe. Les rangs affichés sont des places provisoires, pas des équipes déjà affectées."
   }
 }

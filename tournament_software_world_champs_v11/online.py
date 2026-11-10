@@ -10,10 +10,12 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
+from sqlalchemy.exc import IntegrityError
+from access import configure_access
 from palettes import PALETTES, FIELDS, palette_config, parse_palette
 
 
-def configure_online(app, db, Tournament, settings_for, save_settings, tournament_view):
+def configure_online(app, db, Tournament, Match, Phase, settings_for, save_settings, tournament_view):
     class User(db.Model):
         id = db.Column(db.Integer, primary_key=True)
         username = db.Column(db.String(80), unique=True, nullable=False)
@@ -21,6 +23,8 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         role = db.Column(db.String(12), nullable=False, default='viewer')
         active = db.Column(db.Boolean, nullable=False, default=True)
         version = db.Column(db.Integer, nullable=False, default=1)
+
+    access=configure_access(app,db,Tournament,Match,Phase,User)
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     limiter = Limiter(get_remote_address, app=app, storage_uri='memory://', default_limits=[])
@@ -33,24 +37,28 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
         if g.user and (not g.user.active or session.get('version') != g.user.version):
             session.clear()
             g.user = None
-        public = {'ui_catalog_script', 'set_language', 'login', 'setup', 'health', 'public_tournament', 'public_short', 'public_tournament_logo', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores', 'public_event_updates', 'match_statistics', 'match_statistics_data'}
+        public = {'ui_catalog_script', 'set_language', 'register', 'login', 'setup', 'health', 'public_tournament', 'public_short', 'public_tournament_logo', 'static', 'referee_page', 'referee_access', 'referee_state', 'referee_action', 'public_live_scores', 'public_event_updates', 'match_statistics', 'match_statistics_data'}
         if request.endpoint in public:
             return
         if not g.user:
             if request.method not in ('GET', 'HEAD', 'OPTIONS'):
                 abort(401)
             return redirect(url_for('login'))
-        if request.endpoint in {'accounts', 'export_db'} and g.user.role != 'admin':
-            abort(403)
-        if request.method not in ('GET', 'HEAD', 'OPTIONS') and request.endpoint not in {'logout', 'password'} and g.user.role != 'admin':
-            abort(403)
+        scoped=access['scope']()
+        if g.user.role=='organizer':
+            if scoped and not access['manage'](g.user,scoped):abort(404)
+            if not scoped and request.endpoint not in {'index','create','import_db','help_page','logout','password'}:abort(403)
+            return
+        if scoped and not access['read'](g.user,scoped):abort(404)
+        if request.endpoint in {'accounts', 'export_db'} and g.user.role != 'admin':abort(403)
+        if request.method not in ('GET', 'HEAD', 'OPTIONS') and request.endpoint not in {'logout', 'password'} and g.user.role != 'admin':abort(403)
 
     CSRFProtect(app)
 
     @app.context_processor
     def identity():
         user = getattr(g, 'user', None)
-        return dict(palette_catalog=PALETTES,palette_fields=FIELDS,palette_config=palette_config,current_user=user, is_admin=bool(user and user.role == 'admin'), public_view=getattr(g, 'public_view', False))
+        return dict(palette_catalog=PALETTES,palette_fields=FIELDS,palette_config=palette_config,current_user=user, is_admin=bool(user and (user.role=='admin' or (user.role=='organizer' and (not getattr(g,'language_tournament',None) or access['manage'](user,g.language_tournament))))), is_superadmin=bool(user and user.role=='admin'), public_view=getattr(g, 'public_view', False))
 
     @app.after_request
     def headers(response):
@@ -86,6 +94,28 @@ def configure_online(app, db, Tournament, settings_for, save_settings, tournamen
                 flash('Konto administratora utworzone. Zaloguj się.')
                 return redirect(url_for('login'))
         return render_template('auth.html', mode='setup', token=token)
+
+    @app.route('/register',methods=['GET','POST'])
+    @limiter.limit('5/hour',methods=['POST'])
+    def register():
+        if g.user:return redirect(url_for('index'))
+        if request.method=='POST':
+            name=request.form.get('username','').strip().lower()
+            password=request.form.get('password','')
+            if not re.fullmatch(r'[\w.-]{3,80}',name) or not 8<=len(password)<=256 or password!=request.form.get('password_confirm'):
+                flash('Sprawdź login (3–80 znaków) i dwa identyczne hasła (minimum 8 znaków).')
+            elif User.query.filter_by(username=name).first():
+                flash('Ten login jest już zajęty.')
+            else:
+                user=User(username=name,password_hash=generate_password_hash(password),role='organizer')
+                try:
+                    db.session.add(user);db.session.commit()
+                except IntegrityError:
+                    db.session.rollback();flash('Ten login jest już zajęty.')
+                else:
+                    session.clear();session.update(uid=user.id,version=user.version);session.permanent=True
+                    return redirect(url_for('index'))
+        return render_template('register.html')
 
     @app.route('/login', methods=['GET', 'POST'])
     @limiter.limit('10/minute;60/hour', methods=['POST'])
